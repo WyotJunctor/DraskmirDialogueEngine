@@ -1,0 +1,411 @@
+{
+  "all_edges": [
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Argument",
+      "tgt": "Hostile"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "CombatAction",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Rest",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Seen",
+      "tgt": "MoA"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Smalltalk",
+      "tgt": "FriendlyConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Person",
+      "tgt": "Object"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Calm",
+      "tgt": "Singleton"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Calm",
+      "tgt": "Context"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Combat",
+      "tgt": "Hostile"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Wounded",
+      "tgt": "Physical"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Attack",
+      "tgt": "CombatAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Door",
+      "tgt": "Object"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Equipment",
+      "tgt": "Physical"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "SendOff",
+      "tgt": "FriendlyConversationAction"
+    },
+    {
+      "directed": false,
+      "edge_type": "like",
+      "src": "Calm",
+      "tgt": "Conversation"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Conversation",
+      "tgt": "Context"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Unknown",
+      "tgt": "Relationship"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Engage",
+      "tgt": "CombatAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "AskTags",
+      "tgt": "UniqueConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "UniqueConversationAction",
+      "tgt": "ConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Enter",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Physical",
+      "tgt": "Attribute"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Armed",
+      "tgt": "Equipment"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Traverse",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Friendly",
+      "tgt": "Known"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Greet",
+      "tgt": "UniqueConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Room",
+      "tgt": "Object"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Dead",
+      "tgt": "Physical"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Greet",
+      "tgt": "FriendlyConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Bystander",
+      "tgt": "Involved"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Loot",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "FriendlyConversationAction",
+      "tgt": "ConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "as",
+      "src": "ShareTags",
+      "tgt": "FriendlyConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "ConversationAction",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Combat",
+      "tgt": "Singleton"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Known",
+      "tgt": "Relationship"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "HostileRelationship",
+      "tgt": "Known"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Flee",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Armored",
+      "tgt": "Equipment"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Participant",
+      "tgt": "Involved"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "SendOff",
+      "tgt": "UniqueConversationAction"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Hostile",
+      "tgt": "Context"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "Wait",
+      "tgt": "Action"
+    },
+    {
+      "directed": true,
+      "edge_type": "is",
+      "src": "ShareTags",
+      "tgt": "UniqueConversationAction"
+    }
+  ],
+  "all_verts": [
+    {
+      "vertex_id": "Relationship"
+    },
+    {
+      "vertex_id": "Traverse"
+    },
+    {
+      "vertex_id": "Physical"
+    },
+    {
+      "vertex_id": "AskTags"
+    },
+    {
+      "vertex_id": "Argument"
+    },
+    {
+      "vertex_id": "Unknown"
+    },
+    {
+      "vertex_id": "Enter"
+    },
+    {
+      "vertex_id": "FriendlyConversationAction"
+    },
+    {
+      "vertex_id": "Attribute"
+    },
+    {
+      "vertex_id": "Bystander"
+    },
+    {
+      "vertex_id": "Dead"
+    },
+    {
+      "vertex_id": "Room"
+    },
+    {
+      "vertex_id": "Hostile"
+    },
+    {
+      "vertex_id": "Seen"
+    },
+    {
+      "vertex_id": "Conversation"
+    },
+    {
+      "vertex_id": "Rest"
+    },
+    {
+      "vertex_id": "MoA"
+    },
+    {
+      "vertex_id": "Calm"
+    },
+    {
+      "vertex_id": "SendOff"
+    },
+    {
+      "vertex_id": "Armored"
+    },
+    {
+      "vertex_id": "Known"
+    },
+    {
+      "vertex_id": "ConversationAction"
+    },
+    {
+      "vertex_id": "Person"
+    },
+    {
+      "vertex_id": "Combat"
+    },
+    {
+      "vertex_id": "ShareTags"
+    },
+    {
+      "vertex_id": "Action"
+    },
+    {
+      "vertex_id": "Flee"
+    },
+    {
+      "vertex_id": "Context"
+    },
+    {
+      "vertex_id": "Involved"
+    },
+    {
+      "vertex_id": "Greet"
+    },
+    {
+      "vertex_id": "Smalltalk"
+    },
+    {
+      "vertex_id": "Engage"
+    },
+    {
+      "vertex_id": "Door"
+    },
+    {
+      "vertex_id": "Loot"
+    },
+    {
+      "vertex_id": "Friendly"
+    },
+    {
+      "vertex_id": "Equipment"
+    },
+    {
+      "vertex_id": "Singleton"
+    },
+    {
+      "vertex_id": "HostileRelationship"
+    },
+    {
+      "vertex_id": "Attack"
+    },
+    {
+      "vertex_id": "Wait"
+    },
+    {
+      "vertex_id": "Participant"
+    },
+    {
+      "vertex_id": "CombatAction"
+    },
+    {
+      "vertex_id": "Group"
+    },
+    {
+      "vertex_id": "Wounded"
+    },
+    {
+      "vertex_id": "Object"
+    },
+    {
+      "vertex_id": "UniqueConversationAction"
+    },
+    {
+      "vertex_id": "Armed"
+    }
+  ]
+}
