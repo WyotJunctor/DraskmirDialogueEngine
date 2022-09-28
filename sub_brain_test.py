@@ -80,9 +80,9 @@ class r_Rest(Rule):
     pass
 
 class r_Wait(Rule):
-    # wait until end,
-    # if there is action that can be taken in response, disallow
     # if number of waits too great, disallow
+    # defer until end,
+    # if there is action that can be taken in response, disallow
     # else allow
     pass
 

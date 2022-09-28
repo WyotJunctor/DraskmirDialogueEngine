@@ -9,7 +9,7 @@ class Game:
 
         reality_graph = Graph(self)
         reality_graph.load_json(json_path)
-        self.reality_brain = Brain(reality_graph, set())
+        self.reality_brain = Brain(reality_graph, dict())
 
     def step(self):
         ...
