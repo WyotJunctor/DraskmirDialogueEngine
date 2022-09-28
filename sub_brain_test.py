@@ -1,17 +1,20 @@
 from brain import Brain
 
+class ActionBrain(Brain):
+    pass
+
 sub_graph = Graph(self)
 sub_graph.load_json(json_path)
-sub_brain = Brain(sub_graph, set())
+sub_brain = ActionBrain(sub_graph, set())
 
 """
 SUBJECTIVE BRAIN ACTION VIABILITY RULES
-# viability checker breadth-first searches down the list...
-# passing a set that diminishes each time
 
 class r_Action(Rule):
     # if self is person, allow
     # else disallow
+    # viability checker breadth-first searches down the list...
+    # passing a set that diminishes each time
     pass
 
 class r_InteractionAction(Rule):
