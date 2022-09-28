@@ -12,7 +12,7 @@ class Rule:
 class GraphObject:
 
     def __init__(self, created_timestep=None, updated_timestep=None, rules=None, attr_map=None):
-        self.rules = [] if rules is None else rules
+        self.rules = dict() if rules is None else rules
         self.created_timestep = created_timestep
         self.updated_timestep = updated_timestep
         self.attr_map = dict() if attr_map is None else attr_map
