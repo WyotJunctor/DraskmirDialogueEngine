@@ -22,7 +22,8 @@ class Vertex(GraphObject):
 
     def __init__(self, id, created_timestep, updated_timestep, rules=None, attr_map=None):
         self.id = id
-        self.edges = set()
+        self.in_edges = set()
+        self.out_edges = set()
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
 
 
@@ -31,9 +32,12 @@ class Edge(GraphObject):
     def __init__(self, edge_type:str, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, rules=None, attr_map=None, twoway=False):
         self.edge_type = edge_type
         self.src = src
-        src.edges.add(self)
         self.tgt = tgt
-        tgt.edges.add(self)
+        src.out_edges.add(self)
+        tgt.in_edges.add(self)
+        if twoway == True:
+            src.in_edges.add(self)
+            tgt.out_edges.add(self)
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
         # TODO: add logic for twoway
 
