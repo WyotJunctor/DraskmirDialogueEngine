@@ -3,7 +3,7 @@ from graph import Graph, Rule
 # object which checks groups, AND within groups, OR outside groups
 
 # if tgt_set is a dict...
-# 
+#
 
 def check_member(src, tgt_set):
     # src is a list of sets or a single set, tgt_set is always one set
@@ -24,10 +24,26 @@ def get_members(src, tgt_dict, fetch_op=lambda x,y : x.get(y,None)):
     else:
         return fetch_op(tgt_dict, src)
 
+def get_vertex_set(context, vertex, member_edge, group_edge):
+    result = None
+    v_set = context.graph.vertices[vertex.id].in_edges.edgetype_to_id[member_edge]
+    if len(v_set) > 0:
+        result = set(v_set)
+    else:
+        v_set = context.graph.vertices[vertex.id].in_edges.edgetype_to_id[group_edge]
+        result = list()
+        for v_group in v_set:
+            result.append(set(context.graph.vertices[v_group].in_edges.edgetype_to_id[member_edge]))
+    return result
+
+
 
 class ActionRule(Rule):
     def transform(self, context, target_set: dict, allow: bool):
         return target_set, allow
+
+    def instance_init(self):
+        pass
 
     def __call__(self, context, target_set: dict, allow: bool):
         target_set = target_set.copy()
@@ -40,8 +56,11 @@ class r_Allow(ActionRule):
     # if self is person, allow
     # else disallow}
 
-    def __init__(self, allow_type):
-        self.allow_type = allow_type
+    def __init__(self):
+        self.allow_type
+
+    def instance_init(self, context, vertex):
+        self.allow_type = get_vertex_set(context, vertex, "allow_member", "allow_group")
 
     def transform(self, context, target_set: dict, allow: bool):
         return target_set, check_member(self.allow_type, context.graph.vertices["ego"].out_edges.edgetype_to_id["Is"].keys())
@@ -51,11 +70,14 @@ class r_AllowIndividual(ActionRule):
     # allow interaction action
 
     def __init__(self, allow_type):
-        self.allow_type = allow_type
+        self.allow_type
+
+    def instance_init(self):
+        self.allow_type = get_vertex_set(context, vertex, "allow_member", "allow_group")
 
     def transform(self, context, target_set: dict, allow: bool):
-
-
+        allow_set = get_members(allow_type, context.graph.vertices, fetch_op= lambda x,y : x[y].edgetype_to_id["Is"].keys())
+        target_set["allow"] = target_set["allow"].union(allow_set)
         return target_set, allow
 
 
