@@ -14,14 +14,15 @@ def check_member(src, tgt_set):
     else:
         return src in tgt_set
 
-
+# if list, get union of
+# if set, get intersection of members of fetch_op
 def get_members(src, tgt_dict, fetch_op=lambda x,y : x.get(y,None)):
     if type(src) is list:
-        return set([src.issubset(tgt_set) for src_set in src])
+        return set.union([set.intersection([fetch_op(tgt_dict, src_elem) for src_set in src for src_elem in src_set])])
     elif type(src) is set:
-        return src.issubset(tgt_set)
+        return set.intersection([fetch_op(tgt_dict, src_elem) for src_elem in src])
     else:
-        return src in tgt_set
+        return fetch_op(tgt_dict, src)
 
 
 class ActionRule(Rule):
@@ -61,7 +62,7 @@ class r_AllowIndividual(ActionRule):
 def generate_metagraph():
     import sys
     import inspect
-    print([c[0'] for c in inspect.getmembers(sys.modules[__name__], inspect.isclass) if "main" in str(c[1])])
+    print([c[0] for c in inspect.getmembers(sys.modules[__name__], inspect.isclass) if "main" in str(c[1])])
 
 generate_metagraph()
 #metagraph = Graph()
