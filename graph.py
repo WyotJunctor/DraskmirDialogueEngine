@@ -1,6 +1,7 @@
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
+from collections import defaultdict, Counter
 
 
 class Rule:
@@ -8,6 +9,19 @@ class Rule:
     def __init__(self, rule):
       self.rule = rule
 
+
+class EdgeMap:
+    def __init__(self):
+        self.edge_set = set()
+        self.id_to_edgetype = defaultdict(Counter)
+        self.id_to_edge = defaultdict(set)
+        self.edgetype_to_id = defaultdict(Counter)
+
+    def add(self, edge, endpoint):
+        self.edge_set.add(edge)
+        self.id_to_edgetype[endpoint.id].update({edge.edge_type:1})
+        self.id_to_edge[endpoint.id].add(edge)
+        self.edgetype_to_id[edge.edge_type].update({endpoint.id:1})
 
 class GraphObject:
 
@@ -22,10 +36,19 @@ class Vertex(GraphObject):
 
     def __init__(self, id, created_timestep, updated_timestep, rules=None, attr_map=None):
         self.id = id
-        self.in_edges = set()
-        self.out_edges = set()
+        self.in_edges = EdgeMap()
+        self.out_edges = EdgeMap()
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
 
+
+    def add_edge(self, edge, endpoint, target=False, twoway=False):
+        if twoway:
+            self.in_edges.add(edge, endpoint)
+            self.out_edges.add(edge, endpoint)
+        elif not target:
+            self.out_edges.add(edge, endpoint)
+        else:
+            self.in_edges.add(edge, endpoint)
 
 class Edge(GraphObject):
 
@@ -33,18 +56,15 @@ class Edge(GraphObject):
         self.edge_type = edge_type
         self.src = src
         self.tgt = tgt
-        src.out_edges.add(self)
-        tgt.in_edges.add(self)
-        if twoway == True:
-            src.in_edges.add(self)
-            tgt.out_edges.add(self)
+        src.add_edge(self, tgt, twoway=twoway)
+        tgt.add_edge(self, src, target=True, twoway=twoway)
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
         # TODO: add logic for twoway
 
 class Graph:
 
-    def __init__(self, game):
-        self.game = game
+    def __init__(self, timestep=0):
+        self.timestep = timestep
         self.vertices = dict()
         self.edges = set()
         self.visgraph = nx.Graph()
@@ -55,7 +75,7 @@ class Graph:
 
     def load_vert(self, vert_glob):
         id = vert_glob["vertex_id"]
-        self.vertices[id] = Vertex(id, self.game.timestep, self.game.timestep)
+        self.vertices[id] = Vertex(id, self.timestep, self.timestep)
         self.visgraph.add_node(id)
 
     def load_edge(self, edge_glob):
@@ -71,8 +91,8 @@ class Graph:
                 edge_glob["edge_type"],
                 tup[0],
                 tup[1],
-                self.game.timestep,
-                self.game.timestep,
+                self.timestep,
+                self.timestep,
                 twoway=not edge_glob["directed"]
             )
         )
