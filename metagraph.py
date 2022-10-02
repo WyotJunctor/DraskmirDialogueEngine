@@ -37,13 +37,18 @@ def get_vertex_set(context, vertex, member_edge, group_edge):
     return result
 
 
+def check_member_is(context, src, tgt_set):
+    return True
+
+def get_current_context(context, vertex, involved_edge):
+    return ""
 
 class ActionRule(Rule):
+    def __init__(self, context, vertex):
+        self.ego = vertex.in_edges.edgetype_to_id("Is_Ego")
+
     def transform(self, context, target_set: dict, allow: bool):
         return target_set, allow
-
-    def instance_init(self):
-        pass
 
     def __call__(self, context, target_set: dict, allow: bool):
         target_set = target_set.copy()
@@ -56,29 +61,76 @@ class r_Allow(ActionRule):
     # if self is person, allow
     # else disallow}
 
-    def __init__(self):
-        self.allow_type
-
-    def instance_init(self, context, vertex):
-        self.allow_type = get_vertex_set(context, vertex, "allow_member", "allow_group")
+    def __init__(self, context, vertex):
+        super().__init__(context, vertex)
+        self.allow_type = get_vertex_set(context, vertex, "Allow_Type", "Allow_group")
 
     def transform(self, context, target_set: dict, allow: bool):
-        return target_set, check_member(self.allow_type, context.graph.vertices["ego"].out_edges.edgetype_to_id["Is"].keys())
+        return target_set, check_member(self.allow_type, self.ego.out_edges.edgetype_to_id["Is"].keys())
 
 class r_AllowIndividual(ActionRule):
     # get instance from Person not self
     # allow interaction action
 
-    def __init__(self, allow_type):
-        self.allow_type
-
-    def instance_init(self):
-        self.allow_type = get_vertex_set(context, vertex, "allow_member", "allow_group")
+    def __init__(self, context, vertex):
+        super().__init__(context, vertex)
+        self.allow_type = get_vertex_set(context, vertex, "Allow_type", "Allow_Group")
 
     def transform(self, context, target_set: dict, allow: bool):
-        allow_set = get_members(allow_type, context.graph.vertices, fetch_op= lambda x,y : x[y].edgetype_to_id["Is"].keys())
+        allow_set = get_members(allow_type, context.graph.vertices, fetch_op=lambda x,y : x[y].edgetype_to_id["Is"].keys())
         target_set["allow"] = target_set["allow"].union(allow_set)
+        target_set.remove(self.ego)
         return target_set, allow
+
+
+class r_SameContext(ActionRule):
+
+    def __init__(self, context, vertex):
+        super().__init__(context, vertex)
+        self.allow_context = get_vertex_set(context, vertex, "Allow_Context", "Allow_Group")
+        self.disallow_context = get_vertex_set(context, vertex, "Disallow_Context", "Disallow_Group")
+        self.same_context_check = get_vertex_set(context, vertex, "Check_Context", "Check_Group")
+
+    def transform(self, context, target_set: dict, allow: bool):
+        most_recent_context = get_current_context(context, self.ego, "Participant")
+        allow = len(self.allow_context) == 0 or check_member(self.allow_context, most_recent_context)
+        allow = allow and not check_member_is(self.allow_context, most_recent_context)
+        if allow == False:
+            return target_set, allow
+        allow_set = set([p for p in target_set["allow"] if get_current_context(context, p, "Participant") == most_recent_context])
+        target_set["disallow"].union(target_set["allow"].difference(allow_set))
+        target_set["allow"] = allow_set
+        return target_set, allow
+
+"""
+metagraph vertices contain a reference to a class.
+when they add an instance, they instantiate that instance 'on' the instance vertex
+
+if ego in disallow context, disallow
+if ego and other in same context, allow other, else disallow other
+
+NOTE: 'in context' check involves getting most recent edge
+"""
+
+class r_ResponseConversationAction(ActionRule):
+    # PASS RULE TO ROOT ON ADD
+    # for each action last timestep that is of a type that 'CanRespond'
+    #   if not responded to by self and within some time threshold, allow
+    #   else disallow
+    pass
+
+
+class r_ConversationAction(ActionRule):
+
+    # if self in combat, disallow
+    # for each allowed Person
+    #   get self Participation ConversationContext (if none, fine)
+    #   check last participation
+    #   if ConversationContext and not same as self participation
+    #       disallow for this person
+    #   else allow for this person
+    pass
+
 
 
 def generate_metagraph():
@@ -89,6 +141,9 @@ def generate_metagraph():
 generate_metagraph()
 #metagraph = Graph()
 #metagraph.load_json("./metagraph.json")
+
+"""
+"""
 
 """
 SUBJECTIVE BRAIN ACTION VIABILITY RULES
