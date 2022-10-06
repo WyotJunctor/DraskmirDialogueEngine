@@ -82,7 +82,7 @@ class r_AllowIndividual(ActionRule):
         self.allow_type = get_vertex_set(context, vertex, "Allow_Type", "Allow_Group")
 
     def transform(self, context, target_set: dict, allow: bool):
-        allow_set = get_member(allow_type, context.graph.vertices, fetch_op=lambda x,y : x[y].out_edges.edgetype_to_id["Is"].keys())
+        allow_set = get_member(self.allow_type, context.graph.vertices, fetch_op=lambda x,y : x[y].out_edges.edgetype_to_id["Is"].keys())
         target_set["allow"] = target_set["allow"].union(allow_set)
         target_set.remove(self.ego)
         return target_set, allow
@@ -94,7 +94,6 @@ class r_SameContext(ActionRule):
         super().__init__(context, vertex)
         self.allow_context = get_vertex_set(context, vertex, "Allow_Context", "Allow_Group")
         self.disallow_context = get_vertex_set(context, vertex, "Disallow_Context", "Disallow_Group")
-        self.same_context_check = get_vertex_set(context, vertex, "Check_Context", "Check_Group")
 
     def transform(self, context, target_set: dict, allow: bool):
         most_recent_context = get_current_context(context, self.ego, "Participant")
@@ -146,6 +145,16 @@ class r_UniqueRule(PassActionRule):
         # go to all actions of use_type where allowed person is target
         # subtract sets
         return target_set, allow
+
+
+
+
+class r_FriendlyConversationAction(ActionRule):
+    # for each allowed Person
+    # check last relationship between self and other
+    # if not HostileRelationship, allow
+    # else disallow
+    pass
 
 
 # TODO: metagraph vertices traverse to instances, which instantiate rule instances on the target vertices.
