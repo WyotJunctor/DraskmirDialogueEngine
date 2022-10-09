@@ -172,6 +172,8 @@ generate_metagraph()
 """
 SUBJECTIVE BRAIN ACTION VIABILITY RULES
 
+RULE -> RULE INSTANCE -> USE RULE [-> USE RULE...] -> VERTEX
+RULE INSTANCE [-> SUB INSTANCE -> USE RULE]
 
 what prevents one doing a unique conversation action again?
 while timer disallows or if target has gotten an opportunity to respond***, you can't target them again
@@ -197,6 +199,9 @@ class ActionRule(Rule):
     def __call__(self, target_set: dict, allow: bool):
         pass
 
+
+rule -> check pattern -> ego -> IS -> person
+
 done
 class r_Action(ActionRule):
     # if self is person, allow
@@ -205,11 +210,17 @@ class r_Action(ActionRule):
     # passing a set that diminishes each time
     pass
 
+rule -> allow instance pattern -> instance -> IS -> Person
+rule -> disallow instance pattern -> ego
+
 done
 class r_InteractionAction(ActionRule):
     # get instance from Person not self
     # allow interaction action
     pass
+
+rule -> check pattern -> ego !-> IN -> combat
+rule -> disallow allowed pattern -> allow instance -> IN -> (conversation context) <- IN <- ego
 
 done
 class r_ConversationAction(ActionRule):
@@ -222,13 +233,27 @@ class r_ConversationAction(ActionRule):
     #   else allow for this person
     pass
 
+(maybe reword this as allow vs disallow)
+rule -> check instance pattern -> instance -> IS -> Action -> CanRespond -> root
+rule -> get allowed pattern -> instance2 -> IS -> Person
+instance -> source -> instance2
+instance -> last timestep
+instance !<-> responded -> within X turns
+
 pseudo
 class r_ResponseConversationAction(ActionRule):
     # PASS RULE TO ROOT ON ADD
     # for each action last timestep that is of a type that 'CanRespond'
-    #   if not responded to by self and within some time threshold, allow
+    #   if not <responded> to by self and within some time threshold, allow
     #   else disallow
     pass
+
+rule -> disallow allowed pattern -> instance -> IS -> Person
+instance -> option -> instance2 -> option2
+option -> source
+option -> target
+option2 -> root
+option2 -> instance3 -> AsUnique -> root
 
 pseudo
 class r_UniqueConversationAction(ActionRule):
@@ -237,6 +262,9 @@ class r_UniqueConversationAction(ActionRule):
     # if root (or something AsUnique) not exist between self and other, allow
     # else disallow
     pass
+
+rule -> disallow allowed pattern -> instance -> IS -> Person
+instance -> HAS -> HostileRelationship -> HAS -> ego
 
 doin
 class r_FriendlyConversationAction(ActionRule):
@@ -247,6 +275,10 @@ class r_FriendlyConversationAction(ActionRule):
     pass
 
 # CombatAction doesn't have a rule
+
+rule -> disallow allowed pattern -> instance -> IS -> Person
+instance <-> acknowledged <-> ego
+(NOTE: NEED ACKNOWLEDGE RULE)
 
 class r_Greet(ActionRule):
     # for each allowed Person
@@ -260,10 +292,16 @@ class r_Greet(ActionRule):
 
 # OfferTags doesn't have a rule
 
+rule -> check pattern -> ego !-> IN -> conversation
+rule -> disallow allowed pattern -> instance -> IS -> Person -> IN -> combat <- IN <- ego
+
 class r_Engage(ActionRule):
     # for each allowed Person
     # if self in calm or if not (self and person participant in combat)
     pass
+
+rule -> check pattern -> ego -> IN -> combat
+rule -> disallow allowed pattern -> instance -> IS -> Person !-> IN -> combat
 
 class r_Attack(ActionRule):
     # if self not in combat, disallow
@@ -272,10 +310,19 @@ class r_Attack(ActionRule):
     # else disallow
     pass
 
+rule -> check pattern -> room !<- INSIDE <- instance -> IS -> Person
+instance !-> ego
+
 class r_Rest(ActionRule):
     # if room empty allow
     # else disallow
     pass
+
+rule -> DEFER -> check pattern -> instance -> IS -> root
+instance -> within X turns
+instance -> count -> within X amount
+check pattern -> HasPriority -> action -> IS -> ResponseAction
+(NOTE: this priority system might be built into something bigger)
 
 class r_Wait(ActionRule):
     # if number of waits too great, disallow
@@ -284,29 +331,49 @@ class r_Wait(ActionRule):
     # else allow
     pass
 
+rule -> check pattern -> ego -> IN -> calm
+rule -> allow instance pattern -> instance -> IS -> Dead
+
 class r_Loot(ActionRule):
     # if self in calm
     # for each instance of Dead
     pass
+
+rule -> check pattern -> ego -> IN -> combat
+rule -> allow instance pattern -> instance -> IS -> Door
 
 class r_Flee(ActionRule):
     # if self participant in combat
     # for each door, allow
     pass
 
+rule -> force pattern -> instance -> root
+instance -> source -> ego
+instance -> last timestep
+
 class r_Enter(ActionRule):
     # if traverse last turn, FORCE
     pass
+
+rule -> check pattern -> ego -> IN -> calm
+rule -> allow instance pattern -> instance -> IS -> Door
 
 class r_Traverse(ActionRule):
     # if self in calm
     # for each door, allow
     pass
 
+rule -> disallow allowed pattern -> instance -> IS -> Person
+instance !-> source -> root -> last timestep
+
 class r_SendOff(ActionRule):
     # for each allowed Person
     # if source or person traverse last turn, allow
-    # allow (but force traverse next turn)
     # NOTE: remember to remove from conversation context
     pass
+
+rule -> force pattern -> Traverse
+
+class r_AnnounceDeparture(ActionRule):
+    # allow (but force traverse next turn)
 """
