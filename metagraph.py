@@ -189,18 +189,25 @@ if you were interrupted, that's fine
 how should unique conversation actions work...
 AsUnique edge...
 
-CountsAs
-RespondTag and ShareTag block each other
-alternatively you just have a limit... greet limit = 1
-CanRespond
+TODO: CalmAction (if ego in calm context...)
 
 done
 class ActionRule(Rule):
     def __call__(self, target_set: dict, allow: bool):
         pass
 
+graph, vertex (Rule Instance)
+ego vertex
+action vertex
 
-rule -> check pattern -> ego -> IS -> person
+check(target_set: dict, allow: bool)
+allow = BFS(ego, Person, "is>")
+return target_set, allow
+
+[] ego -> IS` -> Person
+    IS` -> IS
+
+rule -> check pattern* -> ego* -> IS* -> Person
 
 done
 class r_Action(ActionRule):
@@ -219,7 +226,9 @@ class r_InteractionAction(ActionRule):
     # allow interaction action
     pass
 
-rule -> check pattern -> ego !-> IN -> combat
+ego -> Involved` -> Combat
+
+rule -> !check pattern -> ego -> IN -> combat
 rule -> disallow allowed pattern -> allow instance -> IN -> (conversation context) <- IN <- ego
 
 done
@@ -234,11 +243,19 @@ class r_ConversationAction(ActionRule):
     pass
 
 (maybe reword this as allow vs disallow)
-rule -> check instance pattern -> instance -> IS -> Action -> CanRespond -> root
+rule -> check instance pattern -> instance -> IS -> Action <-> CanRespond <-> root
 rule -> get allowed pattern -> instance2 -> IS -> Person
 instance -> source -> instance2
 instance -> last timestep
-instance !<-> responded -> within X turns
+instance !<-> responded* -> within X turns
+
+responded =
+    instance3 -> IS -> Action
+    instance3 -immediate_parent-> parent -> CanRespond -> instance
+
+immediate -> last timestep
+recent -> last 3 timesteps
+long -> duration of the room
 
 pseudo
 class r_ResponseConversationAction(ActionRule):
@@ -292,7 +309,7 @@ class r_Greet(ActionRule):
 
 # OfferTags doesn't have a rule
 
-rule -> check pattern -> ego !-> IN -> conversation
+rule -> !check pattern -> ego -> IN -> conversation
 rule -> disallow allowed pattern -> instance -> IS -> Person -> IN -> combat <- IN <- ego
 
 class r_Engage(ActionRule):
@@ -318,17 +335,11 @@ class r_Rest(ActionRule):
     # else disallow
     pass
 
-rule -> DEFER -> check pattern -> instance -> IS -> root
-instance -> within X turns
-instance -> count -> within X amount
-check pattern -> HasPriority -> action -> IS -> ResponseAction
-(NOTE: this priority system might be built into something bigger)
+// TODO: pattern
 
 class r_Wait(ActionRule):
-    # if number of waits too great, disallow
-    # defer until end,
-    # if there is action that can be taken as RESPONSE, disallow
-    # else allow
+    # if any action other than a InactiveAction has happened in the last timestep, allow
+    # otherwise disallow
     pass
 
 rule -> check pattern -> ego -> IN -> calm
