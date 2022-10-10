@@ -226,10 +226,10 @@ class r_InteractionAction(ActionRule):
     # allow interaction action
     pass
 
-ego -> Involved` -> Combat
-
 rule -> !check pattern -> ego -> IN -> combat
-rule -> disallow allowed pattern -> allow instance -> IN -> (conversation context) <- IN <- ego
+rule -> disallow allowed pattern -> allow instance -> IN -> instance1 -> IS -> Conversation_Context
+disallow allowed pattern -> ego -> IN -> instance2 -> IS -> Conversation_Context
+instance1 !-> instance2
 
 done
 class r_ConversationAction(ActionRule):
