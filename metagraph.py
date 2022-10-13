@@ -243,19 +243,25 @@ class r_ConversationAction(ActionRule):
     pass
 
 (maybe reword this as allow vs disallow)
-rule -> check instance pattern -> instance -> IS -> Action <-> CanRespond <-> root
-rule -> get allowed pattern -> instance2 -> IS -> Person
-instance -> source -> instance2
+rule -> local allow instance pattern -> instance -> IS -> instance2("Action") <-CanRespond- root
+rule -> get allowed pattern -> instance3 -> IS -> Person
+instance3 -> source -> instance
 instance -> last timestep
 instance !<-> responded* -> within X turns
 
 responded =
-    instance3 -> IS -> Action
-    instance3 -immediate_parent-> parent -> CanRespond -> instance
+    instance4 -> IS -> option
+    instance4 -> IS -> recent
+    option -> root
+    option -> instance5("Action")
+    instance5 -AsResponse-> root
+    option -> CanRespond -> instancex
+
+use AsResponse edge...
 
 immediate -> last timestep
 recent -> last 3 timesteps
-long -> duration of the room
+past -> duration of the room
 
 pseudo
 class r_ResponseConversationAction(ActionRule):
@@ -265,6 +271,7 @@ class r_ResponseConversationAction(ActionRule):
     #   else disallow
     pass
 
+# REWRITE THIS PATTERN
 rule -> disallow allowed pattern -> instance -> IS -> Person
 instance -> option -> instance2 -> option2
 option -> source
@@ -374,14 +381,7 @@ class r_Traverse(ActionRule):
     # for each door, allow
     pass
 
-rule -> disallow allowed pattern -> instance -> IS -> Person
-instance !-> source -> root -> last timestep
-
-class r_SendOff(ActionRule):
-    # for each allowed Person
-    # if source or person traverse last turn, allow
-    # NOTE: remember to remove from conversation context
-    pass
+# no rule for SendOff
 
 rule -> force pattern -> Traverse
 
