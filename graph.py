@@ -2,12 +2,8 @@ import json
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter
-
-
-class Rule:
-
-    def __init__(self, rule):
-      self.rule = rule
+from rules import ActionRule, InheritedActionRule
+from utils import merge_targets
 
 
 class EdgeMap:
@@ -16,12 +12,14 @@ class EdgeMap:
         self.id_to_edgetype = defaultdict(Counter)
         self.id_to_edge = defaultdict(set)
         self.edgetype_to_id = defaultdict(Counter)
+        self.edgetype_to_edge = defaultdict(set)
 
     def add(self, edge, endpoint):
         self.edge_set.add(edge)
         self.id_to_edgetype[endpoint.id].update({edge.edge_type:1})
         self.id_to_edge[endpoint.id].add(edge)
         self.edgetype_to_id[edge.edge_type].update({endpoint.id:1})
+        self.edgetype_to_edge[edge.edge_type].add(edge)
 
 class GraphObject:
 
@@ -34,21 +32,30 @@ class GraphObject:
 
 class Vertex(GraphObject):
 
-    def __init__(self, id, created_timestep, updated_timestep, rules=None, attr_map=None):
+    def __init__(self, id, created_timestep, updated_timestep, rules=None, action_rules=None, attr_map=None):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
+        self.action_rules = list() if action_rules is None else action_rules
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
 
 
     def add_edge(self, edge, endpoint, target=False, twoway=False):
-        if twoway:
-            self.in_edges.add(edge, endpoint)
+        if twoway or target:
             self.out_edges.add(edge, endpoint)
-        elif not target:
-            self.out_edges.add(edge, endpoint)
-        else:
+        if twoway or not target:
             self.in_edges.add(edge, endpoint)
+
+    def get_targets(self, graph, target_set):
+        local_target_set = {"allow":set(), "disallow":set()}
+        for rule in self.action_rules:
+            r_target_set, r_local_target_set, allow = rule.get_targets(graph, target_set, local_target_set)
+            if allow is False:
+                return {}, {}, False
+            target_set = merge_targets(target_set, r_target_set)
+            r_local_target_set["disallow"] = r_local_target_set["disallow"].union(target_set["disallow"])
+            local_target_set = merge_targets(local_target_set, r_local_target_set)
+        return target_set, local_target_set, True
 
 class Edge(GraphObject):
 
