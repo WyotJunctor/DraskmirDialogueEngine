@@ -130,7 +130,7 @@ class r_Action(ActionRule):
     patterns = (
         (PatternType.check, {"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
         (PatternType.check, {"ref":"v_0"}, {"type":"Is", "dir":">"}, {"tag":"v_1", "attr":"Instance"}),
-        (PatternType.check, {"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Type"}),
+        (PatternType.check, {"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Is"}),
         (PatternType.check, {"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Person"}),
     )
 
