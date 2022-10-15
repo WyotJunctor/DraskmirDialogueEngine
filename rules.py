@@ -1,3 +1,5 @@
+import copy
+from utils import merge_targets
 
 class ActionRule:
 
@@ -13,6 +15,25 @@ class ActionRule:
         # return target_set, local_target_set, allow
         return target_set, local_target_set, True
 
+    def check(self, graph, pattern, context):
+        # deepcopy context
+        context = copy.deepcopy(context)
+        for traversal in pattern:
+            src, edge, tgt = traversal
+            # if src is ref, check/set ref
+            # if tgt is ref, check/set ref
+            # get src vert, if no existy, return false
+            # if target has id, check id to edgetype
+            # if target is tag, get edgetype to id
+            # if target has attr, filter by attr
+            # add target to context
+        return context, True
+
+    def allow_instance(self, graph, context):
+        return set()
+
+    def disallow_instance(self, graph, context):
+        return set()
 
 class InheritedActionRule:
 
@@ -34,6 +55,47 @@ class InheritedActionRule:
                 visited.add(child)
                 queue.append(child)
 
+class r_Action(ActionRule):
+
+    def get_targets(self, graph, target_set, local_target_set):
+        check_pattern = [
+            ({"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
+            ({"ref":"v_0"}, {"type":"Is", "dir":">"}, {"tag":"v_1", "attr":"Instance"}),
+            ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Type"}),
+            ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Person"}),
+        ]
+        return {"allow":set(), "disallow":set()}, {"allow":set(), "disallow":set()}, True
+
+class r_Interaction_Action(ActionRule):
+
+    def get_targets(self, graph, target_set, local_target_set):
+        allow_instance = [
+            ({"id":"Person"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
+            ({"ref":"v_0"}, {"type":"Is", "dir":"<"}, {"id":"Is"}),
+            ({"ref":"v_0"}, {"type":"Is", "dir":"<"}, {"tag":"instance", "attr":"Instance"}),
+        ]
+
+        disallow_instance = [
+            ({"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"instance", "attr":"Instance"}),
+        ]
+        return {"allow":set(), "disallow":set()}, {"allow":set(), "disallow":set()}, True
+
+rules_map = {
+    "Action": r_Action,
+    "Interaction_Action": r_Interaction_Action,
+}
+
+"""
+class r_Conversation_Action(ActionRule):
+
+    def get_targets(self, graph, target_set, local_target_set):
+        disallow = [
+            (),
+            (),
+            (),
+        ]
+"""
+
 """
 'Check' = If pattern fails, set allow to false. If pattern succeeds, set allow to true.
 'Disallow' = If pattern matches, set allow to false.
@@ -41,6 +103,10 @@ class InheritedActionRule:
 'Disallow Instance' = Disallow every vertex 'instance' which matches the pattern.
 'Get' = Simply exists to populate temporary variables. Note that all temporary vertex sets referenced in a 'Get' block should be initialized, even if not met.
 'Disallow Allowed' = Disallow every vertex in target_set["allow"] which matches the pattern.
+'Allow Local Instance'
+'Disallow Local Instance'
+'Disallow Local Allowed'
+'Allow Local Allowed'
 
 '(BFS)edge_type' = Iteratively traverse over this edge type until target ID is met.
 v_0, v_1, v_2 = 'Variable' vertex. Anything that matches the pattern, regardless of id.
@@ -61,7 +127,7 @@ Interaction_Action Rule
 --Allow instance--
 Person <-Is- v_0("Instance")
 v_0 <-Is- Is
-v_0 <-Is- instance
+v_0 <-Is- instance("Instance")
 
 --Disallow instance--
 Ego <-Is- instance("Instance")

@@ -39,11 +39,14 @@ class Vertex(GraphObject):
         self.action_rules = list() if action_rules is None else action_rules
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
 
+    def __repr__(self):
+        return self.id
+
 
     def add_edge(self, edge, endpoint, target=False, twoway=False):
-        if twoway or target:
-            self.out_edges.add(edge, endpoint)
         if twoway or not target:
+            self.out_edges.add(edge, endpoint)
+        if twoway or target:
             self.in_edges.add(edge, endpoint)
 
     def get_targets(self, graph, target_set):
@@ -68,6 +71,9 @@ class Edge(GraphObject):
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
         # TODO: add logic for twoway
 
+    def __repr__(self):
+        return f"({self.src})-({self.tgt})"
+
 class Graph:
 
     def __init__(self, timestep=0):
@@ -80,9 +86,8 @@ class Graph:
         nx.draw(self.visgraph, with_labels=True)
         plt.savefig("reality.png")
 
-    def load_vert(self, vert_glob):
-        id = vert_glob["vertex_id"]
-        self.vertices[id] = Vertex(id, self.timestep, self.timestep)
+    def load_vert(self, id, attr_map):
+        self.vertices[id] = Vertex(id, self.timestep, self.timestep, attr_map)
         self.visgraph.add_node(id)
 
     def load_edge(self, edge_glob):
@@ -109,8 +114,14 @@ class Graph:
         with open(json_path) as f:
             glob = json.load(f)
 
-        for vert in glob["all_verts"]:
-            self.load_vert(vert)
+        for vert, attr_map in glob["all_verts"].items():
+            self.load_vert(vert, attr_map)
 
         for edge in glob["all_edges"]:
             self.load_edge(edge)
+
+        print(self.edges)
+
+    def load_rules(self, rule_map):
+        for v_id, rule_class in rule_map.items():
+            rule_class(self.vertices[v_id])
