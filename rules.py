@@ -68,7 +68,36 @@ class ActionRule:
         # deepcopy context
         context = copy.deepcopy(context)
         for traversal in pattern:
-            _, src, edge, tgt = traversal
+            _, src_rule, edge_rule, tgt_rule = traversal
+            src_vert = None
+            if "id" in src_rule:
+                src_vert = graph.vertices.get(src_rule["id"])
+            elif "ref" in src_rule:
+                src_vert = context.get(src_rule["ref"])
+            
+            if src_vert is None:
+                return context, False
+
+            if edge_rule["dir"] == "<":
+                edgeset = { e for e in src_vert.in_edges.edge_set if e.edge_type == edge_rule["type"] }
+            elif edge_rule["dir"] == ">":
+                edgeset = { e for e in src_vert.out_edges.edge_set if e.edge_type == edge_rule["type"] }
+            else:
+                return context, False
+
+            seeking_id = "id" in tgt_rule
+            found_id = False
+            for edge in edgeset:
+
+                if seeking_id and edge.tgt.id == tgt_rule["id"]:
+                    found_id = True
+                    break
+                elif "tag" in tgt_rule and edge.tgt.id == tgt_rule["tag"] and tgt_rule["attr"] in edge.tgt.attr_map:
+                    context[tgt_rule["tag"]] = edge.tgt
+
+            if seeking_id and not found_id:
+                return context, False
+
             # if src is ref, check/set ref
             # if tgt is ref, check/set ref
             # get src vert, if no existy, return false
@@ -76,6 +105,7 @@ class ActionRule:
             # if target is tag, get edgetype to id
             # if target has attr, filter by attr
             # add target to context
+
         return context, True
 
     def disallow(self, graph, pattern, context):
