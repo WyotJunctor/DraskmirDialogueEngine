@@ -1,5 +1,18 @@
 import copy
+from enum import Enum
 from utils import merge_targets
+
+class PatternType(Enum):
+    check = 0
+    disallow = 1
+    allow_instance = 2
+    disallow_instance = 3
+    get = 4
+    disallow_allowed = 5
+    allow_local_instance = 6
+    disallow_local_instance = 7
+    disallow_local_allowed = 8
+    allow_local_allowed = 9
 
 class ActionRule:
 
@@ -15,11 +28,47 @@ class ActionRule:
         # return target_set, local_target_set, allow
         return target_set, local_target_set, True
 
+    def process_patterns(self, patterns, graph, target_set, local_target_set):
+
+        allow = True
+        context = dict()
+        for pattern in patterns:
+
+            type = pattern[0]
+
+            if type == PatternType.check:
+                allow = self.check(graph, pattern, context)
+            elif type == PatternType.disallow:
+                allow = self.disallow(graph, pattern, context)
+            elif type == PatternType.allow_instance:
+                target_set["allow"] |= self.allow_instance(graph, pattern, context)
+            elif type == PatternType.disallow_instance:
+                target_set["disallow"] |= self.disallow_instance(graph, pattern, context)
+            elif type == PatternType.get:
+                self.get(graph, pattern, context)
+            elif type == PatternType.disallow_allowed:
+                target_set["allow"] -= self.disallow_allowed(graph, pattern, context, target_set)
+            elif type == PatternType.allow_local_instance:
+                local_target_set["allow"] |= self.allow_local_instance(graph, pattern, context)
+            elif type == PatternType.disallow_local_instance:
+                local_target_set["disallow"] |= self.disallow_local_instance(graph, pattern, context)
+            elif type == PatternType.disallow_local_allowed:
+                local_target_set["allow"] -= self.disallow_local_allowed(graph, pattern, context, local_target_set)
+            elif type == PatternType.allow_local_allowed:
+                self.allow_local_allowed(graph, pattern, context, target_set, local_target_set)
+            else:
+                raise Exception("Bad PatternType!")
+
+            if not allow:
+                return target_set, local_target_set, allow
+
+        return target_set, local_target_set, allow
+
     def check(self, graph, pattern, context):
         # deepcopy context
         context = copy.deepcopy(context)
         for traversal in pattern:
-            src, edge, tgt = traversal
+            _, src, edge, tgt = traversal
             # if src is ref, check/set ref
             # if tgt is ref, check/set ref
             # get src vert, if no existy, return false
@@ -29,10 +78,31 @@ class ActionRule:
             # add target to context
         return context, True
 
-    def allow_instance(self, graph, context):
+    def disallow(self, graph, pattern, context):
         return set()
 
-    def disallow_instance(self, graph, context):
+    def allow_instance(self, graph, pattern, context):
+        return set()
+
+    def disallow_instance(self, graph, pattern, context):
+        return set()
+
+    def get(self, graph, pattern, context):
+        return set()
+
+    def disallow_allowed(self, graph, pattern, context):
+        return set()
+
+    def allow_local_instance(self, graph, pattern, context):
+        return set()
+
+    def disallow_local_instance(self, graph, pattern, context):
+        return set()
+
+    def disallow_local_allowed(self, graph, pattern, context):
+        return set()
+
+    def allow_local_allowed(self, graph, pattern, context):
         return set()
 
 class InheritedActionRule:
@@ -57,27 +127,26 @@ class InheritedActionRule:
 
 class r_Action(ActionRule):
 
+    patterns = (
+        (PatternType.check, {"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
+        (PatternType.check, {"ref":"v_0"}, {"type":"Is", "dir":">"}, {"tag":"v_1", "attr":"Instance"}),
+        (PatternType.check, {"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Type"}),
+        (PatternType.check, {"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Person"}),
+    )
+
     def get_targets(self, graph, target_set, local_target_set):
-        check_pattern = [
-            ({"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
-            ({"ref":"v_0"}, {"type":"Is", "dir":">"}, {"tag":"v_1", "attr":"Instance"}),
-            ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Type"}),
-            ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Person"}),
-        ]
         return {"allow":set(), "disallow":set()}, {"allow":set(), "disallow":set()}, True
 
 class r_Interaction_Action(ActionRule):
 
-    def get_targets(self, graph, target_set, local_target_set):
-        allow_instance = [
-            ({"id":"Person"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
-            ({"ref":"v_0"}, {"type":"Is", "dir":"<"}, {"id":"Is"}),
-            ({"ref":"v_0"}, {"type":"Is", "dir":"<"}, {"tag":"instance", "attr":"Instance"}),
-        ]
+    patterns = (
+        (PatternType.allow_instance, {"id":"Person"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
+        (PatternType.allow_instance, {"ref":"v_0"}, {"type":"Is", "dir":"<"}, {"id":"Is"}),
+        (PatternType.allow_instance, {"ref":"v_0"}, {"type":"Is", "dir":"<"}, {"tag":"instance", "attr":"Instance"}),
+        (PatternType.disallow_instance, {"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"instance", "attr":"Instance"}),
+    )
 
-        disallow_instance = [
-            ({"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"instance", "attr":"Instance"}),
-        ]
+    def get_targets(self, graph, target_set, local_target_set):
         return {"allow":set(), "disallow":set()}, {"allow":set(), "disallow":set()}, True
 
 rules_map = {
