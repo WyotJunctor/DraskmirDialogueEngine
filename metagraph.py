@@ -209,6 +209,13 @@ return target_set, allow
 
 rule -> check pattern* -> ego* -> IS* -> Person
 
+Action Rule
+
+instance -Is-> Ego
+instance -Is-> instance_1
+instance_1 -Is-> Is
+instance_1 -Is-> Person
+
 done
 class r_Action(ActionRule):
     # if self is person, allow
@@ -220,6 +227,16 @@ class r_Action(ActionRule):
 rule -> allow instance pattern -> instance -> IS -> Person
 rule -> disallow instance pattern -> ego
 
+--Allow each one that succeeds--
+foreach instance in target_set["allow"]
+instance -Is-> instance_1
+instance_1 -Is-> Is
+instance_1 -Is-> Person
+if:
+    --Disallow instance--
+    instance -Is-> Ego
+
+
 done
 class r_InteractionAction(ActionRule):
     # get instance from Person not self
@@ -230,6 +247,23 @@ rule -> !check pattern -> ego -> IN -> combat
 rule -> disallow allowed pattern -> allow instance -> IN -> instance1 -> IS -> Conversation_Context
 disallow allowed pattern -> ego -> IN -> instance2 -> IS -> Conversation_Context
 instance1 !-> instance2
+
+--Disallow--
+Ego <-Is- v_0("instance")
+v_0 (BFS)-Is-> Involved
+v_0 -Is-> Combat_Context
+--Get--
+Ego <-Is- v_1("instance")
+v_1 -Is-> Participant
+v_1 -Is-> v_2("Instance")
+v_2 -Is-> Conversation_Context
+--Disallow Allowed--
+instance <-Is- v_3("instance")
+v_3 -Is-> Participant
+v_3 -Is-> v_4("Instance")
+v_4 -Is-> Conversation_Context
+v_4 != v_2
+
 
 done
 class r_ConversationAction(ActionRule):
