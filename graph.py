@@ -40,7 +40,7 @@ class Vertex(GraphObject):
         super().__init__(rules, created_timestep, updated_timestep, attr_map)
 
     def __repr__(self):
-        return self.id
+        return f"{self.id}, {self.attr_map}"
 
 
     def add_edge(self, edge, endpoint, target=False, twoway=False):
@@ -87,7 +87,7 @@ class Graph:
         plt.savefig("reality.png")
 
     def load_vert(self, id, attr_map):
-        self.vertices[id] = Vertex(id, self.timestep, self.timestep, attr_map)
+        self.vertices[id] = Vertex(id, self.timestep, self.timestep, attr_map=attr_map)
         self.visgraph.add_node(id)
 
     def load_edge(self, edge_glob):

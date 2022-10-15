@@ -61,7 +61,7 @@ class r_Action(ActionRule):
         check_pattern = [
             ({"id":"Ego"}, {"type":"Is", "dir":"<"}, {"tag":"v_0", "attr":"Instance"}),
             ({"ref":"v_0"}, {"type":"Is", "dir":">"}, {"tag":"v_1", "attr":"Instance"}),
-            ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Type"}),
+            ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Is"}),
             ({"ref":"v_1"}, {"type":"Is", "dir":">"}, {"id":"Person"}),
         ]
         return {"allow":set(), "disallow":set()}, {"allow":set(), "disallow":set()}, True
