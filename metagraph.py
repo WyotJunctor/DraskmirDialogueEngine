@@ -276,6 +276,7 @@ class r_ConversationAction(ActionRule):
     #   else allow for this person
     pass
 
+
 (maybe reword this as allow vs disallow)
 rule -> local allow instance pattern -> instance -> IS -> instance2("Action") <-CanRespond- root
 rule -> get allowed pattern -> instance3 -> IS -> Person
@@ -289,13 +290,27 @@ responded =
     option -> root
     option -> instance5("Action")
     instance5 -AsResponse-> root
-    option -> CanRespond -> instancex
+    option -> CanRespond -> instance
 
-use AsResponse edge...
+--Get Allowed--
+Person <-Is- v_0("Instance", target)
+--Allow Local--
+root -Can_Respond-> v_1("Action")
+v_1 <-Is- v_2("Instance", target)
+v_2 -Is-> Recent
+v_0 -Is-> v_3("Instance")
+v_3 -Is-> Source
+v_3 -Is-> v_2
+Ego <-Is- v_4("Instance")
+v_4 -Is-> v_5("Instance")
+v_5 -Is-> Target
+v_5 -Is-> v_1
+--Disallow Local--
+v_2 <-Response- v_6("Instance")
+v_6 <-Is- v_7("Instance")
+v_7 -Is-> Source
+v_7 -Is-> v_4
 
-immediate -> last timestep
-recent -> last 3 timesteps
-past -> duration of the room
 
 pseudo
 class r_ResponseConversationAction(ActionRule):
@@ -313,6 +328,14 @@ option -> target
 option2 -> root
 option2 -> instance3 -> AsUnique -> root
 
+--Disallow Local--
+Person <-Is- v_0("Instance") # get all people
+root -As_Unique-> v_1("Action") # get set of actions which count as unique for the root
+v_1 <-Is- v_2("Instance", "Source") # get instances of source of action
+v_2 <-Is- v_3("Instance", "Ego")
+v_1 <-Is- v_4("Instance", "Target")
+v_0 -Is-> v_4
+
 pseudo
 class r_UniqueConversationAction(ActionRule):
     # PASS RULE TO ROOT ON ADD
@@ -323,6 +346,12 @@ class r_UniqueConversationAction(ActionRule):
 
 rule -> disallow allowed pattern -> instance -> IS -> Person
 instance -> HAS -> HostileRelationship -> HAS -> ego
+
+<get allowed local person, v_0>
+Ego -Has-> v_1("Instance", "Hostile_Relationship")
+v_1 <-Has- v_0
+
+
 
 doin
 class r_FriendlyConversationAction(ActionRule):
@@ -336,7 +365,10 @@ class r_FriendlyConversationAction(ActionRule):
 
 rule -> disallow allowed pattern -> instance -> IS -> Person
 instance <-> acknowledged <-> ego
-(NOTE: NEED ACKNOWLEDGE RULE)
+(NOTE: NEED ACKNOWLEDGE RULE) # TODO: add bidirectional edge check, eh?
+
+<get allowed people>
+
 
 class r_Greet(ActionRule):
     # for each allowed Person

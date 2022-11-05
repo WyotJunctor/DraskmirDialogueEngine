@@ -13,6 +13,7 @@ class EdgeMap:
         self.id_to_edge = defaultdict(set)
         self.edgetype_to_id = defaultdict(Counter)
         self.edgetype_to_edge = defaultdict(set)
+        self.edgetype_to_vertex = defaultdict(set)
 
     def add(self, edge, endpoint):
         self.edge_set.add(edge)
@@ -20,6 +21,7 @@ class EdgeMap:
         self.id_to_edge[endpoint.id].add(edge)
         self.edgetype_to_id[edge.edge_type].update({endpoint.id:1})
         self.edgetype_to_edge[edge.edge_type].add(edge)
+        self.edgetype_to_vertex[edge.edge_type].add(endpoint)
 
 class GraphObject:
 
@@ -72,7 +74,7 @@ class Edge(GraphObject):
         # TODO: add logic for twoway
 
     def __repr__(self):
-        return f"({self.src})-({self.tgt})"
+        return f"({self.src.id})-({self.tgt.id})"
 
 class Graph:
 
@@ -119,8 +121,6 @@ class Graph:
 
         for edge in glob["all_edges"]:
             self.load_edge(edge)
-
-        print(self.edges)
 
     def load_rules(self, rule_map):
         for v_id, rule_class in rule_map.items():
