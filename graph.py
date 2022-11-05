@@ -2,8 +2,8 @@ import json
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter
-from rules import ActionRule, InheritedActionRule
-from utils import merge_targets
+
+from graph_event import GraphEvent
 
 
 class EdgeMap:
@@ -25,8 +25,7 @@ class EdgeMap:
 
 class GraphObject:
 
-    def __init__(self, created_timestep=None, updated_timestep=None, rules=None, attr_map=None):
-        self.rules = dict() if rules is None else rules
+    def __init__(self, created_timestep=None, updated_timestep=None, attr_map=None):
         self.created_timestep = created_timestep
         self.updated_timestep = updated_timestep
         self.attr_map = dict() if attr_map is None else attr_map
@@ -34,12 +33,11 @@ class GraphObject:
 
 class Vertex(GraphObject):
 
-    def __init__(self, id, created_timestep, updated_timestep, rules=None, action_rules=None, attr_map=None):
+    def __init__(self, id, created_timestep, updated_timestep, attr_map=None):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
-        self.action_rules = list() if action_rules is None else action_rules
-        super().__init__(rules, created_timestep, updated_timestep, attr_map)
+        super().__init__(created_timestep, updated_timestep, attr_map)
 
     def __repr__(self):
         return f"{self.id}, {self.attr_map}"
@@ -51,26 +49,15 @@ class Vertex(GraphObject):
         if twoway or target:
             self.in_edges.add(edge, endpoint)
 
-    def get_targets(self, graph, target_set):
-        local_target_set = {"allow":set(), "disallow":set()}
-        for rule in self.action_rules:
-            r_target_set, r_local_target_set, allow = rule.get_targets(graph, target_set, local_target_set)
-            if allow is False:
-                return {}, {}, False
-            target_set = merge_targets(target_set, r_target_set)
-            r_local_target_set["disallow"] = r_local_target_set["disallow"].union(target_set["disallow"])
-            local_target_set = merge_targets(local_target_set, r_local_target_set)
-        return target_set, local_target_set, True
-
 class Edge(GraphObject):
 
-    def __init__(self, edge_type:str, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, rules=None, attr_map=None, twoway=False):
+    def __init__(self, edge_type:str, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None, twoway=False):
         self.edge_type = edge_type
         self.src = src
         self.tgt = tgt
         src.add_edge(self, tgt, twoway=twoway)
         tgt.add_edge(self, src, target=True, twoway=twoway)
-        super().__init__(rules, created_timestep, updated_timestep, attr_map)
+        super().__init__(created_timestep, updated_timestep, attr_map)
         # TODO: add logic for twoway
 
     def __repr__(self):
@@ -87,6 +74,9 @@ class Graph:
     def draw_graph(self):
         nx.draw(self.visgraph, with_labels=True)
         plt.savefig("reality.png")
+
+    def calculate_parents(self): # TODO: finish this 
+        pass
 
     def load_vert(self, id, attr_map):
         self.vertices[id] = Vertex(id, self.timestep, self.timestep, attr_map=attr_map)
@@ -121,6 +111,15 @@ class Graph:
 
         for edge in glob["all_edges"]:
             self.load_edge(edge)
+
+    # TODO: do this
+    # def delete edge/vertex
+
+    def update_json(self, event: GraphEvent): # TODO: actually code this
+
+        # if event actually updates the graph...
+        # recalculate parents?
+        pass
 
     def load_rules(self, rule_map):
         for v_id, rule_class in rule_map.items():

@@ -1,7 +1,7 @@
 import copy
 from enum import Enum
 from utils import merge_targets, get_set, get_key_set
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 class PatternScope(Enum):
     graph = 0 # target_set
@@ -59,7 +59,7 @@ class ActionRule:
 
     # paths is a map of id: list<paths>, each path is a list of fellas?... possibly just refs.
 
-    def execute_traversal(graph, traversal, dependencies, context, hop_count, src_hop):
+    def execute_traversal(self, graph, traversal, dependencies, context, hop_count, src_hop):
 
         src_ref, edge, tgt_ref = traversal
 
@@ -162,16 +162,18 @@ class ActionRule:
         for pattern in self.__class__.patterns:
             dependencies = {}
             context["target"] = set()
-            hop_count = Counter()
+            hop_count = Counter() # TODO: change to set?
             check_type = pattern[0]
             scope = pattern[1]
             success = True
+            hop = 0
             for traversal in pattern[2]:
                 # if traversal succeeds, proceed
                 # if traversal fails, stop
-                success = execute_traversal(traversal, dependencies, context, hop_count, hop)
-                if success == False:
+                success = self.execute_traversal(traversal, dependencies, context, hop_count, hop)
+                if success is False:
                     break
+                hop += 1
             # TODO: rewrite how success is handled
             if success == True:
                 # TODO: only get target where they exist in the dependencies map
@@ -209,6 +211,8 @@ class InheritedActionRule:
                 queue.append(child)
 
 
+# TODO: allow indication of no backtracking
+# TODO: allow negative attr checking
 class r_Action(ActionRule):
 
     patterns = (
