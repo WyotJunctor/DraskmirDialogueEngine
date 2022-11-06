@@ -13,6 +13,15 @@ class Brain:
         self.effect_rules = effect_rules
         self.action_rules = action_rules
 
+    def choose_action(self):
+        #TODO(Simon): implement
+        return (self, None, None) # (entity, vert, tgt)
+
+    def check_action_validity(self, action_vertex, action_target):
+        #TODO(Simon): implement in a not dumb way
+        target_map = self.get_targets()
+        return action_target in target_map.get(action_vertex, set())
+
     def get_action_targets(self, action_rules, target_set):
         local_target_set = {"allow":set(), "disallow":set()}
         for rule in action_rules:
@@ -49,6 +58,8 @@ class Brain:
                 if target_map[child][1] == target_map[child][2]:
                     queue.append(child)
         print(target_map)
+
+        return target_map
 
     def receive_event(self, event: GraphEvent):
         status = True
