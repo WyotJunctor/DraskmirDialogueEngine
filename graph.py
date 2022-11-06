@@ -37,11 +37,20 @@ class Vertex(GraphObject):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
+        self.relationship_map = defaultdict(set)
         super().__init__(created_timestep, updated_timestep, attr_map)
 
     def __repr__(self):
         return f"{self.id}, {self.attr_map}"
 
+    def consolidate_relationships(self):
+
+        for out_edge in self.out_edges.edge_set:
+            tgt = out_edge.tgt if out_edge.tgt is not self else out_edge.src
+
+            tgt.consolidate_relationships()
+
+            self.relationship_map[out_edge.edge_type] |= tgt.relationship_map["is"]
 
     def add_edge(self, edge, endpoint, target=False, twoway=False):
         if twoway or not target:
