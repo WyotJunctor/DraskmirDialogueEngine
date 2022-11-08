@@ -1,20 +1,51 @@
+import json
 from random import shuffle
 
+from clock import Clock
 from brain import Brain
-from graph import Graph
+from graph import Graph, Vertex
+from graph_event import GraphEvent, EventType
 from reality import Reality
 
 class Game:
 
-    def __init__(self, json_path="drask_graph.json"):
-        self.timestep = 0
+    def __init__(self, objective_json="objective_graph.json", subjective_json="drask_graph.json", player_json="player.json"):
+        self.clock = Clock()
 
         reality_graph = Graph(self)
-        reality_graph.load_json(json_path)
+        reality_graph.load_json(objective_json)
         self.reality = Reality(reality_graph, dict())
 
-        self.entities = set()
+        self.player_json_path = player_json
+        self.subjective_json_path = subjective_json
+
         self.player_entity = None
+        self.entities = set()
+
+        self.create_player()
+
+    def create_player(self):
+
+        subjective_graph = Graph(self)
+        subjective_graph.load_json(self.subjective_json_path)
+
+        player_add_event = GraphEvent(
+            EventType.Add,
+            json.load(self.player_json_path)
+        )
+
+        self.reality.graph.handle_graph_event(player_add_event)
+        subjective_graph.handle_graph_event(player_add_event)
+
+        self.player_entity =  Brain(
+            self.clock,
+            subjective_graph.vertices["Player"],
+            subjective_graph,
+            dict(),
+            dict()
+        )
+        self.entities.add(self.player_entity)
+
 
     def step(self):
 

@@ -9,3 +9,8 @@ class GraphEvent:
     def __init__(self, key, subgraph):
         self.key = key
         self.subgraph = subgraph
+
+class GraphDelta:
+    def __init__(self, key, subgraph):
+        self.key = key
+        self.subgraph = subgraph

@@ -1,21 +1,37 @@
 from utils import merge_targets
 import copy
-from graph import Graph
-from graph_event import GraphEvent
+from clock import Clock
+from graph import Graph, Vertex
+from graph_event import GraphEvent, EventType
 from rules import ActionRule, InheritedActionRule
 from utils import merge_targets
 
 
 class Brain:
 
-    def __init__(self, graph: Graph, effect_rules: dict, action_rules: dict):
+    def __init__(self, clock: Clock, ego: Vertex, graph: Graph, effect_rules: dict, action_rules: dict):
+        self.clock = clock
+        self.ego = ego
         self.graph = graph
         self.effect_rules = effect_rules
         self.action_rules = action_rules
 
     def choose_action(self):
         #TODO(Simon): implement
-        return (self, None, None) # (entity, vert, tgt)
+
+        act_id = self.ego.id + "_act_" + self.game.timestep
+        act_type = "Wait"
+
+        return GraphEvent(
+            EventType.Add,
+            {
+                "all_verts": [ act_id ],
+                "all_edges": [ 
+                    { "directed": True, "edge_tpye": "inst", "src": act_id, "tgt": act_type },
+                    { "directed": True, "edge_tpye": "src", "src": self.ego.id, "tgt": act_id },
+                 ]
+            }
+        )
 
     def check_action_validity(self, action_vertex, action_target):
         #TODO(Simon): implement in a not dumb way

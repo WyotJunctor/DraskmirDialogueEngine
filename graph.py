@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter
 
-from graph_event import GraphEvent
+from graph_event import GraphDelta, GraphEvent
 
 
 class EdgeMap:
@@ -61,9 +61,11 @@ class Vertex(GraphObject):
 class Edge(GraphObject):
 
     def __init__(self, edge_type:str, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None, twoway=False):
+        self.id = f"{src.id}~{edge_type}~{tgt.id}"
         self.edge_type = edge_type
         self.src = src
         self.tgt = tgt
+        self.twoway = twoway
         src.add_edge(self, tgt, twoway=twoway)
         tgt.add_edge(self, src, target=True, twoway=twoway)
         super().__init__(created_timestep, updated_timestep, attr_map)
@@ -77,7 +79,7 @@ class Graph:
     def __init__(self, timestep=0):
         self.timestep = timestep
         self.vertices = dict()
-        self.edges = set()
+        self.edges = dict()
         self.visgraph = nx.Graph()
 
     def draw_graph(self):
@@ -99,16 +101,16 @@ class Graph:
 
         tup = (self.vertices[idtup[0]], self.vertices[idtup[1]])
 
-        self.edges.add(
-            Edge(
-                edge_glob["edge_type"],
-                tup[0],
-                tup[1],
-                self.timestep,
-                self.timestep,
-                twoway=not edge_glob["directed"]
-            )
+        edge = Edge(
+            edge_glob["edge_type"],
+            tup[0],
+            tup[1],
+            self.timestep,
+            self.timestep,
+            twoway=not edge_glob["directed"]
         )
+
+        self.edges[edge.id] = edge
         self.visgraph.add_edge(*idtup)
 
     def load_json(self, json_path):
@@ -124,11 +126,88 @@ class Graph:
     # TODO: do this
     # def delete edge/vertex
 
-    def update_json(self, event: GraphEvent): # TODO: actually code this
+    def convert_graph_event_to_delta(self, event: GraphEvent):
+
+        delta_subgraph = dict(all_verts=dict(), all_edges=[])
+
+        for vert_id, attr_map in event.subgraph["all_verts"]:
+
+            if self.vertices.get(vert_id) is None:
+                delta_subgraph["all_verts"][vert_id] = Vertex(
+                    vert_id, self.timestep, self.timestep, attr_map=attr_map
+                )
+            else:
+                delta_subgraph["all_verts"][vert_id] = self.vertices.get(vert_id)
+
+        for edge in event.subgraph["all_edges"]:
+
+            edge_id = edge["src"] + "~" + edge["edge_type"] + "~" + edge["tgt"]
+
+            if self.edges.get(edge_id) is None:
+                idtup = (edge["src"], edge["tgt"])
+
+                if not edge["directed"]:
+                    sorted(idtup)
+
+                tup = (self.vertices[idtup[0]], self.vertices[idtup[1]])
+
+                delta_subgraph["all_edges"].append(
+                    Edge(
+                        edge["edge_type"],
+                        tup[0],
+                        tup[1],
+                        self.timestep,
+                        self.timestep,
+                        twoway=not edge["directed"]
+                    )
+                )
+            else:
+                delta_subgraph["all_edges"].append(
+                    self.edges[edge_id]
+                )
+        
+        return GraphDelta(
+            event.key,
+            delta_subgraph
+        )
+
+
+    def convert_graph_delta_to_event(self, delta: GraphDelta):
+
+        event_subgraph = dict(all_verts=dict(), all_edges=[])
+
+        for vertex in delta.subgraph["all_verts"]:
+            event_subgraph["all_verts"][vertex.id] = { }
+        
+        for edge in delta.subgraph["all_edges"]:
+            event_subgraph["all_edges"].append(
+                {
+                    "directed": edge.twoway is False,
+                    "edge_type": edge.edge_type,
+                    "src": edge.src.id,
+                    "tgt": edge.tgt.id
+                }
+            )
+
+        return GraphEvent(
+            delta.key,
+            event_subgraph
+        )
+
+    def handle_graph_delta(self, delta: GraphDelta): # TODO: actually code this
+
+        for vertex in delta.subgraph["all_verts"]:
+
+            ...
+
+        for edge in delta.subgraph["all_edges"]:
+            ...
 
         # if event actually updates the graph...
         # recalculate parents?
         pass
+
+
 
     def load_rules(self, rule_map):
         for v_id, rule_class in rule_map.items():
