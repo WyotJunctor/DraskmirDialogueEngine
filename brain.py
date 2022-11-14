@@ -26,7 +26,7 @@ class Brain:
             EventType.Add,
             {
                 "all_verts": [ act_id ],
-                "all_edges": [ 
+                "all_edges": [
                     { "directed": True, "edge_tpye": "inst", "src": act_id, "tgt": act_type },
                     { "directed": True, "edge_tpye": "src", "src": self.ego.id, "tgt": act_id },
                  ]
@@ -41,7 +41,7 @@ class Brain:
     def get_action_targets(self, action_rules, target_set):
         local_target_set = {"allow":set(), "disallow":set()}
         for rule in action_rules:
-            r_target_set, r_local_target_set, allow = rule.get_targets(self.graph, target_set, local_target_set)
+            r_target_set, r_local_target_set, allow = rule.get_targets(self.ego, self.graph, target_set, local_target_set)
             if allow is False:
                 return {}, {}, False
             target_set = merge_targets(target_set, r_target_set)
