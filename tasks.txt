@@ -1,0 +1,19 @@
+TASKS
+* = done
+--<name> = <name> is working on this
+
+ingest concept graph JSON*
+graph + rule initialization*
+action check logic*
+action check patterns*
+validate action checking --wyatt
+subjective effect rules
+objective effect rules
+graph deltas
+graph events
+action selection
+entering and exiting
+action grouping
+basic AI
+basic action resolution
+tracery logging
