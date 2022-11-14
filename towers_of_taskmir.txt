@@ -9,8 +9,8 @@ action check patterns*
 validate action checking --wyatt
 subjective effect rules
 objective effect rules
-graph deltas
-graph events
+graph deltas --simon
+graph events --simon
 action selection
 entering and exiting
 action grouping
