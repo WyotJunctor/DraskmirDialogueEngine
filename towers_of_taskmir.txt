@@ -15,5 +15,5 @@ action selection
 entering and exiting
 action grouping
 basic AI
-basic action resolution
+basic action resolution --simon
 tracery logging
