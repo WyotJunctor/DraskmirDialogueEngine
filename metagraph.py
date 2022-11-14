@@ -227,6 +227,9 @@ class r_Action(ActionRule):
 rule -> allow instance pattern -> instance -> IS -> Person
 rule -> disallow instance pattern -> ego
 
+Person -Is-> v_0("Instance", "Person")
+
+
 --Allow each one that succeeds--
 foreach instance in target_set["allow"]
 instance -Is-> instance_1
@@ -311,6 +314,9 @@ v_6 <-Is- v_7("Instance")
 v_7 -Is-> Source
 v_7 -Is-> v_4
 
+allow local
+root -Can_Respond-> v_0("Action")
+vertex("Instance", "Action", has:"Recent", Target:"Ego", Is:v_0, Source:context["allowed"] target, alias:v_1)
 
 pseudo
 class r_ResponseConversationAction(ActionRule):
@@ -337,7 +343,7 @@ v_1 <-Is- v_4("Instance", "Target")
 v_0 -Is-> v_4
 
 pseudo
-class r_UniqueConversationAction(ActionRule):
+class r_UniqueAction(ActionRule):
     # PASS RULE TO ROOT ON ADD
     # for each allowed Person
     # if root (or something AsUnique) not exist between self and other, allow
@@ -348,9 +354,8 @@ rule -> disallow allowed pattern -> instance -> IS -> Person
 instance -> HAS -> HostileRelationship -> HAS -> ego
 
 <get allowed local person, v_0>
-Ego -Has-> v_1("Instance", "Hostile_Relationship")
-v_1 <-Has- v_0
-
+Ego -Has-> v_0("Instance", "Hostile_Relationship")
+v_0 <-Has- v_1(context)
 
 
 doin
@@ -367,8 +372,9 @@ rule -> disallow allowed pattern -> instance -> IS -> Person
 instance <-> acknowledged <-> ego
 (NOTE: NEED ACKNOWLEDGE RULE) # TODO: add bidirectional edge check, eh?
 
-<get allowed people>
 
+Ego -Has-> Acknowledged()
+Acknowledged -Has-> v_1("Person")
 
 class r_Greet(ActionRule):
     # for each allowed Person
@@ -385,6 +391,13 @@ class r_Greet(ActionRule):
 rule -> !check pattern -> ego -> IN -> conversation
 rule -> disallow allowed pattern -> instance -> IS -> Person -> IN -> combat <- IN <- ego
 
+disallow
+Ego -Participant-> v_0("Instance", "Conversation_Context")
+disallow instance
+Ego -Participant-> Combat
+Combat <-Participant- context("allowed")
+
+
 class r_Engage(ActionRule):
     # for each allowed Person
     # if self in calm or if not (self and person participant in combat)
@@ -392,6 +405,11 @@ class r_Engage(ActionRule):
 
 rule -> check pattern -> ego -> IN -> combat
 rule -> disallow allowed pattern -> instance -> IS -> Person !-> IN -> combat
+
+check
+Ego -Participant-> Combat
+exclusive allow instance
+context -Participant-> Combat
 
 class r_Attack(ActionRule):
     # if self not in combat, disallow
@@ -403,20 +421,29 @@ class r_Attack(ActionRule):
 rule -> check pattern -> room !<- INSIDE <- instance -> IS -> Person
 instance !-> ego
 
+disallow
+v_0("Instance", "Person", not: Ego) -In-> Room
+
+
 class r_Rest(ActionRule):
     # if room empty allow
     # else disallow
     pass
 
-// TODO: pattern
+disallow
+Immediate <-Is- v_0("Instance", "Action", not: InactiveAction)
 
 class r_Wait(ActionRule):
-    # if any action other than a InactiveAction has happened in the last timestep, allow
+    # if any action other than an InactiveAction has happened in the last timestep, allow
     # otherwise disallow
     pass
 
 rule -> check pattern -> ego -> IN -> calm
 rule -> allow instance pattern -> instance -> IS -> Dead
+
+allow
+Ego -Participant-> Calm
+Dead <-Is- v_0("Instance", "Dead")
 
 class r_Loot(ActionRule):
     # if self in calm
@@ -425,6 +452,11 @@ class r_Loot(ActionRule):
 
 rule -> check pattern -> ego -> IN -> combat
 rule -> allow instance pattern -> instance -> IS -> Door
+
+allow
+Ego -Participant-> Combat
+allow instance
+Door <-Is- v_0("Instance", "Door")
 
 class r_Flee(ActionRule):
     # if self participant in combat
@@ -435,12 +467,21 @@ rule -> force pattern -> instance -> root
 instance -> source -> ego
 instance -> last timestep
 
+allow
+Ego -Source-> v_0("Instance", "Traverse", "Immediate")
+
 class r_Enter(ActionRule):
     # if traverse last turn, FORCE
     pass
 
 rule -> check pattern -> ego -> IN -> calm
 rule -> allow instance pattern -> instance -> IS -> Door
+
+allow
+Ego -Participant-> Calm
+allow instance
+Door <-Is- v_0("Instance", "Door")
+
 
 class r_Traverse(ActionRule):
     # if self in calm
