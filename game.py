@@ -39,13 +39,11 @@ class Game:
 
         self.player_entity =  Brain(
             self.clock,
-            subjective_graph.vertices["Player"],
             subjective_graph,
             dict(),
             dict()
         )
         self.entities.add(self.player_entity)
-
 
     def step(self):
 
@@ -80,4 +78,4 @@ class Game:
                 for observing_entity in self.entities:
                     observing_entity.reveive_event(graph_event)
 
-        self.timestep += 1
+        self.clock.step()

@@ -23,6 +23,7 @@ class EdgeMap:
         self.edgetype_to_edge[edge.edge_type].add(edge)
         self.edgetype_to_vertex[edge.edge_type].add(endpoint)
 
+
 class GraphObject:
 
     def __init__(self, created_timestep=None, updated_timestep=None, attr_map=None):
@@ -43,6 +44,12 @@ class Vertex(GraphObject):
     def __repr__(self):
         return f"{self.id}, {self.attr_map}"
 
+    def add_edge(self, edge, endpoint, target=False, twoway=False):
+        if twoway or not target:
+            self.out_edges.add(edge, endpoint)
+        if twoway or target:
+            self.in_edges.add(edge, endpoint)
+
     def consolidate_relationships(self):
 
         for out_edge in self.out_edges.edge_set:
@@ -50,13 +57,14 @@ class Vertex(GraphObject):
 
             tgt.consolidate_relationships()
 
-            self.relationship_map[out_edge.edge_type] |= tgt.relationship_map["is"]
+            self.relationship_map[out_edge.edge_type + ">"].add(tgt)
+            self.relationship_map[out_edge.edge_type + ">"] |= tgt.relationship_map["Is>"]
 
-    def add_edge(self, edge, endpoint, target=False, twoway=False):
-        if twoway or not target:
-            self.out_edges.add(edge, endpoint)
-        if twoway or target:
-            self.in_edges.add(edge, endpoint)
+        for in_edge in self.in_edges.edge_set:
+            src = in_edge.src if in_edge.src is not self else in_edge.tgt
+
+            self.relationship_map[in_edge.edge_type + "<"].add(src)
+
 
 class Edge(GraphObject):
 
@@ -73,6 +81,7 @@ class Edge(GraphObject):
 
     def __repr__(self):
         return f"({self.src.id})-({self.tgt.id})"
+
 
 class Graph:
 
