@@ -1,5 +1,6 @@
 from utils import merge_targets
 import copy
+from choose import ChooseMaker
 from clock import Clock
 from graph import Graph, Vertex
 from graph_event import GraphEvent, EventType
@@ -9,17 +10,19 @@ from utils import merge_targets
 
 class Brain:
 
-    def __init__(self, clock: Clock, ego: Vertex, graph: Graph, effect_rules: dict, action_rules: dict):
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, ego: Vertex, graph: Graph, effect_rules: dict, action_rules: dict):
         self.clock = clock
+        self.choosemaker = choosemaker
         self.ego = ego
         self.graph = graph
         self.effect_rules = effect_rules
         self.action_rules = action_rules
 
     def choose_action(self):
-        #TODO(Simon): implement
 
-        return ("Wait", self.ego) # (action vertex, action target)
+        choose = self.choosemaker.consider(self.ego, self.graph)
+
+        return (choose, self.ego) # (action vertex, action target)
 
     def check_action_validity(self, action_vertex, action_target):
         #TODO(Simon): implement in a not dumb way
