@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter
 
-from graph_event import GraphDelta, GraphEvent
+from graph_event import GraphDelta, GraphEvent, EventType
 
 
 class EdgeMap:
@@ -22,6 +22,46 @@ class EdgeMap:
         self.edgetype_to_id[edge.edge_type].update({endpoint.id:1})
         self.edgetype_to_edge[edge.edge_type].add(edge)
         self.edgetype_to_vertex[edge.edge_type].add(endpoint)
+
+    def remove(self, edge, endpoint):
+        self.edge_set.remove(edge)
+
+        self.id_to_edgetype[endpoint.id].update({edge.edge_type:-1})
+        if self.id_to_edgetype[endpoint.id][edge.edge_type] == 0:
+            del self.id_to_edgetype[endpoint.id][edge.edge_type]
+
+        self.id_to_edge[endpoint.id].remove(edge)
+        if len(self.id_to_edge[endpoint.id]) == 0:
+            del self.id_to_edge[endpoint.id]
+        
+        self.edgetype_to_id[edge.edge_type].update({endpoint.id:-1})
+        if self.edgetype_to_id[edge.edge_type][endpoint.id] == 0:
+            del self.edgetype_to_id[edge.edge_type][endpoint.id]
+
+        self.edgetype_to_edge[edge.edge_type].remove(edge)
+        if len(self.edgetype_to_edge[edge.edge_type]) == 0:
+            del self.edgetype_to_edge[edge.edge_type]
+        
+        self.edgetype_to_vertex[edge.edge_type].remove(endpoint)
+        if len(self.edgetype_to_vertex[edge.edge_type]) == 0:
+            del self.edgetype_to_vertex[edge.edge_type]
+
+    def remove_edges_with(self, vertex):
+
+        edgetypes = self.id_to_edgetype[vertex.id]
+        edges = self.id_to_edge[vertex.id]
+
+        self.edge_set -= edges
+        del self.id_to_edgetype[vertex.id]
+        del self.id_to_edge[vertex.id]
+
+        for edgetype in edgetypes:
+            del self.edgetype_to_id[edgetype]
+
+            for edge in edges:
+                self.edgetype_to_edge[edgetype].remove(edge)
+            
+            self.edgetype_to_vertex[edgetype].remove(edge)
 
 
 class GraphObject:
@@ -49,6 +89,23 @@ class Vertex(GraphObject):
             self.out_edges.add(edge, endpoint)
         if twoway or target:
             self.in_edges.add(edge, endpoint)
+
+    def remove_edge(self, edge):
+
+        endpoint = edge.tgt if edge.tgt is not self else edge.src
+
+        if edge.twoway:
+            self.in_edges.remove(edge, endpoint)
+            self.out_edges.remove(edge, endpoint)
+        elif self is edge.src:
+            self.out_edges.remove(edge, endpoint)
+        elif self is edge.tgt:
+            self.in_edges.remove(edge, endpoint)
+
+    def remove_edges_with(self, vertex):
+        self.in_edges.remove_edges_with(vertex)
+        self.out_edges.remove_edges_with(vertex)
+
 
     def consolidate_relationships(self):
 
@@ -207,14 +264,52 @@ class Graph:
 
         for vertex in delta.subgraph["all_verts"]:
 
-            ...
+            if delta.key is EventType.Add and vertex.id not in self.vertices:
+
+                # ensure vertex is in graph
+                self.vertices[vertex.id] = vertex
+
+            elif delta.key is EventType.Delete and vertex.id in self.vertices:
+
+                # remove vertex from graph
+                del self.vertices[vertex.id]
+
+                # find set of neighbors (we can't modify edge sets while iterating over them)
+                neighbors = set()
+
+                for in_edge in vertex.in_edges.edge_set:
+                    tgt = out_edge.tgt if out_edge.tgt is not vertex else out_edge.src
+                    neighbors.add(tgt)
+
+                for out_edge in vertex.out_edges.edge_set:
+                    src = in_edge.src if in_edge.src is not vertex else in_edge.tgt
+                    neighbors.add(src)
+
+                # remove edges to deleted vertex
+                for neighbor in neighbors:
+                    neighbor.remove_edges_with(vertex)
 
         for edge in delta.subgraph["all_edges"]:
-            ...
 
-        # if event actually updates the graph...
-        # recalculate parents?
-        pass
+            if delta.key is EventType.Add and edge.id not in self.edges:
+
+                # ensure edge is in graph
+                self.edges[edge.id] = edge
+
+                # look at src and tgt
+                # make sure they're bookkeeping
+                edge.src.add_edge(edge)
+                edge.tgt.add_edge(edge)
+
+            elif delta.key is EventType.Delete and edge.id in self.edges:
+
+                # remove edge from graph
+                del self.edges[edge.id]
+
+                edge.src.remove_edge(edge)
+                edge.tgt.remove_edge(edge)
+
+        self.calculate_parents()
 
 
 
