@@ -12,7 +12,7 @@ update knowledge graphs --wyatt
 subjective effect rules
 objective effect rules
 graph deltas --simon (wyatt: inspect)
-graph events --simon
+graph events --simon (wyatt: inspect)
 action selection
 entering and exiting
 action grouping
