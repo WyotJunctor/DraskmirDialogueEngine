@@ -66,13 +66,4 @@ class Brain:
         return target_map
 
     def receive_event(self, event: GraphEvent):
-        # TODO(Simon): refactor to convert into Delta and apply
-        status = True
-        if event.key in self.effect_rules:
-            for event_response in self.effect_rules[event.key]:
-                if event_response(event) is False:
-                    status = False
-                    break
-        if status is False:
-            return
-        self.graph.update_json(event)
+        self.graph.handle_graph_event(event)

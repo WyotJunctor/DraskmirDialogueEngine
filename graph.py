@@ -260,7 +260,12 @@ class Graph:
             event_subgraph
         )
 
-    def handle_graph_delta(self, delta: GraphDelta): # TODO: actually code this
+    def handle_grpah_event(self, event: GraphEvent):
+
+        delta = self.convert_graph_event_to_delta(event)
+        self.handle_graph_delta(delta)
+
+    def handle_graph_delta(self, delta: GraphDelta):
 
         for vertex in delta.subgraph["all_verts"]:
 
