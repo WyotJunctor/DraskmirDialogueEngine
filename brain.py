@@ -19,19 +19,7 @@ class Brain:
     def choose_action(self):
         #TODO(Simon): implement
 
-        act_id = self.ego.id + "_act_" + self.game.timestep
-        act_type = "Wait"
-
-        return GraphEvent(
-            EventType.Add,
-            {
-                "all_verts": [ act_id ],
-                "all_edges": [
-                    { "directed": True, "edge_tpye": "inst", "src": act_id, "tgt": act_type },
-                    { "directed": True, "edge_tpye": "src", "src": self.ego.id, "tgt": act_id },
-                 ]
-            }
-        )
+        return ("Wait", self.ego) # (action vertex, action target)
 
     def check_action_validity(self, action_vertex, action_target):
         #TODO(Simon): implement in a not dumb way
@@ -78,6 +66,7 @@ class Brain:
         return target_map
 
     def receive_event(self, event: GraphEvent):
+        # TODO(Simon): refactor to convert into Delta and apply
         status = True
         if event.key in self.effect_rules:
             for event_response in self.effect_rules[event.key]:

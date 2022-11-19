@@ -11,7 +11,7 @@ shortcut management --wyatt
 update knowledge graphs --wyatt
 subjective effect rules
 objective effect rules
-graph deltas --simon
+graph deltas --simon (wyatt: inspect)
 graph events --simon
 action selection
 entering and exiting

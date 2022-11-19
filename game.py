@@ -14,7 +14,7 @@ class Game:
 
         reality_graph = Graph(self)
         reality_graph.load_json(objective_json)
-        self.reality = Reality(reality_graph, dict())
+        self.reality = Reality(self.clock, reality_graph, dict())
 
         self.player_json_path = player_json
         self.subjective_json_path = subjective_json
@@ -74,6 +74,8 @@ class Game:
             )
 
             for graph_event in graph_events:
+
+                self.reality.receive_event(graph_event)
 
                 for observing_entity in self.entities:
                     observing_entity.reveive_event(graph_event)
