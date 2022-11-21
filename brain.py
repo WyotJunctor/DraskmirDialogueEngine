@@ -20,9 +20,10 @@ class Brain:
 
     def choose_action(self):
 
-        choose = self.choosemaker.consider(self.ego, self.graph)
+        target_map = self.get_target()
+        action, target = self.choosemaker.consider(target_map, self.ego, self.graph)
 
-        return (choose, self.ego) # (action vertex, action target)
+        return (action, target) # (action vertex, action target)
 
     def check_action_validity(self, action_vertex, action_target):
         #TODO(Simon): implement in a not dumb way

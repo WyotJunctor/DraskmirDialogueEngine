@@ -14,6 +14,7 @@ class Reality:
 
         actor_id = acting_entity.ego.id
         act_id = actor_id + "_act_" + self.game.timestep
+        act_tgt = action_target.id
         act_type = action_vertex.id
         act_event = GraphEvent(
             EventType.Add,
@@ -22,6 +23,7 @@ class Reality:
                 "all_edges": [
                     { "directed": True, "edge_tpye": "inst", "src": act_id, "tgt": act_type },
                     { "directed": True, "edge_tpye": "src", "src": actor_id, "tgt": act_id },
+                    { "directed": True, "edge_type": "tgt", "src": act_id, "tgt":  act_tgt }
                  ]
             }
         )
