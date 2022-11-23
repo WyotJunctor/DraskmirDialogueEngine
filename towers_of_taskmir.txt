@@ -13,9 +13,12 @@ subjective effect rules
 objective effect rules
 graph deltas --simon (wyatt: inspect)
 graph events --simon (wyatt: inspect)
+vertex type mapping --simon
+    . map concept node to everything that "Is" it
+    . i.e. graph.vertex_type_map["Action"] -> set(Vertex)
 action selection
 entering and exiting
 action grouping
 basic AI
-basic action resolution --simon
+basic action resolution --simon (wyatt: inspect)
 tracery logging

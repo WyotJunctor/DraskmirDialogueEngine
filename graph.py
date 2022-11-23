@@ -152,8 +152,10 @@ class Graph:
         nx.draw(self.visgraph, with_labels=True)
         plt.savefig("reality.png")
 
-    def calculate_parents(self): # TODO: finish this 
-        pass
+    def consolidate_relationships(self):
+
+        for vertex in self.vertices.values():
+            vertex.consolidate_relationships()
 
     def load_vert(self, id, attr_map):
         self.vertices[id] = Vertex(id, self.timestep, self.timestep, attr_map=attr_map)
@@ -314,9 +316,7 @@ class Graph:
                 edge.src.remove_edge(edge)
                 edge.tgt.remove_edge(edge)
 
-        self.calculate_parents()
-
-
+        self.consolidate_relationships()
 
     def load_rules(self, rule_map):
         for v_id, rule_class in rule_map.items():
