@@ -127,7 +127,8 @@ class Vertex(GraphObject):
         for out_edge in self.out_edges.edge_set:
             tgt = out_edge.tgt if out_edge.tgt is not self else out_edge.src
 
-            tgt.consolidate_relationships()
+            if tgt is not self:
+                tgt.consolidate_relationships()
 
             for edge_type in out_edge.edge_type:
                 self.relationship_map[edge_type + ">"].add(tgt)
@@ -214,7 +215,7 @@ class Graph:
 
         delta_subgraph = dict(all_verts=dict(), all_edges=[])
 
-        for vert_id, attr_map in event.subgraph["all_verts"]:
+        for vert_id, attr_map in event.subgraph["all_verts"].items():
 
             if self.vertices.get(vert_id) is None:
                 delta_subgraph["all_verts"][vert_id] = Vertex(
@@ -233,7 +234,9 @@ class Graph:
                 if not edge["directed"]:
                     sorted(idtup)
 
-                tup = (self.vertices[idtup[0]], self.vertices[idtup[1]])
+                vert_0 = self.vertices.get(idtup[0], delta_subgraph["all_verts"].get(idtup[0]))
+                vert_1 = self.vertices.get(idtup[1], delta_subgraph["all_verts"].get(idtup[1]))
+                tup = (vert_0, vert_1)
 
                 delta_subgraph["all_edges"].append(
                     Edge(
@@ -278,14 +281,14 @@ class Graph:
             event_subgraph
         )
 
-    def handle_grpah_event(self, event: GraphEvent):
+    def handle_graph_event(self, event: GraphEvent):
 
         delta = self.convert_graph_event_to_delta(event)
         self.handle_graph_delta(delta)
 
     def handle_graph_delta(self, delta: GraphDelta):
 
-        for vertex in delta.subgraph["all_verts"]:
+        for vertex in delta.subgraph["all_verts"].values():
 
             if delta.key is EventType.Add and vertex.id not in self.vertices:
 
@@ -321,8 +324,8 @@ class Graph:
 
                 # look at src and tgt
                 # make sure they're bookkeeping
-                edge.src.add_edge(edge)
-                edge.tgt.add_edge(edge)
+                edge.src.add_edge(edge, edge.tgt, target=False, twoway=edge.twoway)
+                edge.tgt.add_edge(edge, edge.src, target=True, twoway=edge.twoway)
 
             elif delta.key is EventType.Delete and edge.id in self.edges:
 

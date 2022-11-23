@@ -29,9 +29,12 @@ class Game:
         subjective_graph = Graph(self)
         subjective_graph.load_json(self.subjective_json_path)
 
+        with open(self.player_json_path) as f:
+            glob = json.load(f)
+
         player_add_event = GraphEvent(
             EventType.Add,
-            json.load(self.player_json_path)
+            glob
         )
 
         self.reality.graph.handle_graph_event(player_add_event)
