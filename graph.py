@@ -37,10 +37,10 @@ class EdgeMap:
             (self.edgetype_to_vertex, "set", endpoint, "tgt")):
             for edge_type in edge.edge_type:
                 if edge_key == "src":
-                    src_key = edge_tuple[1]
+                    src_key = edge_type
                     tgt_key = other_key
                 else:
-                    tgt_key = edge_tuple[1]
+                    tgt_key = edge_type
                     src_key = other_key
                 if index_type == "counter":
                     indexer[src_key].update({tgt_key:-1})
