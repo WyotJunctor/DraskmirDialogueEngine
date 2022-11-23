@@ -1,11 +1,20 @@
 from random import sample
 from string import ascii_lowercase
+num_ascii = len(ascii_lowercase)
 
-def get_alphastring(num):
+def get_alphastring(num, string=""):
 
+    mod = num % num_ascii
+    num = (num - mod) // num_ascii
+    string = ascii_lowercase[mod] + string
+
+    if num > num_ascii:
+        string = get_alphastring(num, string)
+    elif num > 0:
+        string = ascii_lowercase[num-1] + string
     
+    return string
 
-    ...
 
 class ChooseMaker:
     def __init__(self):
@@ -14,27 +23,91 @@ class ChooseMaker:
     def consider(self, target_map, ego, graph):
         return graph.vertices["Wait"], 
 
+
 class PlayerChooseMaker(ChooseMaker):
     def __init__(self):
         self.make = "player choose"
 
     def consider(self, target_map, ego, graph):
 
-        print(f"Act, '{ego.id}'...")
+        print(f"Consider, '{ego.id}'...")
+
+        action_label_map = dict()
+        target_label_map = dict()
 
         num_actions = len(target_map)
         action_i_len = len(str(num_actions))
         for i, pair in enumerate(target_map.items()):
             action, targets = pair
 
-            print(f"{i}. {action}:")
+            action_label_map[i] = graph.vertices[action]
+            print(f"{i:>{action_i_len}}. {action}:")
+
+            target_i_len = len(get_alphastring(len(targets)))
             for j, target in enumerate(targets):
                 alpha = get_alphastring(j)
-                print(f"{alpha} {target}")
+                target_label_map[(i, alpha)] = graph.vertices[target]
+                print(f"\t{alpha:>{target_i_len}}. {target}")
 
+        print()
+    
+        print(f"Act, {ego.id}...")
+        good_act = False
+        while not good_act:
+            
+            act_choose = input()
 
+            try:
+                act_choose = int(act_choose)
+                chosen_action = action_label_map[act_choose]
+                targets = target_map[chosen_action.id]
+                good_act = True
 
-        return graph.vertices["Wait"]
+            except:
+                print(f"Action Input '{act_choose}' invalid.")
+                continue
+
+            print(f"Target, {ego.id}...")
+            good_target = False
+            while not good_target:
+                print("[input '!' to return to Action choice]")
+                target_choose = input()
+
+                if target_choose == "!":
+                    print("Cancelling Action Choice")
+                    good_act = False
+                    break
+
+                try:
+                    chosen_target = target_label_map[target_choose]
+                    good_target = True
+                except:
+                    print(f"Target Input '{target_choose}' invalid.")
+                    continue
+            
+            print(f"{ego.id} Chooses...")
+            print(f"Action: {chosen_action.id}")
+            print(f"Target: {chosen_target.id}")
+            print(f"[input 'y' to confirm choice or 'n' to return to Action choice]")
+
+            good_confirm = False
+            while not good_confirm:
+
+                confirm_choose = input()
+
+                if confirm_choose == "y":
+                    print("Confirming Choice")
+                    good_confirm = True
+                elif confirm_choose == "n":
+                    print("Rejecting Choice - Returning to Action choice")
+                    good_act = False
+                    good_target = False
+                    break
+                else:
+                    print("Bad input. Please input 'y' or 'n'.")
+
+        return chosen_action, chosen_target
+
 
 class AIChooseMaker(ChooseMaker):
     def __init__(self):
