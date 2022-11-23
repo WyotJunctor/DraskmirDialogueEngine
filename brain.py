@@ -4,19 +4,26 @@ from choose import ChooseMaker
 from clock import Clock
 from graph import Graph, Vertex
 from graph_event import GraphEvent, EventType
-from rules import ActionRule, InheritedActionRule
 from utils import merge_targets
 
 
 class Brain:
 
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, ego: Vertex, graph: Graph, effect_rules: dict, action_rules: dict):
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, ego: Vertex, graph: Graph, effect_rules_map: dict, action_rules_map: dict, shortcut_maps: dict):
         self.clock = clock
         self.choosemaker = choosemaker
         self.ego = ego
         self.graph = graph
-        self.effect_rules = effect_rules
-        self.action_rules = action_rules
+        self.effect_rules = defaultdict(list)
+        self.action_rules = defaultdict(list)
+
+        # for each shortcut, put it on a vertex
+        for v_id, shortcut_map in shortcut_maps.items():
+            self.graph.vertices[v_id].shortcut_map = shortcut_map
+
+        # initialize effect rules
+        for v_id, shortcut_map in shortcut_maps.items():
+            action_rule_class(vertex, self.action_rules[v_id])
 
     def choose_action(self):
 
@@ -71,3 +78,14 @@ class Brain:
 
     def receive_event(self, event: GraphEvent):
         self.graph.handle_graph_event(event)
+"""
+        status = True
+        if event.key in self.effect_rules:
+            for event_response in self.effect_rules[event.key]:
+                if event_response.receive_event(event) is False:
+                    status = False
+                    break
+        if status is False:
+            return
+        self.graph.update_json(event)
+"""
