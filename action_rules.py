@@ -50,12 +50,12 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
 
 class ActionRule:
 
-    def __init__(self, vertex, priority=0):
+    def __init__(self, vertex, rules, priority=0):
         # add self to vertex action_rules
         self.priority = priority
         self.vertex = vertex
-        vertex.action_rules.append(self)
-        vertex.action_rules = sorted(vertex.action_rules, key=lambda x: x.priority)
+        rules.append(self)
+        rules.sort(key=lambda x: x.priority)
 
 
     def check_relationships(self, context, check_set, ref):
@@ -83,14 +83,14 @@ class ActionRule:
 
     def check_src(self, src_set, no_src_tgts, context, dependencies, hop_count):
         cleanup_set = src_set.intersection(no_src_tgts)
-        if self.cleanup(cleanup_set, context, dependencies, hop_count) == False:
+        if cleanup(cleanup_set, context, dependencies, hop_count) == False:
             return set(), set()
         valid_src = src_set.difference(no_src_tgts)
         valid_tgt = no_src_tgts.difference(src_set)
         return valid_src, valid_tgt
 
 
-    def check_step(self, ego, src_set, no_src_tgts, edge, tgt_ref, context, dependencies, hop_count, src_hop, tgt_hop):
+    def check_step(self, src_set, no_src_tgts, edge, tgt_ref, context, dependencies, hop_count, src_hop, tgt_hop):
         valid_src = set()
         valid_tgt = set()
         for src_vert in src_set:
@@ -103,27 +103,25 @@ class ActionRule:
                 tgt_set = context.get(tgt_ref["ref"], set()) & get_set(edge_map.edgetype_to_vertex, edge["type"])
             elif "tag" in tgt_ref:
                 tgt_set = get_set(edge_map.edgetype_to_vertex, edge["type"])
-            elif "ego" in tgt_ref:
-                tgt_set = set([ego])
 
             tgt_set = self.check_relationships(context, tgt_set, tgt_ref)
 
             no_src_tgts -= tgt_set
 
             if len(tgt_set) == 0:
-                if self.cleanup(set([src_vert]), context, dependencies, hop_count) == False:
+                if cleanup(set([src_vert]), context, dependencies, hop_count) == False:
                     return set(), set()
                 continue
 
             if "ref" in src_ref and "ref" in tgt_ref:
                 for tgt_vert in tgt_set:
                     valid_tgt.add(tgt_vert)
-                    self.add_dependencies(dependencies, src_vert, tgt_vert, src_hop, tgt_hop)
+                    add_dependencies(dependencies, src_vert, tgt_vert, src_hop, tgt_hop)
 
             valid_src.add(src_vert)
 
         for tgt_vert in no_src_tgts:
-            if self.cleanup(set([tgt_vert]), context, dependencies, hop_count) == False:
+            if cleanup(set([tgt_vert]), context, dependencies, hop_count) == False:
                 return set(), set()
         return valid_src, valid_tgt
 
@@ -142,8 +140,6 @@ class ActionRule:
             src_set = context.get(src_ref["ref"], set())
         elif "id" in src_ref:
             src_set = get_set(graph.vertices, src_ref["id"])
-        elif "ego" in src_ref:
-            src_set = set([ego])
 
         src_set = self.check_relationships(context, src_set, src_ref)
 
@@ -156,7 +152,7 @@ class ActionRule:
 
         if "Not_Is" in edge:
             cleanup_set = src_set.intersection(no_src_tgts)
-            if self.cleanup(cleanup_set, context, dependencies, hop_count) == False:
+            if cleanup(cleanup_set, context, dependencies, hop_count) == False:
                 return False
             valid_src = src_set.difference(no_src_tgts)
             valid_tgt = no_src_tgts.difference(src_set)
@@ -185,7 +181,8 @@ class ActionRule:
             "disallowed": target_set["disallow"].copy(),
             "local_allowed": local_target_set["allow"].copy(),
             "local_disallowed": local_target_set["disallow"].copy(),
-            "root":set([self.vertex])
+            "root":set([self.vertex]),
+            "ego":set([ego]),
         }
         for pattern in self.__class__.patterns:
             dependencies = {}
@@ -196,7 +193,7 @@ class ActionRule:
             success = True
             hop = 0
             for traversal in pattern["traversal"]:
-                success = self.check_traversal(ego, traversal, dependencies, context, hop_count, hop)
+                success = self.check_traversal(traversal, dependencies, context, hop_count, hop)
                 if success == False:
                     break
                 hop += 1
@@ -224,10 +221,10 @@ class ActionRule:
 
 class InheritedActionRule:
 
-    def __init__(self, vertex, priority=0, replicate=True):
+    def __init__(self, vertex, rules, priority=0, replicate=True):
         if replicate is True:
             self.replicate(vertex)
-        super().__init__(vertex, priority)
+        super().__init__(vertex, rules, priority)
 
     def replicate(self, vertex):
         visited = set([vertex])
@@ -249,7 +246,7 @@ class r_Action(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":"", "rel":(("Is>",set(["Person"])))}, {"null":""}, {})
+                ({"ref":"ego", "rel":(("Is>",set(["Person"])))}, {"null":""}, {})
             )
         },
     )
@@ -277,7 +274,7 @@ class r_Interaction_Action(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":"", "target":""}, {"null":""}, {})
+                ({"ref":"ego", "target":""}, {"null":""}, {})
             )
         }
     )
@@ -296,14 +293,14 @@ class r_Conversation_Action(ActionRule): # TODO: maybe rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Involved", "dir":">"}, {"id":"Combat_Context"}),
+                ({"ref":"ego"}, {"type":"Involved", "dir":">"}, {"id":"Combat_Context"}),
             )
         },
         {
             "check_type":PatternCheckType.get,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":""}, {"type":"Participant", "dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
+                ({"ref":"ego"}, {"type":"Participant", "dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
             )
         },
         {
@@ -324,7 +321,7 @@ disallow instance graph
 v_1(context:"allowed", target) -Participant-> v_0
 """
 
-class r_Response_Conversation_Action(ActionRule): # TODO: rewrite
+class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
 
     patterns = (
         {
@@ -349,14 +346,14 @@ root -Can_Respond-> v_0(Inherits:"Action")
 Recent <-Has_Attr- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "Target":"Ego", "Is":v_0, "Source":context["allowed"], target)
 """
 
-class r_Unique_Conversation_Action(ActionRule): # TODO: rewrite
+class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
     pattern = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.local,
             "traversal":(
                 ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
-                ({"ego":""}, {"type":"Source","dir":">"}, {"tag":"v_1","alias":"v_1","rel":(("Is>","v_0"))}),
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"tag":"v_1","alias":"v_1","rel":(("Is>","v_0"))}),
                 ({"ref":"allowed","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
             )
         },
@@ -375,7 +372,7 @@ class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":""}, {"type":"Hostile_Relationship","dir":">"}, {"tag":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Person"])))})
+                ({"ref":"ego"}, {"type":"Hostile_Relationship","dir":">"}, {"tag":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Person"])))})
             )
         }
     )
@@ -391,7 +388,7 @@ class r_Greet(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":""}, {"type":"Acknowledged","dir":">"}, {"ref":"allowed","alias":"v_0","target":""})
+                ({"ref":"ego"}, {"type":"Acknowledged","dir":">"}, {"ref":"allowed","alias":"v_0","target":""})
             )
         }
     )
@@ -407,14 +404,14 @@ class r_Engage(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Participant","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
             )
         },
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":""}, {"type":"Participant","dir":">"}, {"id":"Combat_Context"}),
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Combat_Context"}),
                 ({"id":"Combat_Context"}, {"type":"Participant","dir":"<"}, {"ref":"allowed","alias":"v_1","target"})
             )
         },
@@ -434,7 +431,7 @@ class r_Attack(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Participant","dir":">"}, {"id":"Combat_Context"})
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Combat_Context"})
             )
         },
         {
@@ -466,7 +463,7 @@ class r_Rest(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":"", "target":""}, {"null":""}, {})
+                ({"ref":"ego", "target":""}, {"null":""}, {})
             )
         }
     )
@@ -489,7 +486,7 @@ class r_Wait(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ego":"", "target":""}, {"null":""}, {})
+                ({"ref":"ego", "target":""}, {"null":""}, {})
             )
         }
     )
@@ -505,7 +502,7 @@ class r_Loot(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Participant","dir":">"}, {"id":"Calm_Context"})
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Calm_Context"})
             )
         },
         {
@@ -530,7 +527,7 @@ class r_Flee(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Participation","dir":">"}, {"id":"Combat"})
+                ({"ref":"ego"}, {"type":"Participation","dir":">"}, {"id":"Combat"})
             )
         },
         {
@@ -555,7 +552,7 @@ class r_Enter(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Source","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Traverse"])),("Has_Attr>",set(["Immediate"])))})
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Traverse"])),("Has_Attr>",set(["Immediate"])))})
             )
         }
     )
@@ -571,7 +568,7 @@ class r_Traverse(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ego":""}, {"type":"Participant","dir":">"}, {"id":"Calm_Context"})
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Calm_Context"})
             )
         },
         {

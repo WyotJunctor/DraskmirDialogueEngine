@@ -17,34 +17,39 @@ class EdgeMap:
 
     def add(self, edge, endpoint):
         self.edge_set.add(edge)
-        self.id_to_edgetype[endpoint.id].update({edge.edge_type:1})
         self.id_to_edge[endpoint.id].add(edge)
-        self.edgetype_to_id[edge.edge_type].update({endpoint.id:1})
-        self.edgetype_to_edge[edge.edge_type].add(edge)
-        self.edgetype_to_vertex[edge.edge_type].add(endpoint)
+        for edge_type in edge.edge_type:
+            self.id_to_edgetype[endpoint.id].update({edge_type:1})
+            self.edgetype_to_id[edge_type].update({endpoint.id:1})
+            self.edgetype_to_edge[edge_type].add(edge)
+            self.edgetype_to_vertex[edge_type].add(endpoint)
 
     def remove(self, edge, endpoint):
         self.edge_set.remove(edge)
-
-        self.id_to_edgetype[endpoint.id].update({edge.edge_type:-1})
-        if self.id_to_edgetype[endpoint.id][edge.edge_type] == 0:
-            del self.id_to_edgetype[endpoint.id][edge.edge_type]
-
         self.id_to_edge[endpoint.id].remove(edge)
         if len(self.id_to_edge[endpoint.id]) == 0:
             del self.id_to_edge[endpoint.id]
-        
-        self.edgetype_to_id[edge.edge_type].update({endpoint.id:-1})
-        if self.edgetype_to_id[edge.edge_type][endpoint.id] == 0:
-            del self.edgetype_to_id[edge.edge_type][endpoint.id]
 
-        self.edgetype_to_edge[edge.edge_type].remove(edge)
-        if len(self.edgetype_to_edge[edge.edge_type]) == 0:
-            del self.edgetype_to_edge[edge.edge_type]
-        
-        self.edgetype_to_vertex[edge.edge_type].remove(endpoint)
-        if len(self.edgetype_to_vertex[edge.edge_type]) == 0:
-            del self.edgetype_to_vertex[edge.edge_type]
+        for indexer, index_type, other_key, edge_key in (
+            (self.id_to_edgetype, "counter", endpoint.id, "tgt"),
+            (self.edgetype_to_id, "counter", endpoint.id, "src"),
+            (self.edgetype_to_edge, "set", edge, "src"),
+            (self.edgetype_to_vertex, "set", endpoint, "tgt")):
+            for edge_type in edge.edge_type:
+                if edge_key == "src":
+                    src_key = edge_tuple[1]
+                    tgt_key = other_key
+                else:
+                    tgt_key = edge_tuple[1]
+                    src_key = other_key
+                if index_type == "counter":
+                    indexer[src_key].update({tgt_key:-1})
+                    if indexer[src_key] == 0:
+                        del indexer[src_key][tgt_key]
+                elif index_type == "set":
+                    indexer[src_key].remove(tgt_key)
+                    if len(indexer[src_key]) == 0:
+                        del indexer[src_key][tgt_key]
 
     def remove_edges_with(self, vertex):
 
@@ -60,7 +65,7 @@ class EdgeMap:
 
             for edge in edges:
                 self.edgetype_to_edge[edgetype].remove(edge)
-            
+
             self.edgetype_to_vertex[edgetype].remove(edge)
 
 
@@ -70,15 +75,25 @@ class GraphObject:
         self.created_timestep = created_timestep
         self.updated_timestep = updated_timestep
         self.attr_map = dict() if attr_map is None else attr_map
+        self.event_map = defaultdict(set)
+
+    def subscribe(self, subscriber, event_key):
+        self.event_map[event_key].add(subscriber)
+
+    def delete(self):
+        for subscriber in self.event_map["delete"]:
+            subscriber() # NOTE: when we need templated event-listener we'll add it
 
 
 class Vertex(GraphObject):
 
-    def __init__(self, id, created_timestep, updated_timestep, attr_map=None):
+    def __init__(self, id, created_timestep, updated_timestep, shortcut_map=None, attr_map=None):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
         self.relationship_map = defaultdict(set)
+        # ({"src":"Pred","src_dir":"<","tgt":"Pred","tgt_dir":">"},)
+        self.shortcut_map = shortcut_map
         super().__init__(created_timestep, updated_timestep, attr_map)
 
     def __repr__(self):
@@ -114,18 +129,19 @@ class Vertex(GraphObject):
 
             tgt.consolidate_relationships()
 
-            self.relationship_map[out_edge.edge_type + ">"].add(tgt)
-            self.relationship_map[out_edge.edge_type + ">"] |= tgt.relationship_map["Is>"]
+            for edge_type in out_edge.edge_type:
+                self.relationship_map[edge_type + ">"].add(tgt)
+                self.relationship_map[edge_type + ">"] |= tgt.relationship_map["Is>"]
 
         for in_edge in self.in_edges.edge_set:
             src = in_edge.src if in_edge.src is not self else in_edge.tgt
-
-            self.relationship_map[in_edge.edge_type + "<"].add(src)
+            for edge_type in in_edge.edge_type:
+                self.relationship_map[edge_type + "<"].add(src)
 
 
 class Edge(GraphObject):
 
-    def __init__(self, edge_type:str, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None, twoway=False):
+    def __init__(self, edge_type:set, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None, twoway=False):
         self.id = f"{src.id}~{edge_type}~{tgt.id}"
         self.edge_type = edge_type
         self.src = src
@@ -170,7 +186,7 @@ class Graph:
         tup = (self.vertices[idtup[0]], self.vertices[idtup[1]])
 
         edge = Edge(
-            edge_glob["edge_type"],
+            set([edge_glob["edge_type"]]),
             tup[0],
             tup[1],
             self.timestep,
@@ -233,7 +249,7 @@ class Graph:
                 delta_subgraph["all_edges"].append(
                     self.edges[edge_id]
                 )
-        
+
         return GraphDelta(
             event.key,
             delta_subgraph
@@ -246,7 +262,7 @@ class Graph:
 
         for vertex in delta.subgraph["all_verts"]:
             event_subgraph["all_verts"][vertex.id] = { }
-        
+
         for edge in delta.subgraph["all_edges"]:
             event_subgraph["all_edges"].append(
                 {
