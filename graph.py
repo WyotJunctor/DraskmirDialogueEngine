@@ -122,13 +122,13 @@ class Vertex(GraphObject):
         self.out_edges.remove_edges_with(vertex)
 
 
-    def consolidate_relationships(self):
+    def consolidate_relationships(self, called_from=None):
 
         for out_edge in self.out_edges.edge_set:
             tgt = out_edge.tgt if out_edge.tgt is not self else out_edge.src
 
-            if tgt is not self:
-                tgt.consolidate_relationships()
+            if tgt is not called_from:
+                tgt.consolidate_relationships(self)
 
             for edge_type in out_edge.edge_type:
                 self.relationship_map[edge_type + ">"].add(tgt)

@@ -1,5 +1,6 @@
 from utils import merge_targets
 import copy
+from collections import defaultdict
 from choose import ChooseMaker
 from clock import Clock
 from graph import Graph, Vertex
@@ -21,9 +22,15 @@ class Brain:
         for v_id, shortcut_map in shortcut_maps.items():
             self.graph.vertices[v_id].shortcut_map = shortcut_map
 
+        # alert
+        # alert
+        # stinky Wyatt code incoming
+        # alrt
+        """
         # initialize effect rules
         for v_id, shortcut_map in shortcut_maps.items():
             action_rule_class(vertex, self.action_rules[v_id])
+        """
 
     def choose_action(self):
 
