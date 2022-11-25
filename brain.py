@@ -10,10 +10,10 @@ from utils import merge_targets
 
 class Brain:
 
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, ego: Vertex, graph: Graph, effect_rules_map: dict, action_rules_map: dict, shortcut_maps: dict):
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, action_rules_map: dict, shortcut_maps: dict):
         self.clock = clock
         self.choosemaker = choosemaker
-        self.ego = ego
+        self.ego = graph.vertices["Ego"]  # TODO(Simon): this should grab the instance not the concept
         self.graph = graph
         self.effect_rules = defaultdict(list)
         self.action_rules = defaultdict(list)
@@ -26,6 +26,7 @@ class Brain:
         # alert
         # stinky Wyatt code incoming
         # alrt
+        # TODO(Simon): WYatt fix your shit
         """
         # initialize effect rules
         for v_id, shortcut_map in shortcut_maps.items():
@@ -34,7 +35,7 @@ class Brain:
 
     def choose_action(self):
 
-        target_map = self.get_target()
+        target_map = self.get_targets()
         action, target = self.choosemaker.consider(target_map, self.ego, self.graph)
 
         return (action, target) # (action vertex, action target)
@@ -56,13 +57,14 @@ class Brain:
         return target_set, local_target_set, True
 
     def get_targets(self):
+        target_map = dict()
         # get root action
         action_vert = self.graph.vertices["Action"]
         target_map = {action_vert: [{"allow":set(), "disallow":set()}, 0, 0]} # vertex: [target_set, num_calculated_dependencies, num_dependencies]
         queue = [action_vert]
         while len(queue) > 0:
             root = queue.pop(0)
-            target_set, local_target_set, allow = self.get_action_targets(self.action_rules[root.id], self.target_map[root][0])
+            target_set, local_target_set, allow = self.get_action_targets(self.action_rules[root.id], target_map[root][0])
             if allow is False:
                 continue
             target_map[root][0] = merge_targets(target_set, local_target_set)
@@ -79,9 +81,10 @@ class Brain:
                     target_map[child][1] += 1
                 if target_map[child][1] == target_map[child][2]:
                     queue.append(child)
-        print(target_map)
 
-        return target_map
+        return { 
+            action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items()
+        }
 
     def receive_event(self, event: GraphEvent):
         self.graph.handle_graph_event(event)

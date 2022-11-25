@@ -1,5 +1,6 @@
 from random import sample
 from string import ascii_lowercase
+from pprint import pprint
 num_ascii = len(ascii_lowercase)
 
 def get_alphastring(num, string=""):
@@ -40,17 +41,15 @@ class PlayerChooseMaker(ChooseMaker):
         for i, pair in enumerate(target_map.items()):
             action, targets = pair
 
-            action_label_map[i] = graph.vertices[action]
+            action_label_map[i] = action
             print(f"{i:>{action_i_len}}. {action}:")
 
             target_i_len = len(get_alphastring(len(targets)))
             for j, target in enumerate(targets):
                 alpha = get_alphastring(j)
-                target_label_map[(i, alpha)] = graph.vertices[target]
+                target_label_map[(i, alpha)] = target
                 print(f"\t{alpha:>{target_i_len}}. {target}")
 
-        print()
-    
         print(f"Act, {ego.id}...")
         good_act = False
         while not good_act:
@@ -60,7 +59,7 @@ class PlayerChooseMaker(ChooseMaker):
             try:
                 act_choose = int(act_choose)
                 chosen_action = action_label_map[act_choose]
-                targets = target_map[chosen_action.id]
+                targets = target_map[chosen_action]
                 good_act = True
 
             except:
@@ -79,15 +78,15 @@ class PlayerChooseMaker(ChooseMaker):
                     break
 
                 try:
-                    chosen_target = target_label_map[target_choose]
+                    chosen_target = target_label_map[(act_choose, target_choose)]
                     good_target = True
                 except:
                     print(f"Target Input '{target_choose}' invalid.")
                     continue
             
             print(f"{ego.id} Chooses...")
-            print(f"Action: {chosen_action.id}")
-            print(f"Target: {chosen_target.id}")
+            print(f"Action: {chosen_action}")
+            print(f"Target: {chosen_target}")
             print(f"[input 'y' to confirm choice or 'n' to return to Action choice]")
 
             good_confirm = False

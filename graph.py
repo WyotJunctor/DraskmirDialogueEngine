@@ -97,7 +97,7 @@ class Vertex(GraphObject):
         super().__init__(created_timestep, updated_timestep, attr_map)
 
     def __repr__(self):
-        return f"{self.id}, {self.attr_map}"
+        return f"|{self.id}| {id(self)}" # f"{self.id}, {self.attr_map}"
 
     def add_edge(self, edge, endpoint, target=False, twoway=False):
         if twoway or not target:

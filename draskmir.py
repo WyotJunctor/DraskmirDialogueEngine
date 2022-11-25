@@ -35,7 +35,9 @@ loop
 if __name__ == "__main__":
 
     game = Game()
-    game.reality_brain.graph.draw_graph()
+
+    for _ in range(5):
+        game.step()
 
     """
     Start the world loop

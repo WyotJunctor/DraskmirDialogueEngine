@@ -1,6 +1,7 @@
 import json
 from random import shuffle
 
+from choose import PlayerChooseMaker
 from clock import Clock
 from brain import Brain
 from graph import Graph, Vertex
@@ -42,7 +43,9 @@ class Game:
 
         self.player_entity =  Brain(
             self.clock,
+            PlayerChooseMaker(),
             subjective_graph,
+            dict(),
             dict(),
             dict()
         )
