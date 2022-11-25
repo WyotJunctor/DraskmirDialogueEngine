@@ -58,6 +58,7 @@ class Game:
         actions = [  ]
 
         for entity in self.entities:
+            # action: ()
             action = entity.choose_action()
 
             if action is not None:
@@ -65,9 +66,10 @@ class Game:
                     ( entity, action )
                 )
 
-        actions = shuffle(actions)
+        shuffle(actions)
 
-        for action_entity, action_vert, action_tgt in actions:
+        for action_entity, action_pair in actions:
+            action_vert, action_tgt = action_pair
 
             if action_vert is None:
                 continue

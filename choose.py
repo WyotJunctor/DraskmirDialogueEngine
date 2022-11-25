@@ -22,7 +22,7 @@ class ChooseMaker:
         self.make = "choose"
 
     def consider(self, target_map, ego, graph):
-        return graph.vertices["Wait"], 
+        return graph.vertices["Wait"], ego
 
 
 class PlayerChooseMaker(ChooseMaker):
@@ -30,6 +30,10 @@ class PlayerChooseMaker(ChooseMaker):
         self.make = "player choose"
 
     def consider(self, target_map, ego, graph):
+
+        if len(target_map) == 0:
+            print(f"No actions to take, 'ego.id'!")
+            return graph.vertices["Wait"], ego
 
         print(f"Consider, '{ego.id}'...")
 
@@ -50,9 +54,9 @@ class PlayerChooseMaker(ChooseMaker):
                 target_label_map[(i, alpha)] = target
                 print(f"\t{alpha:>{target_i_len}}. {target}")
 
-        print(f"Act, {ego.id}...")
         good_act = False
         while not good_act:
+            print(f"Act, {ego.id}...")
             
             act_choose = input()
 
@@ -66,9 +70,9 @@ class PlayerChooseMaker(ChooseMaker):
                 print(f"Action Input '{act_choose}' invalid.")
                 continue
 
-            print(f"Target, {ego.id}...")
             good_target = False
             while not good_target:
+                print(f"Target, {ego.id}...")
                 print("[input '!' to return to Action choice]")
                 target_choose = input()
 
@@ -84,26 +88,26 @@ class PlayerChooseMaker(ChooseMaker):
                     print(f"Target Input '{target_choose}' invalid.")
                     continue
             
-            print(f"{ego.id} Chooses...")
-            print(f"Action: {chosen_action}")
-            print(f"Target: {chosen_target}")
-            print(f"[input 'y' to confirm choice or 'n' to return to Action choice]")
+                print(f"{ego.id} Chooses...")
+                print(f"Action: {chosen_action}")
+                print(f"Target: {chosen_target}")
+                print(f"[input 'y' to confirm choice or 'n' to return to Action choice]")
 
-            good_confirm = False
-            while not good_confirm:
+                good_confirm = False
+                while not good_confirm:
 
-                confirm_choose = input()
+                    confirm_choose = input()
 
-                if confirm_choose == "y":
-                    print("Confirming Choice")
-                    good_confirm = True
-                elif confirm_choose == "n":
-                    print("Rejecting Choice - Returning to Action choice")
-                    good_act = False
-                    good_target = False
-                    break
-                else:
-                    print("Bad input. Please input 'y' or 'n'.")
+                    if confirm_choose == "y":
+                        print("Confirming Choice")
+                        good_confirm = True
+                    elif confirm_choose == "n":
+                        print("Rejecting Choice - Returning to Action choice")
+                        good_act = False
+                        good_target = False
+                        break
+                    else:
+                        print("Bad input. Please input 'y' or 'n'.")
 
         return chosen_action, chosen_target
 

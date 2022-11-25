@@ -83,7 +83,7 @@ class Brain:
                     queue.append(child)
 
         return { 
-            action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items()
+            action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items() if len(dumbass_list[0]["allow"]) > 0
         }
 
     def receive_event(self, event: GraphEvent):
