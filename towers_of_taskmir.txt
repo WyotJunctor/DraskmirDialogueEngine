@@ -9,16 +9,13 @@ action check patterns*
 validate action checking --wyatt
 shortcut management --wyatt
 update knowledge graphs --wyatt
-subjective effect rules
+subjective effect rules --wyatt
 objective effect rules
 graph deltas --simon (wyatt: inspect)
 graph events --simon (wyatt: inspect)
-vertex type mapping --simon
-    . map concept node to everything that "Is" it
-    . i.e. graph.vertex_type_map["Action"] -> set(Vertex)
-action selection
+action selection        --simon (wyatt: inspect)
 entering and exiting
 action grouping
-basic AI
+basic AI                --simon (wyatt: inspect)
 basic action resolution --simon (wyatt: inspect)
 tracery logging
