@@ -116,9 +116,9 @@ class Graph:
 
         self.consolidate_relationships(moded_objs["verts"])
 
-        graph_deltas = set()
+        graph_deltas = list()
         for vert in moded_objs["verts"]:
-            graph_deltas.add(GraphDelta(
+            graph_deltas.append(GraphDelta(
                 event.key,
                 EventTarget.Vertex,
                 vert.relationship_map["Is>"],
@@ -126,7 +126,7 @@ class Graph:
             ))
 
         for edge in moded_objs["edges"]:
-            graph_deltas.add(GraphDelta(
+            graph_deltas.append(GraphDelta(
                 event.key,
                 EventTarget.Edge,
                 edge.edge_type,

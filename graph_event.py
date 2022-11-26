@@ -21,6 +21,13 @@ class GraphDelta:
         self.type_set = type_set
         self.graph_object = graph_object
 
+    def get_effect_keys(self):
+
+        keys = set()
+        for type in self.type_set:
+            keys.add((self.key, self.event_target, type))
+
+        return keys
 
 class GraphEvent:
     def __init__(self, key: EventType, subgraph: dict):

@@ -4,29 +4,55 @@ from collections import defaultdict
 from choose import ChooseMaker
 from clock import Clock
 from graph import Graph
-from graph_event import GraphEvent
+from graph_event import GraphEvent, EventType
+from graph_objs import Vertex
 from utils import merge_targets
 
 
 class Brain:
 
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, action_rules_map: dict, shortcut_maps: dict):
+    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
         self.clock = clock
-        self.choosemaker = choosemaker
-        self.ego = graph.vertices["Ego"]  # TODO(Simon): this should grab the instance not the concept
         self.graph = graph
+
         self.effect_rules = defaultdict(list)
-        self.action_rules = defaultdict(list)
+
+        # for each effect in the map, instantiate it
+        for effect_key, effect_rule in effect_rules_map.items():
+            v_id = effect_key[2]
+            effect_rule(graph.vertices[v_id], self.effect_rules[effect_key])
 
         # for each shortcut, put it on a vertex
         for v_id, shortcut_map in shortcut_maps.items():
             self.graph.vertices[v_id].shortcut_map = shortcut_map
 
-        # alert
-        # alert
-        # stinky Wyatt code incoming
-        # alrt
-        # TODO(Simon): WYatt fix your shit
+    def receive_event(self, event: GraphEvent):
+        graph_deltas = self.graph.handle_graph_event(event)
+
+        while len(graph_deltas) > 0:
+            delta = graph_deltas.pop()
+
+            effect_keys = delta.get_effect_keys()
+            for effect_key in effect_keys:
+                effect_rules = self.effect_rules[effect_key]
+
+                for rule in effect_rules:
+                    new_deltas = rule.receive_delta(delta, self.graph)
+                    graph_deltas.extend(new_deltas)
+
+
+class SubjectiveBrain(Brain):
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, shortcut_maps: dict, action_rules_map: dict):
+        super().__init__(clock, graph, effect_rules_map, shortcut_maps)
+
+        self.choosemaker = choosemaker
+        self.ego = graph.vertices["Ego"]  # TODO(Simon): this should grab the instance not the concept
+        self.action_rules = defaultdict(list)
+
+        # for each action rule in the map, instantiate it
+        for v_id, action_rule in action_rules_map.items():
+            action_rule(graph.vertices[v_id], self.action_rules[v_id])
+
         """
         # initialize effect rules
         for v_id, shortcut_map in shortcut_maps.items():
@@ -86,16 +112,42 @@ class Brain:
             action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items() if len(dumbass_list[0]["allow"]) > 0
         }
 
-    def receive_event(self, event: GraphEvent):
-        self.graph.handle_graph_event(event)
-"""
-        status = True
-        if event.key in self.effect_rules:
-            for event_response in self.effect_rules[event.key]:
-                if event_response.receive_event(event) is False:
-                    status = False
-                    break
-        if status is False:
-            return
-        self.graph.update_json(event)
-"""
+class RealityBrain(Brain):
+    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
+        super().__init__(clock, graph, effect_rules_map, shortcut_maps)
+
+    def receive_action(self, acting_entity: Brain, action_vertex: Vertex, action_target: Vertex):
+
+        actor_id = acting_entity.ego.id
+        act_id = actor_id + "_act_" + self.clock.timestep
+        act_tgt = action_target.id
+        act_type = action_vertex.id
+        act_event = GraphEvent(
+            EventType.Add,
+            {
+                "all_verts": [ act_id ],
+                "all_edges": [
+                    { "directed": True, "edge_tpye": "inst", "src": act_id, "tgt": act_type },
+                    { "directed": True, "edge_tpye": "src", "src": actor_id, "tgt": act_id },
+                    { "directed": True, "edge_type": "tgt", "src": act_id, "tgt":  act_tgt }
+                 ]
+            }
+        )
+
+        action_isses = action_vertex.relationship_map["Is>"]
+
+        rules = set()
+
+        for action_is in action_isses:
+            # collect the rules associated with the action's conceptual parent vertices
+            rules |= self.effect_rules.get(action_is, set())
+
+        graph_deltas = [
+            self.graph.convert_graph_event_to_delta(act_event)
+        ]
+
+        for rule in rules:
+            # assume mutation in the function
+            rule(graph_deltas)
+
+        return graph_deltas
