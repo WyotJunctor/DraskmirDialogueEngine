@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from clock import Clock
 from graph_event import GraphEvent, GraphDelta, EventType, EventTarget
 from graph_objs import Edge, Vertex
+from collections import defaultdict
 
 
 class Graph:
@@ -19,10 +20,51 @@ class Graph:
         nx.draw(self.visgraph, with_labels=True)
         plt.savefig("reality.png")
 
-    def consolidate_relationships(self, moded_verts):
+    def consolidate_relationships(self, updated_verts=None, tree_recalculate=False):
+        updated_verts = set(self.vertices.values()) if updated_verts is None else updated_verts
+  
+        starting_set = updated_verts
+        if tree_recalculate == True:
+            for v in updated_verts:
+                for n in v.out_edges.edgetype_to_vertex["Is"]:
+                    starting_set |= n.relationship_map["Is>"]
 
-        for vertex in self.vertices.values():
-            vertex.consolidate_relationships()
+        # get list of verts which have ingoing Is, but no outgoing Is
+        queue = list()
+        dependency_map = defaultdict(int)
+
+        for v in starting_set:
+            if len(v.in_edges.edgetype_to_edge["Is"]) > 0 and len(v.out_edges.edgetype_to_edge["Is"]) == 0:
+                queue.append(v)
+                dependency_map[v] = 0
+
+        while len(queue) > 0:
+            root = queue.pop(0)
+            for child in root.in_edges.edgetype_to_vertex["Is"]:
+                dependency_map[child] += 1
+                if dependency_map[child] == len(child.out_edges.edgetype_to_edge):
+                    new_lineage = child.relationship_map["Is>"] | root.relationship_map["Is>"]
+                    if child.relationship_map["Is>"] != new_lineage:
+                        updated_verts.add(child)
+                    child.relationship_map["Is>"] = new_lineage
+                    queue.add(child)
+
+        secondary_verts = set()
+
+
+        while len(queue) > 0:
+            vert = queue.pop(0)
+            vert.clear_secondary_relationships()
+            for dir, edge_map in ((">", vert.out_edges.edgetype_to_vertex), ("<", vert.in_edges.edgetype_to_vertex)):
+                for edge_type, neighbor_set in edge_map.items():
+                    if edge_type == "Is" and dir == ">":
+                        continue
+                    for neighbor in neighbor_set:
+                        if vert not in secondary_verts and neighbor not in updated_verts:
+                            updated_verts.add(neighbor)
+                            secondary_verts.add(neighbor)
+                        vert.relationship_map[edge_type+dir] |= neighbor.relationship_map["Is>"]
+                        
 
     def load_vert(self, id, attr_map):
         self.vertices[id] = Vertex(id, self.clock.timestep, self.clock.timestep, attr_map=attr_map)
