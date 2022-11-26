@@ -86,9 +86,15 @@ class Vertex(GraphObject):
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
         self.relationship_map = defaultdict(set)
+        self.relationship_map["Is>"].add(self)
         # ({"src":"Pred","src_dir":"<","tgt":"Pred","tgt_dir":">"},)
         self.shortcut_map = shortcut_map
         super().__init__(created_timestep, updated_timestep, attr_map)
+
+    def clear_secondary_relationships(self):
+        lineage = self.relationship_map["Is>"]
+        self.relationship_map = defaultdict(set)
+        self.relationship_map["Is>"] = lineage
 
     def __repr__(self):
         return f"|{self.id}| {id(self)}" # f"{self.id}, {self.attr_map}"
