@@ -9,7 +9,7 @@ from graph_objs import Vertex
 from utils import merge_targets
 
 
-class Brain:
+class Reality:
 
     def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
         self.clock = clock
@@ -41,7 +41,7 @@ class Brain:
                     graph_deltas.extend(new_deltas)
 
 
-class SubjectiveBrain(Brain):
+class SubjectiveReality(Reality):
     def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, shortcut_maps: dict, action_rules_map: dict):
         super().__init__(clock, graph, effect_rules_map, shortcut_maps)
 
@@ -112,11 +112,11 @@ class SubjectiveBrain(Brain):
             action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items() if len(dumbass_list[0]["allow"]) > 0
         }
 
-class RealityBrain(Brain):
+class ObjectiveReality(Reality):
     def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
         super().__init__(clock, graph, effect_rules_map, shortcut_maps)
 
-    def receive_action(self, acting_entity: Brain, action_vertex: Vertex, action_target: Vertex):
+    def receive_action(self, acting_entity: SubjectiveReality, action_vertex: Vertex, action_target: Vertex):
 
         actor_id = acting_entity.ego.id
         act_id = actor_id + "_act_" + self.clock.timestep

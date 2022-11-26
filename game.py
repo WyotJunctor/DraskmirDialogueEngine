@@ -3,7 +3,7 @@ from random import shuffle
 
 from choose import PlayerChooseMaker
 from clock import Clock
-from brain import SubjectiveBrain, RealityBrain
+from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
 from graph_event import GraphEvent, EventType
 
@@ -14,7 +14,7 @@ class Game:
 
         reality_graph = Graph(self.clock)
         reality_graph.load_json(objective_json)
-        self.reality = RealityBrain(self.clock, reality_graph, dict(), dict())
+        self.reality = ObjectiveReality(self.clock, reality_graph, dict(), dict())
 
         self.player_json_path = player_json
         self.subjective_json_path = subjective_json
@@ -40,7 +40,7 @@ class Game:
         self.reality.graph.handle_graph_event(player_add_event)
         subjective_graph.handle_graph_event(player_add_event)
 
-        self.player_entity = SubjectiveBrain(
+        self.player_entity = SubjectiveReality(
             self.clock,
             PlayerChooseMaker(),
             subjective_graph,
