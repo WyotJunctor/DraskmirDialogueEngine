@@ -3,8 +3,8 @@ import copy
 from collections import defaultdict
 from choose import ChooseMaker
 from clock import Clock
-from graph import Graph, Vertex
-from graph_event import GraphEvent, EventType
+from graph import Graph
+from graph_event import GraphEvent
 from utils import merge_targets
 
 

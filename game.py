@@ -4,7 +4,7 @@ from random import shuffle
 from choose import PlayerChooseMaker
 from clock import Clock
 from brain import Brain
-from graph import Graph, Vertex
+from graph import Graph
 from graph_event import GraphEvent, EventType
 from reality import Reality
 
@@ -13,7 +13,7 @@ class Game:
     def __init__(self, objective_json="objective_graph.json", subjective_json="drask_graph.json", player_json="player.json"):
         self.clock = Clock()
 
-        reality_graph = Graph(self)
+        reality_graph = Graph(self.clock)
         reality_graph.load_json(objective_json)
         self.reality = Reality(self.clock, reality_graph, dict())
 
@@ -27,7 +27,7 @@ class Game:
 
     def create_player(self):
 
-        subjective_graph = Graph(self)
+        subjective_graph = Graph(self.clock)
         subjective_graph.load_json(self.subjective_json_path)
 
         with open(self.player_json_path) as f:
@@ -55,10 +55,8 @@ class Game:
 
         actions = list()
 
-        actions = [  ]
-
         for entity in self.entities:
-            # action: ()
+            # action: (action_vert, action_target)
             action = entity.choose_action()
 
             if action is not None:
@@ -78,7 +76,7 @@ class Game:
                 continue
 
             graph_events = self.reality.receive_action(
-                self.timestep, action_entity, action_vert, action_tgt
+                action_entity, action_vert, action_tgt
             )
 
             for graph_event in graph_events:

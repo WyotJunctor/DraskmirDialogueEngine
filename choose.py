@@ -32,7 +32,7 @@ class PlayerChooseMaker(ChooseMaker):
     def consider(self, target_map, ego, graph):
 
         if len(target_map) == 0:
-            print(f"No actions to take, 'ego.id'!")
+            print(f"No actions to take, '{ego.id}'!")
             return graph.vertices["Wait"], ego
 
         print(f"Consider, '{ego.id}'...")

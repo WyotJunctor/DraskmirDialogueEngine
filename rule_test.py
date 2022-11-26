@@ -1,6 +1,6 @@
 from brain import Brain
 from graph import Graph
-from subjective_action_rules import rules_map
+from action_rules import rules_map
 from pprint import pprint
 
 # populate brain with concepts, people, and some state

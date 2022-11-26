@@ -1,7 +1,9 @@
 from brain import Brain
 from clock import Clock
-from graph import Graph, Vertex, Edge
+from graph import Graph
+from graph_objs import Vertex
 from graph_event import GraphEvent, EventType
+
 
 class Reality:
 
@@ -10,10 +12,10 @@ class Reality:
         self.graph = graph
         self.effect_rules = effect_rules
 
-    def receive_action(self, timestep: int, acting_entity: Brain, action_vertex: Vertex, action_target: Vertex):
+    def receive_action(self, acting_entity: Brain, action_vertex: Vertex, action_target: Vertex):
 
         actor_id = acting_entity.ego.id
-        act_id = actor_id + "_act_" + self.game.timestep
+        act_id = actor_id + "_act_" + self.clock.timestep
         act_tgt = action_target.id
         act_type = action_vertex.id
         act_event = GraphEvent(
