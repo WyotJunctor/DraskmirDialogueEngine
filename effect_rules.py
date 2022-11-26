@@ -22,20 +22,15 @@ class er_Shortcut(InheritedEffectRule):
         super().__init__(vertex, rules, priority)
         self.managed_shortcuts = defaultdict(set)
 
-    def add_entry(self, graph_delta):
+    def add_entry(self, target_vertex, graph_delta):
         src_set = set()
         tgt_set = set()
         for pattern in self.vertex.shortcut_map:
-            
-            # get graph_delta
-            pass
-
-        # check whether base vertex is included in graph_event subgraph
-        # check shortcut src and shortcut in graph event,
-        #   create, check edge between src x tgt
-        # add to internal map,
-        # if local, instantiate new shortcut edge
-        # if not, get associated shortcut edge?
-            # if none, set up new one
-        # add edge to managed edges
-        pass
+            # ({"src":("Pred", "<"),"tgt":("Pred", ">")},)
+            for key,obj_set in (("src", src_set), ("tgt", tgt_set)):
+                edge_map = target_vertex.in_edges.edgetype_to_vertex if pattern[key][1] == "<" else target_vertex.out_edges.edgetype_to_vertex
+                obj_set += edge_map.get(pattern[key][0], set())
+        for src_v in src_set:
+            for tgt_v in tgt_set:
+                pass
+                # insert edge...
