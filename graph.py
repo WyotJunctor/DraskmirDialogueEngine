@@ -22,7 +22,7 @@ class Graph:
 
     def consolidate_relationships(self, updated_verts=None, tree_recalculate=False):
         updated_verts = set(self.vertices.values()) if updated_verts is None else updated_verts
-  
+
         starting_set = updated_verts
         if tree_recalculate == True:
             for v in updated_verts:
@@ -32,6 +32,9 @@ class Graph:
         # get list of verts which have ingoing Is, but no outgoing Is
         queue = list()
         dependency_map = defaultdict(int)
+        old_lineage_map = defaultdict(set)
+        lineage_add_map = defaultdict(set)
+        lineage_remove_map = defaultdict(set)
 
         for v in starting_set:
             if len(v.in_edges.edgetype_to_edge["Is"]) > 0 and len(v.out_edges.edgetype_to_edge["Is"]) == 0:
@@ -40,18 +43,23 @@ class Graph:
 
         while len(queue) > 0:
             root = queue.pop(0)
+            if root in old_lineage_map:
+                lineage_add_map[root] = root.relationship_map["Is>"] - old_lineage_map[root]
+                lineage_remove_map[root] = old_lineage_map[root] - root.relationship_map["Is>"]
             for child in root.in_edges.edgetype_to_vertex["Is"]:
                 dependency_map[child] += 1
+                new_lineage = child.relationship_map["Is>"] | root.relationship_map["Is>"]
+                if child not in old_lineage_map:
+                    old_lineage_map[child] = child.relationship_map["Is>"]
                 if dependency_map[child] == len(child.out_edges.edgetype_to_edge):
-                    new_lineage = child.relationship_map["Is>"] | root.relationship_map["Is>"]
                     if child.relationship_map["Is>"] != new_lineage:
                         updated_verts.add(child)
-                    child.relationship_map["Is>"] = new_lineage
                     queue.add(child)
+                child.relationship_map["Is>"] = new_lineage
 
         secondary_verts = set()
 
-
+        queue = list(updated_verts)
         while len(queue) > 0:
             vert = queue.pop(0)
             vert.clear_secondary_relationships()
@@ -64,7 +72,9 @@ class Graph:
                             updated_verts.add(neighbor)
                             secondary_verts.add(neighbor)
                         vert.relationship_map[edge_type+dir] |= neighbor.relationship_map["Is>"]
-                        
+
+        return lineage_add_map, lineage_remove_map
+
 
     def load_vert(self, id, attr_map):
         self.vertices[id] = Vertex(id, self.clock.timestep, self.clock.timestep, attr_map=attr_map)
