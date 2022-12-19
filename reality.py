@@ -62,7 +62,7 @@ class SubjectiveReality(Reality):
     def receive_event(self, event: GraphEvent):
 
         event.subgraph["all_edges"] = [
-            edge for edge in event.subgraph["all_edges"] if "shortcut" in edge.edge_type
+            edge for edge in event.subgraph["all_edges"] if "Shortcut" in edge.edge_type
         ]
 
         super().receive_event(event)
