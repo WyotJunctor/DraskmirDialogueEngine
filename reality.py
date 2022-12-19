@@ -59,6 +59,14 @@ class SubjectiveReality(Reality):
             action_rule_class(vertex, self.action_rules[v_id])
         """
 
+    def receive_event(self, event: GraphEvent):
+
+        event.subgraph["all_edges"] = [
+            edge for edge in event.subgraph["all_edges"] if not edge.attr_map.get("shortcut", False)
+        ]
+
+        super().receive_event(event)
+
     def choose_action(self):
 
         target_map = self.get_targets()
