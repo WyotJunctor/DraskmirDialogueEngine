@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from clock import Clock
 from graph_event import GraphEvent, GraphDelta, EventType, EventTarget
 from graph_objs import Edge, Vertex
-from collections import defaultdict
+from collections import defaultdict, Counter
+from utils import to_counter
 
 
 class Graph:
@@ -20,65 +21,131 @@ class Graph:
         nx.draw(self.visgraph, with_labels=True)
         plt.savefig("reality.png")
 
-    def consolidate_relationships(self, updated_verts=None, tree_recalculate=False):
-        updated_verts = set(self.vertices.values()) if updated_verts is None else updated_verts
+    def split_edge_set(self, edge_set):
+        primary_edge_set = {edge for edge in edge_set if "Is" in edge.edge_type}
+        return primary_edge_set, edge_set - primary_edge_set
 
-        starting_set = updated_verts
-        if tree_recalculate == True:
-            for v in updated_verts:
-                for n in v.out_edges.edgetype_to_vertex["Is"]:
-                    starting_set |= n.relationship_map["Is>"]
-
-        # get list of verts which have ingoing Is, but no outgoing Is
-        queue = list()
-        dependency_map = defaultdict(int)
-        old_lineage_map = defaultdict(set)
-        lineage_add_map = defaultdict(set)
-        lineage_remove_map = defaultdict(set)
-
-        for v in starting_set:
-            if len(v.in_edges.edgetype_to_edge["Is"]) > 0 and len(v.out_edges.edgetype_to_edge["Is"]) == 0:
-                queue.append(v)
-                dependency_map[v] = 0
-
+    def calculate_dependencies(self, queue, original_set, visited):
         while len(queue) > 0:
             root = queue.pop(0)
-            if root in old_lineage_map:
-                lineage_add_map[root] = root.relationship_map["Is>"] - old_lineage_map[root]
-                lineage_remove_map[root] = old_lineage_map[root] - root.relationship_map["Is>"]
-            for child in root.in_edges.edgetype_to_vertex["Is"]:
-                dependency_map[child] += 1
-                new_lineage = child.relationship_map["Is>"] | root.relationship_map["Is>"]
-                if child not in old_lineage_map:
-                    old_lineage_map[child] = child.relationship_map["Is>"]
-                if dependency_map[child] == len(child.out_edges.edgetype_to_edge):
-                    if child.relationship_map["Is>"] != new_lineage:
-                        updated_verts.add(child)
-                    queue.add(child)
-                child.relationship_map["Is>"] = new_lineage
+            for child in root.get_relationships("Is<"):
+                original_set.remove(child)
+                if child in visited:
+                    visited[child][0] += 1
+                else:
+                    visited[child] = [1, 0]
+                    queue.append(child)
 
-        secondary_verts = set()
-
-        queue = list(updated_verts)
+    def apply_primary_edges(self, original_set, visited, update_map, lineage_map, add):
+        queue = list(original_set)
         while len(queue) > 0:
-            vert = queue.pop(0)
-            vert.clear_secondary_relationships()
-            for dir, edge_map in ((">", vert.out_edges.edgetype_to_vertex), ("<", vert.in_edges.edgetype_to_vertex)):
-                for edge_type, neighbor_set in edge_map.items():
-                    if edge_type == "Is" and dir == ">":
-                        continue
-                    for neighbor in neighbor_set:
-                        if vert not in secondary_verts and neighbor not in updated_verts:
-                            updated_verts.add(neighbor)
-                            secondary_verts.add(neighbor)
-                        vert.relationship_map[edge_type+dir] |= neighbor.relationship_map["Is>"]
+            root = queue.pop(0)
+            # apply update map removal
+            lineage_map[root] = root.update_relationships(update_map[root], add=add)
+            update_counter = to_counter(lineage_map[root])
+            for child in root.get_relationships("Is<"):
+                if child in visited: # this should always be true
+                    update_map[child] += update_counter
+                    visited[child][1] += 1
+                    if visited[child][1] == visited[child][0]:
+                        queue.append(child)
 
-        return lineage_add_map, lineage_remove_map
+    def update_graph(self, add_verts=None, add_edges=None, del_verts=None, del_edges=None):
+        # ugly, but I don't FREAKING care
+        add_verts = set() if add_verts is None else add_verts
+        del_verts = set() if del_verts is None else del_verts
+        add_edges = set() if add_edges is None else add_edges
+        add_edges = set([e for e in add_edges if e.src not in del_verts and e.tgt not in del_verts])
+        add_p_edges, add_s_edges = self.split_edge_set(add_edges)
+        del_edges = set() if del_edges is None else del_edges
+        del_p_edges, del_s_edges = self.split_edge_set(del_edges)
+
+        lineage_add_map = defaultdict(set)
+        lineage_del_map = defaultdict(set)
+
+        update_map = defaultdict(Counter)
+        original_set = set()
+        visited = dict()
+        queue = list()
+        # HANDLE DELETED VERTICES
+        for v in del_verts:
+            del self.vertices[v.id]
+            lineage_del_map[v] = v.get_relationships("Is>")
+            for edge_map in (v.out_edges, v.in_edges):
+                for edge_type, edge_set in edge_map.edgetype_to_edge.items():
+                    if edge_type == "Is":
+                        del_p_edges += edge_set
+                    else:
+                        del_s_edges += edge_set
+
+        # BEGIN DELETED PRIMARY EDGES
+        for e in del_p_edges:
+            del self.edges[e.id] # does this just remove the key or does it actually delete the thing, too?
+            if e.src not in del_verts:
+                original_set.add(e.src)
+                visited[e.src] = [0,0]
+                queue.append(e.src)
+                update_map[e.src] += e.tgt.get_relationships("Is>", as_counter=True)
+            if e.src in del_verts and e.tgt in del_verts:
+                continue
+            for v in (e.src, e.tgt):
+                if v not in del_verts:
+                    v.remove_edge(e, update_relationships=v == e.tgt) # this is basically a secondary edge
+
+        self.calculate_dependencies(self, queue, original_set, visited)
+
+        self.apply_primary_edges(self, original_set, visited, update_map, lineage_del_map, add=False)
+        # END DELTED PRIMARY EDGES
+
+        # HANDLE DELETED SECONDARY EDGES
+        for e in del_s_edges:
+            del self.edges[e.id]
+            for v in (e.src, e.tgt):
+                if v not in del_verts:
+                    v.remove_edge(e)
+
+        # BEGIN ADDED PRIMARY EDGES
+        update_map = defaultdict(Counter)
+        visited = dict()
+        original_set = set()
+        queue = list()
+        for e in add_p_edges:
+            visited[e.src] = [0, 0]
+            original_set.add(e.src)
+            queue.append(e.src)
+            update_map[e.src] += e.tgt.get_relationships("Is>", as_counter=True)
+            e.src.add_edge(e, e.twoway, update_relationships=False)
+            e.tgt.add_edge(e, e.twoway, update_relationships=True)
+
+        self.calculate_dependencies(self, queue, original_set, visited)
+
+        self.apply_primary_edges(self, original_set, visited, update_map, lineage_add_map, add=True)
+        # END ADDED PRIMARY EDGES
+
+        # PROPAGATE LINEAGE TO NEIGHBORS
+        for lineage_map, add in ((lineage_del_map, False), (lineage_add_map,True)):
+            for v, updated_lineage in lineage_map:
+                v.propagate_lineage_delta(updated_lineage, add=add)
+                # this is about propagating changes to neighbors via remaining secondary edges
+
+        # HANDLE ADDED SECONDARY EDGES
+        for e in add_s_edges:
+            e.src.add_edge(e, e.twoway, update_relationships=True)
+            e.tgt.add_edge(e, e.twoway, update_relationships=True)
+
+        # HANDLE ADDED VERTS (POSSIBLE MERGING)
+        for v in add_verts:
+            self.vertices[v.id] = v
+        # if the v.id already exists and doesn't equal v, we have to figure out merging...
+
+        return lineage_add_map, lineage_del_map
 
 
     def load_vert(self, id, attr_map):
-        self.vertices[id] = Vertex(id, self.clock.timestep, self.clock.timestep, attr_map=attr_map)
+        vertex = Vertex(id, self.clock.timestep, self.clock.timestep, attr_map=attr_map)
+        self.vertices[id] = vertex
         self.visgraph.add_node(id)
+        return vertex
 
     def load_edge(self, edge_glob):
         idtup = (edge_glob["src"], edge_glob["tgt"])
@@ -99,6 +166,7 @@ class Graph:
 
         self.edges[edge.id] = edge
         self.visgraph.add_edge(*idtup)
+        return edge
 
     def load_json(self, json_path):
         with open(json_path) as f:
@@ -173,7 +241,7 @@ class Graph:
             graph_deltas.append(GraphDelta(
                 event.key,
                 EventTarget.Vertex,
-                vert.relationship_map["Is>"],
+                vert.get_relationships("Is>"),
                 vert
             ))
 

@@ -94,6 +94,7 @@ class SubjectiveReality(Reality):
         target_map = dict()
         # get root action
         action_vert = self.graph.vertices["Action"]
+        instance_vert = self.graph.vertices["Instance"]
         target_map = {action_vert: [{"allow":set(), "disallow":set()}, 0, 0]} # vertex: [target_set, num_calculated_dependencies, num_dependencies]
         queue = [action_vert]
         while len(queue) > 0:
@@ -103,12 +104,13 @@ class SubjectiveReality(Reality):
                 continue
             target_map[root][0] = merge_targets(target_set, local_target_set)
 
-            for child in root.in_edges.edgetype_to_id["Is"]:
-                child = self.graph.vertices[child]
+            for child in root.in_edges.edgetype_to_vertex["Is"]:
+                if instance_vert in child.relationship_map["Is>"]:
+                    continue
                 if child not in target_map:
                     target_map[child] = [
                         copy.deepcopy(target_set), 1,
-                        len([v for v in child.out_edges.edgetype_to_id["Is"] if "Action" in self.graph.vertices[v].attr_map])
+                        len([v for v in child.out_edges.edgetype_to_id["Is"] if action_vert in v.relationship_map["Is>"]])
                     ]
                 else:
                     target_map[child][0] = merge_targets(target_map[child][0], target_set)
@@ -116,7 +118,7 @@ class SubjectiveReality(Reality):
                 if target_map[child][1] == target_map[child][2]:
                     queue.append(child)
 
-        return { 
+        return {
             action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items() if len(dumbass_list[0]["allow"]) > 0
         }
 

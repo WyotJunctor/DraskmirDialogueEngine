@@ -66,14 +66,14 @@ class ActionRule:
                 for rel_key, rel_set in ref["rel"]:
                     if isinstance(rel_set, str):
                         rel_set = context[rel_set]
-                    if rel_set.issubset(v.relationship_map["rel_key"]) == False:
+                    if rel_set.issubset(v.get_relationships(rel_key)) == False:
                         success = False
                         break
             if "no_rel" in ref:
                 for rel_key, rel_set in ref["no_rel"]:
                     if isinstance(rel_set, str):
                         rel_set = context[rel_set]
-                    if rel_set.isdisjoint(v.relationship_map["rel_key"]) == False:
+                    if rel_set.isdisjoint(v.get_relationships(rel_key)) == False:
                         success = False
                         break
             if success == True:

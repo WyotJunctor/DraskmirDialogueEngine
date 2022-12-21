@@ -1,4 +1,5 @@
 from collections import defaultdict, Counter
+from utils import to_counter
 
 class EdgeMap:
     def __init__(self):
@@ -18,6 +19,7 @@ class EdgeMap:
             self.edgetype_to_edge[edge_type].add(edge)
             self.edgetype_to_vertex[edge_type].add(endpoint)
 
+    # optimize?
     def remove(self, edge, endpoint):
         self.edge_set.remove(edge)
         self.id_to_edge[endpoint.id].remove(edge)
@@ -85,29 +87,71 @@ class Vertex(GraphObject):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
-        self.relationship_map = defaultdict(set)
-        self.relationship_map["Is>"].add(self)
+        self.relationship_map = defaultdict(Counter)
+        self.relationship_map["Is>"][self] = 1
         # ({"src":"Pred","src_dir":"<","tgt":"Pred","tgt_dir":">"},)
         self.shortcut_map = shortcut_map
         super().__init__(created_timestep, updated_timestep, attr_map)
 
+    def get_relationships(self, key, exclude_self=False, as_counter=False):
+        if key in self.relationship_map:
+            result = set(self.relationship_map[key].keys())
+            if exclude_self:
+                result.remove(self)
+            if as_counter == True:
+                return to_counter(result)
+            return result
+        return set()
+
     def clear_secondary_relationships(self):
         lineage = self.relationship_map["Is>"]
-        self.relationship_map = defaultdict(set)
+        self.relationship_map = defaultdict(Counter)
         self.relationship_map["Is>"] = lineage
 
     def __repr__(self):
         return f"|{self.id}| {id(self)}" # f"{self.id}, {self.attr_map}"
 
-    def add_edge(self, edge, endpoint, target=False, twoway=False):
+    def update_relationships(self, target_counter:Counter, add:bool):
+        result_set = set()
+        for key,value in target_counter.items():
+            if add == True:
+                if key not in self.relationship_map:
+                    result_set.add(key)
+                self.relationship_map[key] += value
+            elif key in self.relationship_map:
+                self.relationship_map[key] -= value
+                if self.relationship_map[key] <= 0:
+                    del self.relatipnship_map[key]
+                    result_set[key].add(key)
+
+        return result_set
+
+    def propagate_lineage_delta(self, updated_lineage:set, add:bool):
+        lineage_counter = to_counter(updated_lineage)
+        for edge_map in (self.in_edges, self.out_edges):
+            for edge_type, target in edge_map.edgetype_to_vertex.items():
+                if edge_type != "Is":
+                    target.update_relationships(lineage_counter, add=add)
+
+    def add_edge(self, edge, twoway=False, update_relationships=True):
+        target = edge.tgt == self
+        endpoint = edge.tgt if edge.tgt is not self else edge.src
+        result = set()
+
         if twoway or not target:
             self.out_edges.add(edge, endpoint)
         if twoway or target:
             self.in_edges.add(edge, endpoint)
 
-    def remove_edge(self, edge):
+        if update_relationships == True:
+            result = self.update_relationships(endpoint.get_relationships("Is>", as_counter=True), add=True)
+
+        return result
+
+    def remove_edge(self, edge, update_relationships=True):
 
         endpoint = edge.tgt if edge.tgt is not self else edge.src
+        result = set()
 
         if edge.twoway:
             self.in_edges.remove(edge, endpoint)
@@ -117,27 +161,14 @@ class Vertex(GraphObject):
         elif self is edge.tgt:
             self.in_edges.remove(edge, endpoint)
 
+        if update_relationships == True:
+            result = self.update_relationships(endpoint.get_relationships("Is>", as_counter=True), add=False)
+
+        return result
+
     def remove_edges_with(self, vertex):
         self.in_edges.remove_edges_with(vertex)
         self.out_edges.remove_edges_with(vertex)
-
-
-    def consolidate_relationships(self, called_from=None):
-
-        for out_edge in self.out_edges.edge_set:
-            tgt = out_edge.tgt if out_edge.tgt is not self else out_edge.src
-
-            if tgt is not called_from:
-                tgt.consolidate_relationships(self)
-
-            for edge_type in out_edge.edge_type:
-                self.relationship_map[edge_type + ">"].add(tgt)
-                self.relationship_map[edge_type + ">"] |= tgt.relationship_map["Is>"]
-
-        for in_edge in self.in_edges.edge_set:
-            src = in_edge.src if in_edge.src is not self else in_edge.tgt
-            for edge_type in in_edge.edge_type:
-                self.relationship_map[edge_type + "<"].add(src)
 
 
 class Edge(GraphObject):
@@ -148,8 +179,6 @@ class Edge(GraphObject):
         self.src = src
         self.tgt = tgt
         self.twoway = twoway
-        src.add_edge(self, tgt, twoway=twoway)
-        tgt.add_edge(self, src, target=True, twoway=twoway)
         super().__init__(created_timestep, updated_timestep, attr_map)
         # TODO: add logic for twoway
 

@@ -1,21 +1,66 @@
 TASKS
-* = done
---<name> = <name> is working on this
+note: if an effect rule appears in both the subjective and objective list, it means they should probably have unique implementations
 
-ingest concept graph JSON*
-graph + rule initialization*
-action check logic*
-action check patterns*
-validate action checking --wyatt
-shortcut management --wyatt
-update knowledge graphs --wyatt
-subjective effect rules --wyatt
+ACTIVE TASKS
+shared effect rules
+  add track time
+  tick track time
+  add stative (edge?)
+  ACTION RULES...
+    add action
+    add interaction action
+subjective effect rules
+  add shortcut
+  add person
+  del person
+  add involved
+  tick involved
+  add combat context
+  del involved
+  ACTION RULES...
+    add combat action
+  tick combat context?
+  tick ego (acknowledge rule?)
+  del pred?
+  del shortcut?
 objective effect rules
-graph deltas --simon (wyatt: inspect)
-graph events --simon (wyatt: inspect)
-action selection        --simon (wyatt: inspect)
+  add person
+  del person
+  ACTION RULES...
 entering and exiting
 action grouping
-basic AI                --simon (wyatt: inspect)
-basic action resolution --simon (wyatt: inspect)
 tracery logging
+
+
+
+CONTINUOUS TASKS
+modify graph
+  double check As_Response and As_Unique
+  add Instance vertex
+  add Track_Time vertex (with relationships)
+  add Shortcut vertex (with relationships)
+  add Real_Action vertex (with relationships)
+validate
+  action checking
+  graph deltas
+  graph events
+  action selection
+  basic AI
+  basic action resolution
+
+
+COMPLETED TASKS
+ingest concept graph JSON
+graph + rule initialization
+action check logic
+action check patterns
+type filter
+
+$ = nothing active at the moment
+
+
+
+
+
+
+  -
