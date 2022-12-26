@@ -1,5 +1,6 @@
 from collections import defaultdict
 from enum import Enum
+import itertools
 
 from graph_objs import Edge, Vertex, GraphObject
 
@@ -17,11 +18,57 @@ class EventTarget(Enum):
 
 
 class GraphMessage:
-    def __init__(self):
-        self.update_map = defaultdict(set)
+    def __init__(self, update_map):
+        self.update_map = update_map
 
     def add_object(self, key, obj):
         self.update_map[key].add(obj)
+
+    def realize(self, graph):
+        realized = defaultdict(set)
+        duplicate_records = set()
+        realized_verts = dict()
+        for event_key in itertools.product(
+            (EventTarget.Vertex, EventTarget.Edge), (EventType.Add, EventType.Delete)):
+            event_act, event_target = event_key
+            event_set = self.update_map.get(event_key)
+            if event_target == EventTarget.Vertex:
+                for vert_id in event_set:
+                    if graph.vertices.get(vert_id) is None:
+                        realized[event_key].add(Vertex(
+                            vert_id, graph.clock.timestep, graph.clock.timestep
+                        ))
+                    else:
+                        vert = graph.vertices.get(vert_id)
+                        if event_act is EventType.Add:
+                            for label in vert.get_relationships("Is>"):
+                                duplicate_records.add(GraphRecord_Vertex(EventType.Duplicate, EventTarget.Vertex, graph.vertices.get(vert_id), label))
+                        else:
+                            realized[event_key].add(vert)
+            elif event_target == EventTarget.Edge:
+                for edge_tuple in event_set:
+                    s_id, t_set, t_id = edge_tuple
+                    verts = [None, None]
+                    for i, vert_id in enumerate((s_id, t_id)):
+                        verts[i] = graph.vertices.get(
+                            vert_id,
+                            realized_verts.get(vert_id)    
+                        )
+                        if verts[i] is None:
+                            raise BufferError() # because I can
+
+                    s_vert, t_vert = verts
+                    dupe_edge = False
+                    for edge in s_vert.out_edges.id_to_edge.get(t_id, set()):
+                        if edge.edge_type == t_set:
+                            for src_label, e_type, tgt_label in itertools.product(s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
+                                duplicate_records.add(GraphRecord_Edge(EventType.Duplicate, EventTarget.Edge, edge, src_label, e_type, tgt_label)) 
+                            dupe_edge = True
+                            break
+                    if dupe_edge is False:
+                        realized[event_key].add(Edge(t_set, s_vert, t_vert, graph.clock.timestep))
+        return realized, duplicate_records
+            
 
 
 class GraphRecord:
