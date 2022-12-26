@@ -37,8 +37,8 @@ class Game:
             glob
         )
 
-        self.reality.graph.handle_graph_event(player_add_event)
-        subjective_graph.handle_graph_event(player_add_event)
+        self.reality.graph.update_graph([player_add_event])
+        subjective_graph.update_graph([player_add_event])
 
         self.player_entity = SubjectiveReality(
             self.clock,
@@ -78,11 +78,8 @@ class Game:
                 action_entity, action_vert, action_tgt
             )
 
-            for graph_event in graph_events:
-
-                self.reality.receive_event(graph_event)
-
-                for observing_entity in self.entities:
-                    observing_entity.reveive_event(graph_event)
+            self.reality.receive_events(graph_events)
+            for observing_entity in self.entities:
+                observing_entity.reveive_events(graph_events)
 
         self.clock.step()

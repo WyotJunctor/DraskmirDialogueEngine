@@ -26,19 +26,18 @@ class Reality:
         for v_id, shortcut_map in shortcut_maps.items():
             self.graph.vertices[v_id].shortcut_map = shortcut_map
 
-    def receive_event(self, event: GraphEvent):
-        graph_deltas = self.graph.handle_graph_event(event)
+    def receive_events(self, events: list[GraphEvent]):
+        records = self.graph.update_graph(events)
 
-        while len(graph_deltas) > 0:
-            delta = graph_deltas.pop()
+        while len(records) > 0:
+            record = records.pop()
+            effect_rule = self.effect_rules.get(record)
 
-            effect_keys = delta.get_effect_keys()
-            for effect_key in effect_keys:
-                effect_rules = self.effect_rules[effect_key]
+            if effect_rule is not None:
+                new_events = effect_rule.receive_record(record)
+                new_records = self.graph.update_graph(new_events)
 
-                for rule in effect_rules:
-                    new_deltas = rule.receive_delta(delta, self.graph)
-                    graph_deltas.extend(new_deltas)
+                records.extend(new_records)
 
 
 class SubjectiveReality(Reality):
@@ -59,13 +58,6 @@ class SubjectiveReality(Reality):
             action_rule_class(vertex, self.action_rules[v_id])
         """
 
-    def receive_event(self, event: GraphEvent):
-
-        event.subgraph["all_edges"] = [
-            edge for edge in event.subgraph["all_edges"] if "Shortcut" in edge.edge_type
-        ]
-
-        super().receive_event(event)
 
     def choose_action(self):
 

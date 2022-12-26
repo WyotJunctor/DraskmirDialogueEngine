@@ -6,32 +6,19 @@ from graph_objs import Edge, Vertex, GraphObject
 class EventType(Enum):
     Add = 0
     Delete = 1
-    Timestep = 2
+    Duplicate = 2
+    Update = 3
 
 
 class EventTarget(Enum):
     Vertex = 0
     Edge = 1
+    Attribute = 2
 
-
-class GraphDelta:
-    def __init__(self, key: EventType, event_target: EventTarget, type_set: set, graph_object: GraphObject):
-        self.key = key
-        self.event_target = event_target
-        self.type_set = type_set
-        self.graph_object = graph_object
-
-    def get_effect_keys(self):
-
-        keys = set()
-        for type in self.type_set:
-            keys.add((self.key, self.event_target, type))
-
-        return keys
 
 class GraphEvent:
-    def __init__(self, key: EventType, subgraph: dict):
-        self.key = key
+    def __init__(self, event_type: EventType, subgraph: dict):
+        self.event_type = event_type
         self.subgraph = subgraph
 
     def get_objs_subgraph(self, graph):

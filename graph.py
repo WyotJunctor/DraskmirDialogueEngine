@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from clock import Clock
-from graph_event import GraphEvent, GraphDelta, EventType, EventTarget
+from graph_event import GraphEvent, EventType, EventTarget
 from graph_objs import Edge, Vertex
 from collections import defaultdict, Counter
 from utils import to_counter
@@ -51,14 +51,32 @@ class Graph:
                     if visited[child][1] == visited[child][0]:
                         queue.append(child)
 
-    def update_graph(self, add_verts=None, add_edges=None, del_verts=None, del_edges=None):
-        # ugly, but I don't FREAKING care
-        add_verts = set() if add_verts is None else add_verts
-        del_verts = set() if del_verts is None else del_verts
-        add_edges = set() if add_edges is None else add_edges
+    def update_graph(self, events: list[GraphEvent]):
+
+
+        add_verts = set()
+        add_edges = set()
+        del_verts = set()
+        del_edges = set()
+
+        for event in events:
+            obj_subgraph = event.get_objs_subgraph(self)
+
+            set_key = (event.event_type, event.event_target)
+
+            match set_key:
+                case (EventType.Add):
+                    vert_set = add_verts
+                    edge_set = add_edges
+                case (EventType.Delete):
+                    vert_set = del_verts
+                    edge_set = del_edges
+
+            vert_set |= set(obj_subgraph["all_verts"].values())
+            edge_set |= set(obj_subgraph["all_edges"].values())
+
         add_edges = set([e for e in add_edges if e.src not in del_verts and e.tgt not in del_verts])
         add_p_edges, add_s_edges = self.split_edge_set(add_edges)
-        del_edges = set() if del_edges is None else del_edges
         del_p_edges, del_s_edges = self.split_edge_set(del_edges)
 
         lineage_add_map = defaultdict(set)
@@ -187,82 +205,6 @@ class Graph:
         for edge in glob["all_edges"]:
             self.load_edge(edge)
 
-    def handle_graph_event(self, event: GraphEvent):
-
-        moded_objs = { "verts": set(), "edges": set() }
-        obj_subgraph = event.get_objs_subgraph(self)
-
-        for vertex in obj_subgraph["all_verts"].values():
-
-            if event.key is EventType.Add and vertex.id not in self.vertices:
-
-                # ensure vertex is in graph
-                self.vertices[vertex.id] = vertex
-                moded_objs["verts"].add(vertex)
-
-            elif event.key is EventType.Delete and vertex.id in self.vertices:
-
-                # remove vertex from graph
-                del self.vertices[vertex.id]
-                moded_objs["verts"].add(vertex)
-
-                # find set of neighbors (we can't modify edge sets while iterating over them)
-                neighbors = set()
-
-                for in_edge in vertex.in_edges.edge_set:
-                    tgt = out_edge.tgt if out_edge.tgt is not vertex else out_edge.src
-                    neighbors.add(tgt)
-
-                for out_edge in vertex.out_edges.edge_set:
-                    src = in_edge.src if in_edge.src is not vertex else in_edge.tgt
-                    neighbors.add(src)
-
-                # remove edges to deleted vertex
-                for neighbor in neighbors:
-                    neighbor.remove_edges_with(vertex)
-
-        for edge in obj_subgraph["all_edges"]:
-
-            if event.key is EventType.Add and edge.id not in self.edges:
-
-                # ensure edge is in graph
-                self.edges[edge.id] = edge
-                moded_objs["edges"].add(edge)
-
-                # look at src and tgt
-                # make sure they're bookkeeping
-                edge.src.add_edge(edge, edge.tgt, target=False, twoway=edge.twoway)
-                edge.tgt.add_edge(edge, edge.src, target=True, twoway=edge.twoway)
-
-            elif event.key is EventType.Delete and edge.id in self.edges:
-
-                # remove edge from graph
-                del self.edges[edge.id]
-                moded_objs["edges"].add(edge)
-
-                edge.src.remove_edge(edge)
-                edge.tgt.remove_edge(edge)
-
-        self.consolidate_relationships(moded_objs["verts"])
-
-        graph_deltas = list()
-        for vert in moded_objs["verts"]:
-            graph_deltas.append(GraphDelta(
-                event.key,
-                EventTarget.Vertex,
-                vert.get_relationships("Is>"),
-                vert
-            ))
-
-        for edge in moded_objs["edges"]:
-            graph_deltas.append(GraphDelta(
-                event.key,
-                EventTarget.Edge,
-                edge.edge_type,
-                edge
-            ))
-
-        return graph_deltas
 
     def load_rules(self, rule_map):
         for v_id, rule_class in rule_map.items():
