@@ -7,6 +7,7 @@ from graph_event import GraphEvent, GraphDelta, EventType, EventTarget
 from graph_objs import Edge, Vertex
 from collections import defaultdict, Counter
 from utils import to_counter
+import itertools
 
 
 class Graph:
@@ -62,6 +63,8 @@ class Graph:
 
         lineage_add_map = defaultdict(set)
         lineage_del_map = defaultdict(set)
+        edge_add_map = dict()
+        edge_del_map = dict()
 
         update_map = defaultdict(Counter)
         original_set = set()
@@ -80,7 +83,7 @@ class Graph:
 
         # BEGIN DELETED PRIMARY EDGES
         for e in del_p_edges:
-            del self.edges[e.id] # does this just remove the key or does it actually delete the thing, too?
+            del self.edges[e.id]
             if e.src not in del_verts:
                 original_set.add(e.src)
                 visited[e.src] = [0,0]
@@ -95,7 +98,7 @@ class Graph:
         self.calculate_dependencies(self, queue, original_set, visited)
 
         self.apply_primary_edges(self, original_set, visited, update_map, lineage_del_map, add=False)
-        # END DELTED PRIMARY EDGES
+        # END DELETED PRIMARY EDGES
 
         # HANDLE DELETED SECONDARY EDGES
         for e in del_s_edges:
@@ -138,7 +141,13 @@ class Graph:
             self.vertices[v.id] = v
         # if the v.id already exists and doesn't equal v, we have to figure out merging...
 
-        return lineage_add_map, lineage_del_map
+        # iterate through secondary edge additions/deletions and generate edge delta maps 
+        for edge_set, edge_delta_map in ((add_s_edges, edge_add_map), (del_s_edges, edge_del_map)):
+            for edge in edge_set:
+                edge_delta_map[edge] = set(itertools.product(edge.src.get_relationships("Is>"), edge.edge_type, edge.tgt.get_relationships("Is>")))
+
+
+        return lineage_add_map, lineage_del_map, edge_add_map, edge_del_map
 
 
     def load_vert(self, id, attr_map):
