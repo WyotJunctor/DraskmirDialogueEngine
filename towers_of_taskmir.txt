@@ -40,6 +40,7 @@ modify graph
   add Track_Time vertex (with relationships)
   add Shortcut vertex (with relationships)
   add Real_Action vertex (with relationships)
+  re-add priority attribute to action lineages
 validate
   action checking
   graph deltas
