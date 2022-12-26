@@ -1,3 +1,4 @@
+from collections import defaultdict
 from enum import Enum
 
 from graph_objs import Edge, Vertex, GraphObject
@@ -7,13 +8,59 @@ class EventType(Enum):
     Add = 0
     Delete = 1
     Duplicate = 2
-    Update = 3
 
 
 class EventTarget(Enum):
     Vertex = 0
     Edge = 1
     Attribute = 2
+
+
+class GraphMessage:
+    def __init__(self):
+        self.update_map = defaultdict(set)
+
+    def add_object(self, key, obj):
+        self.update_map[key].add(obj)
+
+
+class GraphRecord:
+    def __init__(self, act, tgt, o_ref):
+        self.act = act
+        self.tgt = tgt
+        self.o_ref = o_ref
+
+    def __hash__(self):
+        raise NotImplementedError()
+
+
+class GraphRecord_Vertex(GraphRecord):
+    def __init__(self, act, tgt, o_ref, label):
+        super().__init__(act, tgt, o_ref)
+        self.label = label
+
+    def __hash__(self):
+        return hash((self.act, self.tgt, self.label))
+
+class GraphRecord_Edge(GraphRecord):
+    def __init__(self, act, tgt, o_ref, src_label, e_type, tgt_label):
+        super().__init__(act, tgt, o_ref)
+        self.src_label = src_label
+        self.e_type = e_type
+        self.tgt_label = tgt_label
+        
+    def __hash__(self):
+        return hash((self.act, self.tgt, self.src_label, self.e_type, self.tgt_label))
+
+
+class GraphRecord_Attribute(GraphRecord):
+    def __init__(self, act, tgt, o_ref, attr_name, *o_type):
+        super().__init__(act, tgt, o_ref)
+        self.attr_name = attr_name
+        self.o_type = tuple(o_type)
+
+    def __hash__(self):
+        return hash((self.act, self.tgt, self.attr_name, *self.o_type))
 
 
 class GraphEvent:
