@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from clock import Clock
-from graph_event import GraphEvent, EventType, EventTarget
+from graph_event import GraphMessage, GraphRecord_Vertex, GraphRecord_Edge, EventType, EventTarget
 from graph_objs import Edge, Vertex
 from collections import defaultdict, Counter
 from utils import to_counter
@@ -15,7 +15,6 @@ class Graph:
     def __init__(self, clock: Clock):
         self.clock = clock
         self.vertices = dict()
-        self.edges = dict()
         self.visgraph = nx.Graph()
 
     def draw_graph(self):
@@ -51,29 +50,26 @@ class Graph:
                     if visited[child][1] == visited[child][0]:
                         queue.append(child)
 
-    def update_graph(self, events: list[GraphEvent]):
-
+    # TODO(Wyatt): add attribute updates
+    def update_graph(self, events: GraphMessage):
 
         add_verts = set()
         add_edges = set()
         del_verts = set()
         del_edges = set()
 
-        for event in events:
-            obj_subgraph = event.get_objs_subgraph(self)
+        realized_events, duplicate_records = events.realize(self)
+        for event_key, event_set in realized_events.items():
 
-            set_key = (event.event_type, event.event_target)
-
-            match set_key:
-                case (EventType.Add):
-                    vert_set = add_verts
-                    edge_set = add_edges
-                case (EventType.Delete):
-                    vert_set = del_verts
-                    edge_set = del_edges
-
-            vert_set |= set(obj_subgraph["all_verts"].values())
-            edge_set |= set(obj_subgraph["all_edges"].values())
+            match event_key:
+                case (EventType.Add, EventTarget.Vertex):
+                    add_verts = event_set
+                case (EventType.Add, EventTarget.Edge):
+                    add_edges = event_set
+                case (EventType.Delete, EventTarget.Vertex):
+                    del_verts = event_set
+                case (EventType.Delete, EventTarget.Edge):
+                    del_edges = event_set
 
         add_edges = set([e for e in add_edges if e.src not in del_verts and e.tgt not in del_verts])
         add_p_edges, add_s_edges = self.split_edge_set(add_edges)
@@ -101,7 +97,6 @@ class Graph:
 
         # BEGIN DELETED PRIMARY EDGES
         for e in del_p_edges:
-            del self.edges[e.id]
             if e.src not in del_verts:
                 original_set.add(e.src)
                 visited[e.src] = [0,0]
@@ -120,7 +115,6 @@ class Graph:
 
         # HANDLE DELETED SECONDARY EDGES
         for e in del_s_edges:
-            del self.edges[e.id]
             for v in (e.src, e.tgt):
                 if v not in del_verts:
                     v.remove_edge(e)
@@ -159,13 +153,29 @@ class Graph:
             self.vertices[v.id] = v
         # if the v.id already exists and doesn't equal v, we have to figure out merging...
 
+        records = set()
         # iterate through secondary edge additions/deletions and generate edge delta maps 
-        for edge_set, edge_delta_map in ((add_s_edges, edge_add_map), (del_s_edges, edge_del_map)):
+        for edge_set, edge_delta_map, event_type in ((add_s_edges, edge_add_map, EventType.Add), (del_s_edges, edge_del_map, EventType.Delete)):
             for edge in edge_set:
-                edge_delta_map[edge] = set(itertools.product(edge.src.get_relationships("Is>"), edge.edge_type, edge.tgt.get_relationships("Is>")))
+                for src_label, e_type, tgt_label in itertools.product(
+                        edge.src.get_relationships("Is>"), edge.edge_type, edge.tgt.get_relationships("Is>")):
+                    records.add(GraphRecord_Edge(event_type, edge, src_label, e_type, tgt_label))
 
-
-        return lineage_add_map, lineage_del_map, edge_add_map, edge_del_map
+        for delta_map, event_type, event_target in (
+            (lineage_add_map, EventType.Add, EventTarget.Vertex), 
+            (lineage_del_map, EventType.Delete, EventTarget.Vertex), 
+            (edge_add_map, EventType.Add, EventTarget.Edge), 
+            (edge_del_map, EventType.Delete, EventTarget.Edge)):
+            for obj, delta_set in delta_map.items():
+                match event_target:
+                    case EventTarget.Vertex:
+                        for label in delta_set:
+                            records.add(GraphRecord_Vertex(event_type, obj, label))
+                    case EventTarget.Attribute:
+                        pass
+        
+        records |= duplicate_records
+        return records
 
 
     def load_vert(self, id, attr_map):
@@ -191,7 +201,6 @@ class Graph:
             twoway=not edge_glob["directed"]
         )
 
-        self.edges[edge.id] = edge
         self.visgraph.add_edge(*idtup)
         return edge
 

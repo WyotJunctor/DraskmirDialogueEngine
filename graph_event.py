@@ -24,6 +24,7 @@ class GraphMessage:
     def add_object(self, key, obj):
         self.update_map[key].add(obj)
 
+    # TODO(Wyatt): add attribute updates
     def realize(self, graph):
         realized = defaultdict(set)
         duplicate_records = set()
@@ -42,7 +43,7 @@ class GraphMessage:
                         vert = graph.vertices.get(vert_id)
                         if event_act is EventType.Add:
                             for label in vert.get_relationships("Is>"):
-                                duplicate_records.add(GraphRecord_Vertex(EventType.Duplicate, EventTarget.Vertex, graph.vertices.get(vert_id), label))
+                                duplicate_records.add(GraphRecord_Vertex(EventType.Duplicate, graph.vertices.get(vert_id), label))
                         else:
                             realized[event_key].add(vert)
             elif event_target == EventTarget.Edge:
@@ -61,8 +62,9 @@ class GraphMessage:
                     dupe_edge = False
                     for edge in s_vert.out_edges.id_to_edge.get(t_id, set()):
                         if edge.edge_type == t_set:
-                            for src_label, e_type, tgt_label in itertools.product(s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
-                                duplicate_records.add(GraphRecord_Edge(EventType.Duplicate, EventTarget.Edge, edge, src_label, e_type, tgt_label)) 
+                            for src_label, e_type, tgt_label in itertools.product(
+                                s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
+                                duplicate_records.add(GraphRecord_Edge(EventType.Duplicate, edge, src_label, e_type, tgt_label)) 
                             dupe_edge = True
                             break
                     if dupe_edge is False:
@@ -82,32 +84,32 @@ class GraphRecord:
 
 
 class GraphRecord_Vertex(GraphRecord):
-    def __init__(self, act, tgt, o_ref, label):
-        super().__init__(act, tgt, o_ref)
+    def __init__(self, act, o_ref, label):
+        super().__init__(act, EventTarget.Vertex, o_ref)
         self.label = label
 
     def __hash__(self):
-        return hash((self.act, self.tgt, self.label))
+        return hash((self.act, EventTarget.Vertex, self.label))
 
 class GraphRecord_Edge(GraphRecord):
-    def __init__(self, act, tgt, o_ref, src_label, e_type, tgt_label):
-        super().__init__(act, tgt, o_ref)
+    def __init__(self, act, o_ref, src_label, e_type, tgt_label):
+        super().__init__(act, EventTarget.Edge, o_ref)
         self.src_label = src_label
         self.e_type = e_type
         self.tgt_label = tgt_label
         
     def __hash__(self):
-        return hash((self.act, self.tgt, self.src_label, self.e_type, self.tgt_label))
+        return hash((self.act, EventTarget.Edge, self.src_label, self.e_type, self.tgt_label))
 
 
 class GraphRecord_Attribute(GraphRecord):
-    def __init__(self, act, tgt, o_ref, attr_name, *o_type):
-        super().__init__(act, tgt, o_ref)
+    def __init__(self, act, o_ref, attr_name, *o_type):
+        super().__init__(act, EventTarget.Attribute, o_ref)
         self.attr_name = attr_name
         self.o_type = tuple(o_type)
 
     def __hash__(self):
-        return hash((self.act, self.tgt, self.attr_name, *self.o_type))
+        return hash((self.act, EventTarget.Attribute, self.attr_name, *self.o_type))
 
 
 class GraphEvent:

@@ -4,7 +4,7 @@ from collections import defaultdict
 from choose import ChooseMaker
 from clock import Clock
 from graph import Graph
-from graph_event import GraphEvent, EventType
+from graph_event import GraphEvent, GraphMessage, EventType
 from graph_objs import Vertex
 from utils import merge_targets
 
@@ -124,6 +124,12 @@ class ObjectiveReality(Reality):
         act_id = actor_id + "_act_" + self.clock.timestep
         act_tgt = action_target.id
         act_type = action_vertex.id
+
+        graph_message = GraphMessage()
+        
+
+
+        """
         act_event = GraphEvent(
             EventType.Add,
             {
@@ -151,5 +157,6 @@ class ObjectiveReality(Reality):
         for rule in rules:
             # assume mutation in the function
             rule(graph_deltas)
+        """
 
         return graph_deltas

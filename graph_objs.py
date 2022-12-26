@@ -174,7 +174,6 @@ class Vertex(GraphObject):
 class Edge(GraphObject):
 
     def __init__(self, edge_type:set, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None, twoway=False):
-        self.id = f"{src.id}~{edge_type}~{tgt.id}"
         self.edge_type = edge_type
         self.src = src
         self.tgt = tgt
