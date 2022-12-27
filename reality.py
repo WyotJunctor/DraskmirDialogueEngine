@@ -1,13 +1,13 @@
-from utils import merge_targets
 import copy
 from collections import defaultdict
+from functools import reduce
+
 from choose import ChooseMaker
 from clock import Clock
 from graph import Graph
 from graph_event import GraphEvent, GraphMessage, EventType
 from graph_objs import Vertex
 from utils import merge_targets
-
 
 class Reality:
 
@@ -26,19 +26,24 @@ class Reality:
         for v_id, shortcut_map in shortcut_maps.items():
             self.graph.vertices[v_id].shortcut_map = shortcut_map
 
-    def receive_events(self, events: list[GraphEvent]):
-        records = self.graph.update_graph(events)
+    def receive_message(self, message: GraphMessage):
+        records = self.graph.update_graph(message)
+        messages = set([message])
 
         while len(records) > 0:
             record = records.pop()
             effect_rule = self.effect_rules.get(record)
 
             if effect_rule is not None:
-                new_events = effect_rule.receive_record(record)
-                new_records = self.graph.update_graph(new_events)
+                new_message = effect_rule.receive_record(record)
+                messages.add(new_message)
+                new_records = self.graph.update_graph(new_message)
 
                 records.extend(new_records)
 
+        all_messages = reduce(messages, lambda x,y: x.merge(y))
+
+        return all_messages
 
 class SubjectiveReality(Reality):
     def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, shortcut_maps: dict, action_rules_map: dict):
@@ -117,46 +122,3 @@ class SubjectiveReality(Reality):
 class ObjectiveReality(Reality):
     def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
         super().__init__(clock, graph, effect_rules_map, shortcut_maps)
-
-    def receive_action(self, acting_entity: SubjectiveReality, action_vertex: Vertex, action_target: Vertex):
-
-        actor_id = acting_entity.ego.id
-        act_id = actor_id + "_act_" + self.clock.timestep
-        act_tgt = action_target.id
-        act_type = action_vertex.id
-
-        graph_message = GraphMessage()
-        
-
-
-        """
-        act_event = GraphEvent(
-            EventType.Add,
-            {
-                "all_verts": [ act_id ],
-                "all_edges": [
-                    { "directed": True, "edge_tpye": "inst", "src": act_id, "tgt": act_type },
-                    { "directed": True, "edge_tpye": "src", "src": actor_id, "tgt": act_id },
-                    { "directed": True, "edge_type": "tgt", "src": act_id, "tgt":  act_tgt }
-                 ]
-            }
-        )
-
-        action_isses = action_vertex.relationship_map["Is>"]
-
-        rules = set()
-
-        for action_is in action_isses:
-            # collect the rules associated with the action's conceptual parent vertices
-            rules |= self.effect_rules.get(action_is, set())
-
-        graph_deltas = [
-            self.graph.convert_graph_event_to_delta(act_event)
-        ]
-
-        for rule in rules:
-            # assume mutation in the function
-            rule(graph_deltas)
-        """
-
-        return graph_deltas

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 from random import shuffle
 
@@ -5,7 +6,7 @@ from choose import PlayerChooseMaker
 from clock import Clock
 from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
-from graph_event import GraphEvent, EventType
+from graph_event import GraphEvent, GraphMessage, EventType, EventTarget
 
 class Game:
 
@@ -68,18 +69,35 @@ class Game:
         for action_entity, action_pair in actions:
             action_vert, action_tgt = action_pair
 
+
             if action_vert is None:
                 continue
 
             if action_entity.check_action_validity(action_vert, action_tgt) is False:
                 continue
 
-            graph_events = self.reality.receive_action(
-                action_entity, action_vert, action_tgt
+            src_vert = action_entity.ego
+            instance_id = f"{src_vert.id}~{action_vert.id}~{action_tgt.id}~{self.clock.timestep}"
+            message = GraphMessage(update_map=defaultdict(
+                set,
+                {
+                    (EventType.Add, EventTarget.Vertex): set([instance_id]),
+                    (EventType.Add, EventTarget.Edge): set([
+                            (instance_id, "Target", action_tgt.id), 
+                            (src_vert.id, "Source", instance_id), 
+                            (instance_id, "Is", "Instance"), 
+                            (instance_id, "Is", action_vert.id)
+                        ]),
+                }
+            ))
+
+            graph_message = self.reality.receive_message(
+                message
             )
 
-            self.reality.receive_events(graph_events)
+            graph_message.strip_multitype_edges()
+
             for observing_entity in self.entities:
-                observing_entity.reveive_events(graph_events)
+                observing_entity.reveive_events(graph_message)
 
         self.clock.step()

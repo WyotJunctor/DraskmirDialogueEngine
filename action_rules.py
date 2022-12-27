@@ -307,7 +307,7 @@ class r_Conversation_Action(ActionRule): # TODO: maybe rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"allowed","alias":"v_1","target":""}, {"type":"Participant",">"}, {"ref":"v_0"})
+                ({"ref":"allowed","alias":"v_1","target":""}, {"type":"Participant","dir":">"}, {"ref":"v_0"})
             )
         },
     )
@@ -412,7 +412,7 @@ class r_Engage(ActionRule):
             "scope":PatternScope.graph,
             "traversal":(
                 ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Combat_Context"}),
-                ({"id":"Combat_Context"}, {"type":"Participant","dir":"<"}, {"ref":"allowed","alias":"v_1","target"})
+                ({"id":"Combat_Context"}, {"type":"Participant","dir":"<"}, {"ref":"allowed","alias":"v_1","target":""})
             )
         },
     )
@@ -479,7 +479,15 @@ class r_Wait(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"id":"Immediate"}, {"type":"Is","dir":"<"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Action"]))),"not_rel":(("Is>":set(["Inactive_Action"])))})
+                (
+                    {"id":"Immediate"}, 
+                    {"type":"Is","dir":"<"}, 
+                    {
+                        "tag":"v_0","alias":"v_0",
+                        "rel":(("Is>",set(["Instance","Action"]))),
+                        "not_rel":( ("Is>", set(["Inactive_Action"]) ) )
+                    }
+                )
             )
         },
         {

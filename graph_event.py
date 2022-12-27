@@ -18,20 +18,34 @@ class EventTarget(Enum):
 
 
 class GraphMessage:
-    def __init__(self, update_map):
+    def __init__(self, update_map:defaultdict):
         self.update_map = update_map
 
-    def add_object(self, key, obj):
-        self.update_map[key].add(obj)
+    def merge(self, message):
+        for key, val in message.items():
+            self.update_map[key] |= val
+        return self
+
+    def strip_multitype_edges(self):
+        if self.update_map.get((EventType.Add, EventTarget.Edge)) is not None:
+            self.update_map[
+                (EventType.Add, EventTarget.Edge)
+                ] = { edge for edge in self.update_map.get((EventType.Add, EventTarget.Edge)) if len(edge[1]) == 1 }
+        
+        if self.update_map.get((EventType.Delete, EventTarget.Edge)) is not None:
+            self.update_map[
+                (EventType.Delete, EventTarget.Edge)
+                ] = { edge for edge in self.update_map.get((EventType.Delete, EventTarget.Edge)) if len(edge[1]) == 1 }        
 
     # TODO(Wyatt): add attribute updates
     def realize(self, graph):
         realized = defaultdict(set)
         duplicate_records = set()
         realized_verts = dict()
-        for event_key in itertools.product(
+        for iter_key in itertools.product(
             (EventTarget.Vertex, EventTarget.Edge), (EventType.Add, EventType.Delete)):
-            event_act, event_target = event_key
+            event_target, event_act = iter_key
+            event_key = (event_act, event_target)
             event_set = self.update_map.get(event_key)
             if event_target == EventTarget.Vertex:
                 for vert_id in event_set:
