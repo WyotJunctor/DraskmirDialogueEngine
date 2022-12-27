@@ -1,17 +1,14 @@
 from collections import defaultdict
-from graph_event import EventType, EventTarget
+from graph_event import GraphRecord
 
 
 class EffectRule:
 
-    def __init__(self, vertex, rules, priority=0):
+    def __init__(self, key):
         # add self to vertex action_rules
-        self.priority = priority
-        self.vertex = vertex
-        rules.append(self)
-        rules.sort(key=lambda x: x.priority)
+        self.key = key
 
-    def receive_record(self, vertex, graph):
+    def receive_record(self, record: GraphRecord):
         pass
 
 """
