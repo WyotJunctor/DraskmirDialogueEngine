@@ -332,7 +332,10 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
                 (
                     {"id":"Recent"},
                     {"type":"Has_Attr","dir":"<"},
-                    {"tag":"v_1","alias":"v_1","target":"",
+                    {
+                        "tag":"v_1",
+                        "alias":"v_1",
+                        "target":"",
                         "rel":(("Is>",set(["Instance","Action"])),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allowed"))
                     }
                 ),

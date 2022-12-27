@@ -34,13 +34,8 @@ action grouping
 tracery logging
 
 
-
 CONTINUOUS TASKS
-modify graph
-  double check As_Response and As_Unique
-  add Shortcut vertex (with relationships)
-  add Real_Action vertex (with relationships)
-  add Inactive_Action vertex
+modify graph*
   re-add priority attribute to action lineages
 validate
   action checking*

@@ -367,90 +367,68 @@
       "tgt": "Track_Time"
     }
   ],
-  "all_verts": {
-    "Action": {
-    },
-    "Actor": {},
-    "Announce_Exit": {
-    },
-    "Armed": {},
-    "Armored": {},
-    "AskTags": {
-    },
-    "Attack": {
-    },
-    "Attribute": {},
-    "Bystander": {},
-    "Calm_Action": {
-    },
-    "Calm_Context": {},
-    "Combat_Action": {
-    },
-    "Combat_Context": {},
-    "Context": {},
-    "Conversation_Action": {
-    },
-    "Conversation_Context": {},
-    "Dead": {},
-    "Door": {},
-    "Ego": {},
-    "Engage": {
-    },
-    "Entity_State": {},
-    "Equipment": {},
-    "Flee": {
-    },
-    "Friendly_Conversation_Action": {
-
-    },
-    "Friendly_Relationship": {},
-    "Greet": {
-    },
-    "Group": {},
-    "Hostile_Context": {},
-    "Hostile_Relationship": {},
-    "Immediate": {},
-    "Instance": {},
-    "Interaction_Action": {
-    },
-    "Involved": {},
-    "Is": {},
-    "Known_Relationship": {},
-    "Loot": {
-    },
-    "Object": {},
-    "OfferTags": {
-    },
-    "Option": {},
-    "Participant": {},
-    "Past": {},
-    "Person": {},
-    "Physical_Attribute": {},
-    "Recent": {},
-    "Relationship": {},
-    "Response_Conversation_Action": {
-    },
-    "Rest": {
-    },
-    "Room": {},
-    "Rule": {},
-    "Send_Off": {
-    },
-    "ShareTags": {
-    },
-    "Singleton_Context": {},
-    "Source": {},
-    "Stative": {},
-    "Target": {},
-    "Temporal_Interval": {},
-    "Track_Time": {},
-    "Traverse": {
-    },
-    "Unique_Conversation_Action": {
-    },
-    "Unknown_Relationship": {},
-    "Wait": {
-    },
-    "Wounded": {}
-  }
+  "all_verts": [
+    "Action",
+    "Actor",
+    "Announce_Exit",
+    "Armed",
+    "Armored",
+    "AskTags",
+    "Attack",
+    "Attribute",
+    "Bystander",
+    "Calm_Action",
+    "Calm_Context",
+    "Combat_Action",
+    "Combat_Context",
+    "Context",
+    "Conversation_Action",
+    "Conversation_Context",
+    "Dead",
+    "Door",
+    "Ego",
+    "Engage",
+    "Entity_State",
+    "Equipment",
+    "Flee",
+    "Friendly_Conversation_Action",
+    "Friendly_Relationship",
+    "Greet",
+    "Group",
+    "Hostile_Context",
+    "Hostile_Relationship",
+    "Immediate",
+    "Instance",
+    "Interaction_Action",
+    "Involved",
+    "Is",
+    "Known_Relationship",
+    "Loot",
+    "Object",
+    "OfferTags",
+    "Option",
+    "Participant",
+    "Past",
+    "Person",
+    "Physical_Attribute",
+    "Recent",
+    "Relationship",
+    "Response_Conversation_Action",
+    "Rest",
+    "Room",
+    "Rule",
+    "Send_Off",
+    "ShareTags",
+    "Singleton_Context",
+    "Source",
+    "Stative",
+    "Target",
+    "Temporal_Interval",
+    "Track_Time",
+    "Traverse",
+    "Unique_Conversation_Action",
+    "Unknown_Relationship",
+    "Wait",
+    "Wounded"
+  ]
 }
