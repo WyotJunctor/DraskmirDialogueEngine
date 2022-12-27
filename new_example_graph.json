@@ -1,0 +1,44 @@
+{
+    "edges": [
+        {
+            "src": "Door",
+            "tgt": "Object",
+            "types": ["Is"],
+            "attr_map": { }
+        },
+        {
+            "src": "Room",
+            "tgt": "Object",
+            "types": ["Is"],
+            "attr_map": { }
+        },
+        {
+            "src": "Attack",
+            "tgt": "Action",
+            "types": ["Is"],
+            "attr_map": { }
+        }
+    ],
+    "vertices": [
+        {
+            "label": "Attack",
+            "attr_map": { }
+        },
+        {
+            "label": "Action",
+            "attr_map": { }
+        },
+        {
+            "label": "Object",
+            "attr_map": { }
+        },
+        {
+            "label": "Door",
+            "attr_map": { }
+        },
+        {
+            "label": "Room",
+            "attr_map": { }
+        }
+    ]
+}

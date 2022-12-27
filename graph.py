@@ -178,40 +178,44 @@ class Graph:
         return records
 
 
-    def load_vert(self, id, attr_map):
-        vertex = Vertex(id, self.clock.timestep, self.clock.timestep, attr_map=attr_map)
-        self.vertices[id] = vertex
-        self.visgraph.add_node(id)
+    def load_vert(self, vert):
+        label = vert["label"]
+        attr_map = vert.get("attr_map", dict())
+
+        vertex = Vertex(label, self.clock.timestep, self.clock.timestep, attr_map=attr_map)
+        self.vertices[label] = vertex
+        self.visgraph.add_node(label)
         return vertex
 
     def load_edge(self, edge_glob):
-        idtup = (edge_glob["src"], edge_glob["tgt"])
+        src_id = edge_glob["src"]
+        tgt_id = edge_glob["tgt"]
+        src = self.vertices[src_id]
+        tgt = self.vertices[tgt_id]
 
-        if not edge_glob["directed"]:
-            sorted(idtup)
-
-        tup = (self.vertices[idtup[0]], self.vertices[idtup[1]])
+        edge_types = set(edge_glob["types"])
+        attr_map = edge_glob.get("attr_map", dict())
 
         edge = Edge(
-            set([edge_glob["edge_type"]]),
-            tup[0],
-            tup[1],
+            edge_types,
+            src,
+            tgt,
             self.clock.timestep,
             self.clock.timestep,
-            twoway=not edge_glob["directed"]
+            attr_map=attr_map
         )
 
-        self.visgraph.add_edge(*idtup)
+        self.visgraph.add_edge(src_id, tgt_id)
         return edge
 
     def load_json(self, json_path):
         with open(json_path) as f:
             glob = json.load(f)
 
-        for vert, attr_map in glob["all_verts"].items():
-            self.load_vert(vert, attr_map)
+        for vert in glob["vertices"]:
+            self.load_vert(vert)
 
-        for edge in glob["all_edges"]:
+        for edge in glob["edges"]:
             self.load_edge(edge)
 
 
