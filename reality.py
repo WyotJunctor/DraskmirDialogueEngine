@@ -5,7 +5,7 @@ from functools import reduce
 from choose import ChooseMaker
 from clock import Clock
 from graph import Graph
-from graph_event import GraphEvent, GraphMessage, EventType
+from graph_event import GraphMessage, EventType
 from graph_objs import Vertex
 from utils import merge_targets
 

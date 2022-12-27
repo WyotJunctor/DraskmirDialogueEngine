@@ -6,7 +6,7 @@ from choose import PlayerChooseMaker
 from clock import Clock
 from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
-from graph_event import GraphEvent, GraphMessage, EventType, EventTarget
+from graph_event import GraphMessage, EventType, EventTarget
 
 class Game:
 

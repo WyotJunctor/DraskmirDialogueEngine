@@ -27,7 +27,8 @@ objective effect rules
   add person
   del person
   ACTION RULES...
-
+add subjective entity creation to game
+  add ego generation to subjective reality
 entering and exiting
 action grouping
 tracery logging
@@ -42,7 +43,7 @@ modify graph
   add Inactive_Action vertex
   re-add priority attribute to action lineages
 validate
-  action checking
+  action checking*
   graph deltas
   graph events
   action selection
