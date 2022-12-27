@@ -35,7 +35,7 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
     cleanup_queue = list(cleanup_verts)
     while len(cleanup_queue) > 0:
         root = cleanup_queue.pop(0)
-        for hop, vert_set in dependencies[vert]["dependent_on"].items():
+        for hop, vert_set in dependencies[root]["dependent_on"].items():
             hop_count[hop].remove(root)
             if len(hop_count[hop]) <= 0:
                 return False
@@ -90,7 +90,7 @@ class ActionRule:
         return valid_src, valid_tgt
 
 
-    def check_step(self, src_set, no_src_tgts, edge, tgt_ref, context, dependencies, hop_count, src_hop, tgt_hop):
+    def check_step(self, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, dependencies, hop_count, src_hop, tgt_hop):
         valid_src = set()
         valid_tgt = set()
         for src_vert in src_set:
@@ -157,7 +157,7 @@ class ActionRule:
             valid_src = src_set.difference(no_src_tgts)
             valid_tgt = no_src_tgts.difference(src_set)
         elif "null" in edge:
-            valid_src, valid_tgt = self.check_step(ego, src_set, no_src_tgts, context, dependencies, hop_count, src_hop, tgt_hop)
+            valid_src, valid_tgt = self.check_step(ego, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, dependencies, hop_count, src_hop, tgt_hop)
         else:
             valid_src, valid_tgt = self.check_src(src_set, no_src_tgts, edge, tgt_ref, context, dependencies, hop_count, src_hop, tgt_hop)
 

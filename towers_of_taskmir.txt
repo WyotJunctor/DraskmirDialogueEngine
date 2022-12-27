@@ -27,6 +27,7 @@ objective effect rules
   add person
   del person
   ACTION RULES...
+
 entering and exiting
 action grouping
 tracery logging
@@ -36,10 +37,9 @@ tracery logging
 CONTINUOUS TASKS
 modify graph
   double check As_Response and As_Unique
-  add Instance vertex
-  add Track_Time vertex (with relationships)
   add Shortcut vertex (with relationships)
   add Real_Action vertex (with relationships)
+  add Inactive_Action vertex
   re-add priority attribute to action lineages
 validate
   action checking

@@ -1,5 +1,5 @@
 from collections import defaultdict, Counter
-from utils import to_counter
+from utils import as_counter
 
 class EdgeMap:
     def __init__(self):
@@ -99,7 +99,7 @@ class Vertex(GraphObject):
             if exclude_self:
                 result.remove(self)
             if as_counter == True:
-                return to_counter(result)
+                return as_counter(result)
             return result
         return set()
 
@@ -127,7 +127,7 @@ class Vertex(GraphObject):
         return result_set
 
     def propagate_lineage_delta(self, updated_lineage:set, add:bool):
-        lineage_counter = to_counter(updated_lineage)
+        lineage_counter = as_counter(updated_lineage)
         for edge_map in (self.in_edges, self.out_edges):
             for edge_type, target in edge_map.edgetype_to_vertex.items():
                 if edge_type != "Is":

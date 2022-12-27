@@ -33,10 +33,7 @@ class Game:
         with open(self.player_json_path) as f:
             glob = json.load(f)
 
-        player_add_event = GraphEvent(
-            EventType.Add,
-            glob
-        )
+        player_add_event = GraphMessage(update_map=defaultdict(set, {()}))
 
         self.reality.graph.update_graph([player_add_event])
         subjective_graph.update_graph([player_add_event])

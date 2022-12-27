@@ -353,81 +353,73 @@
       "edge_type": "Is",
       "src": "Person",
       "tgt": "Entity_State"
+    },
+    {
+      "directed": true,
+      "edge_type": "Is",
+      "src": "Action",
+      "tgt": "Track_Time"
+    },
+    {
+      "directed": true,
+      "edge_type": "Is",
+      "src": "Stative",
+      "tgt": "Track_Time"
     }
   ],
   "all_verts": {
     "Action": {
-      "Action": ""
     },
     "Actor": {},
     "Announce_Exit": {
-      "Action": "",
-      "Real": ""
     },
     "Armed": {},
     "Armored": {},
     "AskTags": {
-      "Action": "",
-      "Real": ""
     },
     "Attack": {
-      "Action": "",
-      "Real": ""
     },
     "Attribute": {},
     "Bystander": {},
     "Calm_Action": {
-      "Action": ""
     },
     "Calm_Context": {},
     "Combat_Action": {
-      "Action": ""
     },
     "Combat_Context": {},
     "Context": {},
     "Conversation_Action": {
-      "Action": ""
     },
     "Conversation_Context": {},
     "Dead": {},
     "Door": {},
     "Ego": {},
     "Engage": {
-      "Action": "",
-      "Real": ""
     },
     "Entity_State": {},
     "Equipment": {},
     "Flee": {
-      "Action": "",
-      "Real": ""
     },
     "Friendly_Conversation_Action": {
-      "Action": ""
+
     },
     "Friendly_Relationship": {},
     "Greet": {
-      "Action": "",
-      "Real": ""
     },
     "Group": {},
     "Hostile_Context": {},
     "Hostile_Relationship": {},
     "Immediate": {},
+    "Instance": {},
     "Interaction_Action": {
-      "Action": ""
     },
     "Involved": {},
     "Is": {},
     "Known_Relationship": {},
     "Loot": {
-      "Action": "",
-      "Real": ""
     },
     "Object": {},
     "OfferTags": {
-      "Action": "",
-      "Real": ""
     },
     "Option": {},
     "Participant": {},
@@ -437,38 +429,27 @@
     "Recent": {},
     "Relationship": {},
     "Response_Conversation_Action": {
-      "Action": ""
     },
     "Rest": {
-      "Action": "",
-      "Real": ""
     },
     "Room": {},
     "Rule": {},
     "Send_Off": {
-      "Action": "",
-      "Real": ""
     },
     "ShareTags": {
-      "Action": "",
-      "Real": ""
     },
     "Singleton_Context": {},
     "Source": {},
     "Stative": {},
     "Target": {},
     "Temporal_Interval": {},
+    "Track_Time": {},
     "Traverse": {
-      "Action": "",
-      "Real": ""
     },
     "Unique_Conversation_Action": {
-      "Action": ""
     },
     "Unknown_Relationship": {},
     "Wait": {
-      "Action": "",
-      "Real": ""
     },
     "Wounded": {}
   }

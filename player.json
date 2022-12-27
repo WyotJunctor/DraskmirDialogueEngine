@@ -1,13 +1,12 @@
 {
-    "all_edges": [
+    "add_edges": [
         {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Player",
-            "tgt": "Person"
+            "t_set": ["Is"],
+            "s_id": "Player",
+            "t_id": "Person"
         }
     ],
-    "all_verts": {
-        "Player": {}
-    }
+    "add_verts": [
+        "Player"
+    ]
 }

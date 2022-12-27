@@ -6,7 +6,7 @@ from clock import Clock
 from graph_event import GraphMessage, GraphRecord_Vertex, GraphRecord_Edge, EventType, EventTarget
 from graph_objs import Edge, Vertex
 from collections import defaultdict, Counter
-from utils import to_counter
+from utils import as_counter
 import itertools
 
 
@@ -42,7 +42,7 @@ class Graph:
             root = queue.pop(0)
             # apply update map removal
             lineage_map[root] = root.update_relationships(update_map[root], add=add)
-            update_counter = to_counter(lineage_map[root])
+            update_counter = as_counter(lineage_map[root])
             for child in root.get_relationships("Is<"):
                 if child in visited: # this should always be true
                     update_map[child] += update_counter
