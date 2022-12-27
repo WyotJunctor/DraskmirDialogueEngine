@@ -51,7 +51,10 @@ class SubjectiveReality(Reality):
         super().__init__(clock, graph, effect_rules_map, shortcut_maps)
 
         self.choosemaker = choosemaker
-        self.ego = graph.vertices["Ego"]  # TODO(Simon): this should grab the instance not the concept
+
+        ego_concept = graph.vertices["Ego"]
+        self.ego = list(ego_concept.in_edges.edgetype_to_vertex["Is"])[0]
+
         self.action_rules = defaultdict(list)
 
         # for each action rule in the map, instantiate it
