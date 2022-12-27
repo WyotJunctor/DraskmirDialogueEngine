@@ -1,5 +1,5 @@
 from collections import defaultdict
-from graph_event import GraphEvent, EventType, EventTarget
+from graph_event import EventType, EventTarget
 
 
 class EffectRule:
