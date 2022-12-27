@@ -1,52 +1,86 @@
 from collections import defaultdict
 import json
+import re
 from random import shuffle
 
 from choose import PlayerChooseMaker
 from clock import Clock
+from instancegen import get_next_instance_id
 from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
 from graph_event import GraphMessage, EventType, EventTarget
 
+ENTITY_ID_REPLACE = re.compile(r"$[^$]*$")
+
 class Game:
 
-    def __init__(self, objective_json="objective_graph.json", subjective_json="drask_graph.json", player_json="player.json"):
+    def __init__(self, objective_json="objective_graph.json", subjective_json="drask_graph.json", entity_json="entity.json", player_json="player.json"):
         self.clock = Clock()
 
         reality_graph = Graph(self.clock)
-        reality_graph.load_json(objective_json)
+        reality_graph.load_json_file(objective_json)
         self.reality = ObjectiveReality(self.clock, reality_graph, dict(), dict())
 
-        self.player_json_path = player_json
+        self.entity_json_path = entity_json
         self.subjective_json_path = subjective_json
 
-        self.player_entity = None
         self.entities = set()
 
-        self.create_player()
+        self.player_entity = self.create_entity(
+            PlayerChooseMaker(),
+            entity_json=player_json
+        )
 
-    def create_player(self):
+    def create_entity(self, choose_maker, entity_json_path=None):
 
         subjective_graph = Graph(self.clock)
-        subjective_graph.load_json(self.subjective_json_path)
+        subjective_graph.load_json_file(self.subjective_json_path)
 
-        with open(self.player_json_path) as f:
-            glob = json.load(f)
+        if entity_json_path is None:
+            entity_json_path = self.entity_json_path
 
-        player_add_event = GraphMessage(update_map=defaultdict(set, {()}))
+        with open(entity_json_path) as f:
+            globstring = f.read()
 
-        self.reality.graph.update_graph([player_add_event])
-        subjective_graph.update_graph([player_add_event])
+            matches = ENTITY_ID_REPLACE.findall(globstring)
+            for match in matches:
+                globstring = globstring.replace(
+                    match, str(get_next_instance_id())
+                )
 
-        self.player_entity = SubjectiveReality(
+            glob = json.loads(globstring)
+
+        message_map = defaultdict(set)
+        for vertex in glob["vertices"]:
+            message_map[(EventType.Add, EventTarget.Vertex)].add(vertex["label"])
+
+        for edge in glob["edges"]:
+            for edge_type in edge["types"]:
+                message_map[(EventType.Add, EventTarget.Edge)].add((
+                    edge["src"], edge_type, edge["tgt"]
+                ))
+
+        entity_add_message = GraphMessage(update_map=message_map)
+
+        subjective_graph.update_graph(entity_add_message)
+        subjective_reality = SubjectiveReality(
             self.clock,
-            PlayerChooseMaker(),
+            choose_maker,
             subjective_graph,
             dict(),
             dict(),
             dict()
         )
-        self.entities.add(self.player_entity)
+
+        full_message, effect_message = self.reality.receive_message(entity_add_message)
+
+        for entity in self.entities:
+            entity.receive_message(full_message)
+
+        subjective_reality.receive_message(effect_message)
+        self.entities.add(subjective_reality)
+
+        return subjective_reality
 
     def step(self):
 
@@ -88,7 +122,7 @@ class Game:
                 }
             ))
 
-            graph_message = self.reality.receive_message(
+            graph_message, _ = self.reality.receive_message(
                 message
             )
 

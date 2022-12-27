@@ -22,9 +22,10 @@ class GraphMessage:
         self.update_map = update_map
 
     def merge(self, message):
+        new_update_map = self.update_map.copy()
         for key, val in message.items():
-            self.update_map[key] |= val
-        return self
+            new_update_map[key] = new_update_map[key] | val
+        return GraphMessage(update_map=new_update_map)
 
     def strip_multitype_edges(self):
         if self.update_map.get((EventType.Add, EventTarget.Edge)) is not None:

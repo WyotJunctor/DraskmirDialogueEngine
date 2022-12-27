@@ -28,7 +28,7 @@ class Reality:
 
     def receive_message(self, message: GraphMessage):
         records = self.graph.update_graph(message)
-        messages = set([message])
+        effect_messages = set()
 
         while len(records) > 0:
             record = records.pop()
@@ -36,14 +36,15 @@ class Reality:
 
             if effect_rule is not None:
                 new_message = effect_rule.receive_record(record)
-                messages.add(new_message)
+                effect_messages.add(new_message)
                 new_records = self.graph.update_graph(new_message)
 
                 records.extend(new_records)
 
-        all_messages = reduce(messages, lambda x,y: x.merge(y))
+        effect_messages = reduce(effect_messages, lambda x,y: x.merge(y))
+        all_messages = message.merge(effect_messages)
 
-        return all_messages
+        return all_messages, effect_messages
 
 class SubjectiveReality(Reality):
     def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, shortcut_maps: dict, action_rules_map: dict):

@@ -208,9 +208,12 @@ class Graph:
         self.visgraph.add_edge(src_id, tgt_id)
         return edge
 
-    def load_json(self, json_path):
+    def load_json_file(self, json_path):
         with open(json_path) as f:
             glob = json.load(f)
+            self.load_json(glob)
+
+    def load_json(self, glob):
 
         for vert in glob["vertices"]:
             self.load_vert(vert)
