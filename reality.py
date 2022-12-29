@@ -83,13 +83,13 @@ class SubjectiveReality(Reality):
     def get_action_targets(self, action_rules, target_set):
         local_target_set = {"allow":set(), "disallow":set()}
         for rule in action_rules:
-            r_target_set, r_local_target_set, allow = rule.get_targets(self.ego, self.graph, target_set, local_target_set)
+            r_target_set, r_local_target_set, highlight_map, allow = rule.get_targets(self.ego, self.graph, target_set, local_target_set)
             if allow is False:
-                return {}, {}, False
+                return {}, {}, {}, False
             target_set = merge_targets(target_set, r_target_set)
             r_local_target_set["disallow"] = r_local_target_set["disallow"].union(target_set["disallow"])
             local_target_set = merge_targets(local_target_set, r_local_target_set)
-        return target_set, local_target_set, True
+        return target_set, local_target_set, highlight_map, True
 
     def get_targets(self):
         target_map = dict()

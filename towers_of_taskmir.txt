@@ -35,8 +35,6 @@ tracery logging
 
 
 CONTINUOUS TASKS
-modify graph*
-  re-add priority attribute to action lineages
 validate
   action checking*
   graph deltas

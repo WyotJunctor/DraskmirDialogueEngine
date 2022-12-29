@@ -20,7 +20,7 @@ class PatternCheckType(Enum):
 
 
 # update hop_count
-def add_dependencies(dependencies, hop_count, src, tgt, src_hop, tgt_hop):
+def add_dependencies(dependencies, src, tgt, src_hop, tgt_hop):
     for vert in (src, tgt):
         if vert not in dependencies:
             dependencies[vert] = {"dependent_on":defaultdict(set), "dependent_count":defaultdict(int)}
@@ -90,7 +90,7 @@ class ActionRule:
         return valid_src, valid_tgt
 
 
-    def check_step(self, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, dependencies, hop_count, src_hop, tgt_hop):
+    def check_step(self, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop):
         valid_src = set()
         valid_tgt = set()
         for src_vert in src_set:
@@ -101,8 +101,6 @@ class ActionRule:
                 tgt_set = get_set(graph.vertices, tgt_ref["id"])
             elif "ref" in tgt_ref:
                 tgt_set = context.get(tgt_ref["ref"], set()) & get_set(edge_map.edgetype_to_vertex, edge["type"])
-            elif "tag" in tgt_ref:
-                tgt_set = get_set(edge_map.edgetype_to_vertex, edge["type"])
 
             tgt_set = self.check_relationships(context, tgt_set, tgt_ref)
 
@@ -115,6 +113,10 @@ class ActionRule:
 
             if "ref" in src_ref and "ref" in tgt_ref:
                 for tgt_vert in tgt_set:
+                    if "highlight_target" in src_ref:
+                        highlight_map[tgt_vert].add(src_vert)
+                    elif "highlight_target" in tgt_ref:
+                        highlight_map[src_vert].add(tgt_vert)
                     valid_tgt.add(tgt_vert)
                     add_dependencies(dependencies, src_vert, tgt_vert, src_hop, tgt_hop)
 
@@ -127,7 +129,7 @@ class ActionRule:
 
     # paths is a map of id: list<paths>, each path is a list of fellas?... possibly just refs.
 
-    def check_traversal(self, ego, graph, traversal, dependencies, context, hop_count, src_hop):
+    def check_traversal(self, ego, graph, traversal, context, highlight_map, dependencies, hop_count, src_hop):
 
         src_ref, edge, tgt_ref = traversal
 
@@ -157,10 +159,9 @@ class ActionRule:
             valid_src = src_set.difference(no_src_tgts)
             valid_tgt = no_src_tgts.difference(src_set)
         elif "null" in edge:
-            valid_src, valid_tgt = self.check_step(ego, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, dependencies, hop_count, src_hop, tgt_hop)
-        else:
             valid_src, valid_tgt = self.check_src(src_set, no_src_tgts, edge, tgt_ref, context, dependencies, hop_count, src_hop, tgt_hop)
-
+        else:
+            valid_src, valid_tgt = self.check_step(ego, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop)
         if len(valid_src) == 0 or len(valid_tgt) == 0:
             return False
 
@@ -184,6 +185,7 @@ class ActionRule:
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
+        highlight_map = defaultdict(set)
         for pattern in self.__class__.patterns:
             dependencies = {}
             context["removed"] = set()
@@ -193,7 +195,8 @@ class ActionRule:
             success = True
             hop = 0
             for traversal in pattern["traversal"]:
-                success = self.check_traversal(traversal, dependencies, context, hop_count, hop)
+                #  ego, graph, traversal, context, highlight_map, dependencies, hop_count, src_hop):
+                success = self.check_traversal(ego, graph, traversal, context, highlight_map, dependencies, hop_count, hop)
                 if success == False:
                     break
                 hop += 1
@@ -211,12 +214,12 @@ class ActionRule:
                     context[allow_scope + action] |= targets
             if (scope == PatternScope.terminal and
                     (PatternCheckType.allow, PatternCheckType.disallow)[success] == check_type):
-                return {}, {}, False
+                return {}, {}, {}, False
         context["allow"] -= context["disallow"]
         context["local_allow"] -= context["disallow"] + context["local_disallow"]
         target_set = {"allow":context["allow"], "disallow":context["disallow"]}
         local_target_set = {"allow":context["local_allow"], "disallow":context["local_disallow"]}
-        return target_set, local_target_set, True
+        return target_set, local_target_set, highlight_map, True
 
 
 class InheritedActionRule:
@@ -266,7 +269,7 @@ class r_Interaction_Action(ActionRule):
                 (
                     {"id":"Person"},
                     {"type":"Is", "dir":"<"},
-                    {"tag":"v_0", "alias":"v_0", "target":"", "rel":(("Is>",set(["Instance","Person"]))), "not_rel":(("Is>",set(["Ego"])))}
+                    {"ref":"v_0", "alias":"v_0", "target":"", "rel":(("Is>",set(["Instance","Person"]))), "not_rel":(("Is>",set(["Ego"])))}
                 ),
             )
         },
@@ -300,7 +303,7 @@ class r_Conversation_Action(ActionRule): # TODO: maybe rewrite
             "check_type":PatternCheckType.get,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Participant", "dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
+                ({"ref":"ego"}, {"type":"Participant", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
             )
         },
         {
@@ -328,16 +331,20 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.local,
             "traversal":(
-                ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
+                ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
                 (
                     {"id":"Recent"},
                     {"type":"Has_Attr","dir":"<"},
                     {
-                        "tag":"v_1",
+                        "ref":"v_1",
                         "alias":"v_1",
-                        "target":"",
                         "rel":(("Is>",set(["Instance","Action"])),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allowed"))
                     }
+                ),
+                (
+                    {"ref":"v_1", "highlight_target":""},
+                    {"type":"Source", "dir":"<"},
+                    {"ref":"v_2", "alias":"v_2", "target":"", "no_rel":( ("Is>", set( ["Ego"] )) )}
                 ),
             )
         }
@@ -355,8 +362,8 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.local,
             "traversal":(
-                ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
-                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"tag":"v_1","alias":"v_1","rel":(("Is>","v_0"))}),
+                ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"))}),
                 ({"ref":"allowed","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
             )
         },
@@ -375,7 +382,7 @@ class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Hostile_Relationship","dir":">"}, {"tag":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Person"])))})
+                ({"ref":"ego"}, {"type":"Hostile_Relationship","dir":">"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Person"])))})
             )
         }
     )
@@ -407,7 +414,7 @@ class r_Engage(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))})
             )
         },
         {
@@ -459,7 +466,7 @@ class r_Rest(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"id":"Room"}, {"type":"In","dir":"<"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Person"]))),"not_rel":(("Is>",set(["Ego"])))})
+                ({"id":"Room"}, {"type":"In","dir":"<"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Person"]))),"not_rel":(("Is>",set(["Ego"])))})
             )
         },
         {
@@ -486,7 +493,7 @@ class r_Wait(ActionRule):
                     {"id":"Immediate"}, 
                     {"type":"Is","dir":"<"}, 
                     {
-                        "tag":"v_0","alias":"v_0",
+                        "ref":"v_0","alias":"v_0",
                         "rel":(("Is>",set(["Instance","Action"]))),
                         "not_rel":( ("Is>", set(["Inactive_Action"]) ) )
                     }
@@ -520,7 +527,7 @@ class r_Loot(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Dead"}, {"type":"Is","dir":"<"}, {"tag":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Dead"])),("Was>",set(["Person"])))})
+                ({"id":"Dead"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Dead"])),("Was>",set(["Person"])))})
             )
         }
     )
@@ -545,7 +552,7 @@ class r_Flee(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"tag":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance"])))})
+                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance"])))})
             )
         }
     )
@@ -563,7 +570,7 @@ class r_Enter(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"tag":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Traverse"])),("Has_Attr>",set(["Immediate"])))})
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Traverse"])),("Has_Attr>",set(["Immediate"])))})
             )
         }
     )
@@ -586,7 +593,7 @@ class r_Traverse(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"tag":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance"])))})
+                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance"])))})
             )
         }
     )
