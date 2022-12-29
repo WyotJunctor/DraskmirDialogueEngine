@@ -1,12 +1,43 @@
 {
-    "add_edges": [
-        {
-            "t_set": ["Is"],
-            "s_id": "Player",
-            "t_id": "Person"
-        }
+    "edges": [
+      {
+        "src": "$player_v1$",
+        "tgt": "Ego",
+        "types": "Is"
+      },
+      {
+        "src": "$player_v2$",
+        "tgt": "Person",
+        "types": "Pred"
+      },
+      {
+        "src": "$player_v1$",
+        "tgt": "$player_v2$",
+        "types": "Pred"
+      },
+      {
+        "src": "$player_v2$",
+        "tgt": "Is",
+        "types": "Is"
+      },
+      {
+        "src": "$player_v1$",
+        "tgt": "Instance",
+        "types": "Is"
+      },
+      {
+        "src": "$player_v2$",
+        "tgt": "Instance",
+        "types": "Is"
+      },
+      {
+        "src": "$player_v2$",
+        "tgt": "Entity_State",
+        "types": "One_Of"
+      }
     ],
-    "add_verts": [
-        "Player"
+    "vertices": [
+      "$player_v2$",
+      "$player_v1$"
     ]
-}
+  }

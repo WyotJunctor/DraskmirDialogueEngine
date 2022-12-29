@@ -48,4 +48,3 @@ class er_AddShortcut(EffectRule):
             ))
         return graph_deltas
 """
-pass

@@ -193,7 +193,7 @@ class Graph:
         src = self.vertices[src_id]
         tgt = self.vertices[tgt_id]
 
-        edge_types = set(edge_glob["types"])
+        edge_types = set([edge_glob["types"]] if isinstance(edge_glob["types"], str) else edge_glob["types"])
         attr_map = edge_glob.get("attr_map", dict())
 
         edge = Edge(

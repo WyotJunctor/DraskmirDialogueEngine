@@ -1,143 +1,131 @@
 {
-    "all_edges": [
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Dead",
-            "tgt": "Entity_State"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Person",
-            "tgt": "Entity_State"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Door",
-            "tgt": "Object"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Room",
-            "tgt": "Object"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Armed",
-            "tgt": "Attribute"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Armored",
-            "tgt": "Attribute"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Wounded",
-            "tgt": "Attribute"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Attack",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Announce_Exit",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "AskTags",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Engage",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Flee",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Greet",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Loot",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "OfferTags",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Rest",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Send_Off",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Traverse",
-            "tgt": "Action"
-        },
-        {
-            "directed": true,
-            "edge_type": "Is",
-            "src": "Wait",
-            "tgt": "Action"
-        }
-    ],
-    "all_verts": {
-        "Entity_State": {},
-        "Dead": {},
-        "Person": {},
-        "Object": {},
-        "Door": {},
-        "Room": {},
-        "Attribute": {},
-        "Armed": {},
-        "Armored": {},
-        "Wounded": {},
-        "Action": {},
-        "Attack": {},
-        "Announce_Exit": {},
-        "AskTags": {},
-        "Engage": {},
-        "Flee": {},
-        "Greet": {},
-        "Loot": {},
-        "OfferTags": {},
-        "Rest": {},
-        "Send_Off": {},
-        "Traverse": {},
-        "Wait": {}
+    "edges": [
+    {
+        "src": "Armed",
+        "tgt": "Attribute",
+        "types": "Is"
+    },
+    {
+        "src": "Dead",
+        "tgt": "Entity_State",
+        "types": "Is"
+    },
+    {
+        "src": "Armored",
+        "tgt": "Attribute",
+        "types": "Is"
+    },
+    {
+        "src": "Announce_Exit",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Attack",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Person",
+        "tgt": "Entity_State",
+        "types": "Is"
+    },
+    {
+        "src": "Send_Off",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Ask_Tags",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Traverse",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Rest",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Loot",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Engage",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Wait",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Room",
+        "tgt": "Object",
+        "types": "Is"
+    },
+    {
+        "src": "Door",
+        "tgt": "Object",
+        "types": "Is"
+    },
+    {
+        "src": "Wounded",
+        "tgt": "Attribute",
+        "types": "Is"
+    },
+    {
+        "src": "Share_Tags",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Offer_Tags",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Greet",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Flee",
+        "tgt": "Action",
+        "types": "Is"
     }
+    ],
+    "vertices": [
+    "Wounded",
+    "Armed",
+    "Loot",
+    "Armored",
+    "Traverse",
+    "Door",
+    "Flee",
+    "Person",
+    "Room",
+    "Attribute",
+    "Greet",
+    "Offer_Tags",
+    "Send_Off",
+    "Share_Tags",
+    "Object",
+    "Engage",
+    "Action",
+    "Attack",
+    "Entity_State",
+    "Wait",
+    "Rest",
+    "Announce_Exit",
+    "Dead",
+    "Instance",
+    "Ask_Tags"
+    ]
 }
