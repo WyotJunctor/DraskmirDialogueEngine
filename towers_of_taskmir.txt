@@ -27,8 +27,6 @@ objective effect rules
   add person
   del person
   ACTION RULES...
-add subjective entity creation to game
-  add ego generation to subjective reality
 entering and exiting
 action grouping
 tracery logging
