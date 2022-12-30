@@ -55,7 +55,6 @@ class SubjectiveReality(Reality):
         self.choosemaker = choosemaker
 
         ego_concept = graph.vertices["Ego"]
-        pprint(ego_concept.in_edges.edgetype_to_vertex)
         self.ego = list(ego_concept.in_edges.edgetype_to_vertex["Is"])[0]
 
         self.action_rules = defaultdict(list)
@@ -69,8 +68,6 @@ class SubjectiveReality(Reality):
             self.action_rules[vertex].append(rule_instance)
             if isinstance(rule_instance, InheritedActionRule):
                 rule_instance.replicate(self.action_rules)
-
-        pprint(self.action_rules)
         # if the rule is inherited, propagate it down to all children...
 
 

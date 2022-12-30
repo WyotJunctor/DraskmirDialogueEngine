@@ -186,8 +186,6 @@ class ActionRule:
             "ego":set([ego]),
         }
         highlight_map = defaultdict(defaultdict)
-        print(self.__class__)
-        print(self.__class__.patterns)
         for pattern in self.__class__.patterns:
             dependencies = dict()
             context["removed"] = set()
@@ -221,7 +219,6 @@ class ActionRule:
         context["local_allow"] -= context["disallow"] + context["local_disallow"]
         target_set = {"allow":context["allow"], "disallow":context["disallow"]}
         local_target_set = {"allow":context["local_allow"], "disallow":context["local_disallow"]}
-        print("ERMMMM", target_set)
         return target_set, local_target_set, highlight_map, True
 
 
@@ -231,7 +228,6 @@ class InheritedActionRule(ActionRule):
         queue = [self.vertex]
         while len(queue) > 0:
             root = queue.pop(0)
-            print("TRAVERSE:", root)
             for edge in root.in_edges.edgetype_to_edge["Is"]:
                 child = edge.src
                 if child in visited:
