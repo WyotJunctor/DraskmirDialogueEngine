@@ -1,5 +1,6 @@
 from collections import defaultdict
 from pprint import pprint
+from os.path import join as pjoin
 from random import shuffle
 import json
 import re
@@ -15,9 +16,13 @@ from graph_event import GraphMessage, EventType, EventTarget
 
 ENTITY_ID_REPLACE = re.compile(r"\$[^\$]*\$")
 
+obj_path = pjoin("Graphs", "obj_base_graph.json")
+subj_path = pjoin("Graphs", "subj_base_graph.json")
+player_path = pjoin("Graphs", "player_spawn_graph.json")
+
 class Game:
 
-    def __init__(self, objective_json="objective_graph.json", subjective_json="drask_graph.json", entity_json="entity.json", player_json="player.json"):
+    def __init__(self, objective_json=obj_path, subjective_json=subj_path, entity_json=player_path, player_json=player_path):
         self.clock = Clock()
 
         reality_graph = Graph(self.clock)

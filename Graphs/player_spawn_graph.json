@@ -1,0 +1,25 @@
+{
+    "edges": [
+    {
+        "src": "$player_v1$",
+        "tgt": "Ego",
+        "types": "Is"
+    },
+    {
+        "src": "$player_v1$",
+        "tgt": "Instance",
+        "types": "Is"
+    },
+    {
+        "src": "$player_v1$",
+        "tgt": "Person",
+        "types": "Is"
+    }
+    ],
+    "vertices": [
+    {
+        "attr_map": {},
+        "label": "$player_v1$"
+    }
+    ]
+}

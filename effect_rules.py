@@ -1,3 +1,6 @@
+import inspect
+import sys
+
 from collections import defaultdict
 from graph_event import EventType, EventTarget, GraphRecord, GraphMessage
 
@@ -11,7 +14,7 @@ class EffectRule:
         pass
 
 class er_PersonSpawn(EffectRule):
-    keys = (
+    record_keys = (
         (EventType.Add, EventTarget.Vertex, "Person"),
     )
 
@@ -49,7 +52,7 @@ class er_PersonSpawn(EffectRule):
 
 
 class er_RelationshipMod(EffectRule):
-    keys = (
+    record_keys = (
         (EventType.Add, EventTarget.Edge, "Person", "Relationship", "Person"),
     )
     rel_prios = dict(
@@ -103,9 +106,8 @@ class er_RelationshipMod(EffectRule):
             )
 
 rules_map = dict()
-
-for key in er_PersonSpawn.keys:
-    rules_map[key] = er_PersonSpawn
-
-for key in er_RelationshipMod.keys:
-    rules_map[key] = er_RelationshipMod
+ 
+classes = [cls_obj for _, cls_obj in inspect.getmembers(sys.modules[__name__]) if inspect.isclass(cls_obj) and hasattr(cls_obj, "record_keys")]
+for class_obj in classes:
+    for key in class_obj.record_keys:
+        rules_map[key] = class_obj
