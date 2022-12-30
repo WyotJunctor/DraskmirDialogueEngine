@@ -20,8 +20,7 @@ class Reality:
 
         # for each effect in the map, instantiate it
         for effect_key, effect_rule in effect_rules_map.items():
-            v_id = effect_key[2]
-            effect_rule(graph.vertices[v_id], self.effect_rules[effect_key])
+            self.effect_rules[effect_key] = effect_rule(self)
 
     def receive_message(self, message: GraphMessage):
         records = self.graph.update_graph(message)

@@ -119,7 +119,7 @@ class Game:
                     (EventType.Add, EventTarget.Vertex): set([instance_id]),
                     (EventType.Add, EventTarget.Edge): set([
                             (instance_id, {"Target"}, action_tgt.id), 
-                            (instance_id, {"Is"}, action_vert.id)
+                            (instance_id, {"Is"}, action_vert.id),
                             (src_vert.id, {"Source"}, instance_id), 
                             (instance_id, {"Is"}, "Instance"), 
                         ]),

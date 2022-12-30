@@ -14,10 +14,6 @@ class er_PersonSpawn(EffectRule):
     keys = (
         (EventType.Add, EventTarget.Vertex, "Person"),
     )
-    # map shortcut vertices to set of edges
-    def __init__(self, ):
-        super().__init__()
-        self.managed_shortcuts = defaultdict(set)
 
     def receive_record(self, _, record: GraphRecord):
 
@@ -56,7 +52,7 @@ class er_RelationshipMod(EffectRule):
     keys = (
         (EventType.Add, EventTarget.Edge, "Person", "Relationship", "Person"),
     )
-    rel_prios = map(
+    rel_prios = dict(
         Hostile=float("inf"),
         Friendly=1000.0,
         Known=0.0,
