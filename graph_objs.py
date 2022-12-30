@@ -176,6 +176,7 @@ class Edge(GraphObject):
         self.edge_type = edge_type
         self.src = src
         self.tgt = tgt
+        self.ref_vert = None
         super().__init__(created_timestep, updated_timestep, attr_map)
 
     def __repr__(self):
