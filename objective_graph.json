@@ -1,7 +1,37 @@
 {
     "edges": [
     {
+        "src": "Person",
+        "tgt": "Entity_State",
+        "types": "Is"
+    },
+    {
+        "src": "Attack",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Door",
+        "tgt": "Object",
+        "types": "Is"
+    },
+    {
         "src": "Armed",
+        "tgt": "Attribute",
+        "types": "Is"
+    },
+    {
+        "src": "Ask_Tags",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Send_Off",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Armored",
         "tgt": "Attribute",
         "types": "Is"
     },
@@ -11,57 +41,7 @@
         "types": "Is"
     },
     {
-        "src": "Armored",
-        "tgt": "Attribute",
-        "types": "Is"
-    },
-    {
         "src": "Announce_Exit",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Attack",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Person",
-        "tgt": "Entity_State",
-        "types": "Is"
-    },
-    {
-        "src": "Send_Off",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Ask_Tags",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Traverse",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Rest",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Loot",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Engage",
-        "tgt": "Action",
-        "types": "Is"
-    },
-    {
-        "src": "Wait",
         "tgt": "Action",
         "types": "Is"
     },
@@ -71,8 +51,8 @@
         "types": "Is"
     },
     {
-        "src": "Door",
-        "tgt": "Object",
+        "src": "Share_Tags",
+        "tgt": "Action",
         "types": "Is"
     },
     {
@@ -81,12 +61,22 @@
         "types": "Is"
     },
     {
-        "src": "Share_Tags",
-        "tgt": "Action",
+        "src": "Is",
+        "tgt": "Stative",
+        "types": "Is"
+    },
+    {
+        "src": "Stative",
+        "tgt": "Shortcut",
         "types": "Is"
     },
     {
         "src": "Offer_Tags",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Flee",
         "tgt": "Action",
         "types": "Is"
     },
@@ -96,36 +86,143 @@
         "types": "Is"
     },
     {
-        "src": "Flee",
+        "src": "Traverse",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Engage",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Loot",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Wait",
+        "tgt": "Action",
+        "types": "Is"
+    },
+    {
+        "src": "Rest",
         "tgt": "Action",
         "types": "Is"
     }
     ],
     "vertices": [
-    "Wounded",
-    "Armed",
-    "Loot",
-    "Armored",
-    "Traverse",
-    "Door",
-    "Flee",
-    "Person",
-    "Room",
-    "Attribute",
-    "Greet",
-    "Offer_Tags",
-    "Send_Off",
-    "Share_Tags",
-    "Object",
-    "Engage",
-    "Action",
-    "Attack",
-    "Entity_State",
-    "Wait",
-    "Rest",
-    "Announce_Exit",
-    "Dead",
-    "Instance",
-    "Ask_Tags"
+    {
+        "attr_map": {},
+        "label": "Door"
+    },
+    {
+        "attr_map": {},
+        "label": "Engage"
+    },
+    {
+        "attr_map": {},
+        "label": "Person"
+    },
+    {
+        "attr_map": {},
+        "label": "Rest"
+    },
+    {
+        "attr_map": {},
+        "label": "Offer_Tags"
+    },
+    {
+        "attr_map": {},
+        "label": "Room"
+    },
+    {
+        "attr_map": {},
+        "label": "Shortcut"
+    },
+    {
+        "attr_map": {},
+        "label": "Dead"
+    },
+    {
+        "attr_map": {},
+        "label": "Greet"
+    },
+    {
+        "attr_map": {},
+        "label": "Attribute"
+    },
+    {
+        "attr_map": {},
+        "label": "Instance"
+    },
+    {
+        "attr_map": {},
+        "label": "Ask_Tags"
+    },
+    {
+        "attr_map": {},
+        "label": "Object"
+    },
+    {
+        "attr_map": {},
+        "label": "Share_Tags"
+    },
+    {
+        "attr_map": {},
+        "label": "Send_Off"
+    },
+    {
+        "attr_map": {},
+        "label": "Flee"
+    },
+    {
+        "attr_map": {},
+        "label": "Is"
+    },
+    {
+        "attr_map": {},
+        "label": "Wait"
+    },
+    {
+        "attr_map": {},
+        "label": "Entity_State"
+    },
+    {
+        "attr_map": {},
+        "label": "Loot"
+    },
+    {
+        "attr_map": {},
+        "label": "Armored"
+    },
+    {
+        "attr_map": {},
+        "label": "Armed"
+    },
+    {
+        "attr_map": {},
+        "label": "Wounded"
+    },
+    {
+        "attr_map": {},
+        "label": "Traverse"
+    },
+    {
+        "attr_map": {},
+        "label": "Announce_Exit"
+    },
+    {
+        "attr_map": {},
+        "label": "Stative"
+    },
+    {
+        "attr_map": {},
+        "label": "Action"
+    },
+    {
+        "attr_map": {},
+        "label": "Attack"
+    }
     ]
 }

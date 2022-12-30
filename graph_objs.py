@@ -1,5 +1,6 @@
 from collections import defaultdict, Counter
-from utils import as_counter
+from pprint import pprint
+from utils import to_counter
 
 class EdgeMap:
     def __init__(self):
@@ -83,14 +84,12 @@ class GraphObject:
 
 class Vertex(GraphObject):
 
-    def __init__(self, id, created_timestep, updated_timestep, shortcut_map=None, attr_map=None):
+    def __init__(self, id, created_timestep, updated_timestep, attr_map=None):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
         self.relationship_map = defaultdict(Counter)
         self.relationship_map["Is>"][self] = 1
-        # ({"src":"Pred","src_dir":"<","tgt":"Pred","tgt_dir":">"},)
-        self.shortcut_map = shortcut_map
         super().__init__(created_timestep, updated_timestep, attr_map)
 
     def get_relationships(self, key, exclude_self=False, as_counter=False):
@@ -99,7 +98,7 @@ class Vertex(GraphObject):
             if exclude_self:
                 result.remove(self)
             if as_counter == True:
-                return as_counter(result)
+                return to_counter(result)
             return result
         return set()
 
@@ -111,14 +110,14 @@ class Vertex(GraphObject):
     def __repr__(self):
         return f"|{self.id}| {id(self)}" # f"{self.id}, {self.attr_map}"
 
-    def update_relationships(self, target_counter:Counter, add:bool):
+    def update_relationships(self, edge_type, target_counter:Counter, add:bool):
         result_set = set()
         for key,value in target_counter.items():
             if add == True:
-                if key not in self.relationship_map:
+                if key not in self.relationship_map[edge_type]:
                     result_set.add(key)
-                self.relationship_map[key] += value
-            elif key in self.relationship_map:
+                self.relationship_map[edge_type][key] += value
+            elif key in self.relationship_map.get(edge_type, Counter()):
                 self.relationship_map[key] -= value
                 if self.relationship_map[key] <= 0:
                     del self.relatipnship_map[key]
@@ -127,42 +126,42 @@ class Vertex(GraphObject):
         return result_set
 
     def propagate_lineage_delta(self, updated_lineage:set, add:bool):
-        lineage_counter = as_counter(updated_lineage)
-        for edge_map in (self.in_edges, self.out_edges):
-            for edge_type, target in edge_map.edgetype_to_vertex.items():
+        lineage_counter = to_counter(updated_lineage)
+        for edge_map, dir in ((self.in_edges, ">"), (self.out_edges, "<")):
+            for edge_type, target_set in edge_map.edgetype_to_vertex.items():
                 if edge_type != "Is":
-                    target.update_relationships(lineage_counter, add=add)
+                    for target in target_set:
+                        target.update_relationships(edge_type+dir, lineage_counter, add=add)
 
-    def add_edge(self, edge, twoway=False, update_relationships=True):
-        target = edge.tgt == self
+    def add_edge(self, edge, update_relationships=True):
+        dir = "<" if edge.tgt == self else ">"
         endpoint = edge.tgt if edge.tgt is not self else edge.src
         result = set()
 
-        if twoway or not target:
+        if self is edge.src:
             self.out_edges.add(edge, endpoint)
-        if twoway or target:
+        elif self is edge.tgt:
             self.in_edges.add(edge, endpoint)
 
-        if update_relationships == True:
-            result = self.update_relationships(endpoint.get_relationships("Is>", as_counter=True), add=True)
+        for edge_type in edge.edge_type:
+            if update_relationships == True:
+                result = self.update_relationships(edge_type+dir, endpoint.get_relationships("Is>", as_counter=True), add=True)
 
         return result
 
     def remove_edge(self, edge, update_relationships=True):
-
+        dir = "<" if edge.tgt == self else ">"
         endpoint = edge.tgt if edge.tgt is not self else edge.src
         result = set()
 
-        if edge.twoway:
-            self.in_edges.remove(edge, endpoint)
-            self.out_edges.remove(edge, endpoint)
-        elif self is edge.src:
+        if self is edge.src:
             self.out_edges.remove(edge, endpoint)
         elif self is edge.tgt:
             self.in_edges.remove(edge, endpoint)
 
-        if update_relationships == True:
-            result = self.update_relationships(endpoint.get_relationships("Is>", as_counter=True), add=False)
+        for edge_type in edge.edge_type:
+            if update_relationships == True:
+                result = self.update_relationships(edge_type+dir, endpoint.get_relationships("Is>", as_counter=True), add=False)
 
         return result
 
@@ -173,13 +172,11 @@ class Vertex(GraphObject):
 
 class Edge(GraphObject):
 
-    def __init__(self, edge_type:set, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None, twoway=False):
+    def __init__(self, edge_type:set, src:Vertex, tgt:Vertex, created_timestep, updated_timestep, attr_map=None):
         self.edge_type = edge_type
         self.src = src
         self.tgt = tgt
-        self.twoway = twoway
         super().__init__(created_timestep, updated_timestep, attr_map)
-        # TODO: add logic for twoway
 
     def __repr__(self):
         return f"({self.src.id})-({self.tgt.id})"

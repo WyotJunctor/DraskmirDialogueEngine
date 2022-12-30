@@ -50,12 +50,9 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
 
 class ActionRule:
 
-    def __init__(self, vertex, rules, priority=0):
+    def __init__(self, vertex):
         # add self to vertex action_rules
-        self.priority = priority
         self.vertex = vertex
-        rules.append(self)
-        rules.sort(key=lambda x: x.priority)
 
 
     def check_relationships(self, context, check_set, ref):
@@ -100,7 +97,10 @@ class ActionRule:
             if "id" in tgt_ref and tgt_ref["id"] in get_key_set(edge_map.edgetype_to_id, edge["type"]):
                 tgt_set = get_set(graph.vertices, tgt_ref["id"])
             elif "ref" in tgt_ref:
-                tgt_set = context.get(tgt_ref["ref"], set()) & get_set(edge_map.edgetype_to_vertex, edge["type"])
+                if tgt_ref["alias"] in context:
+                    tgt_set = context.get(tgt_ref["alias"], set()) & get_set(edge_map.edgetype_to_vertex, edge["type"])
+                else:
+                    tgt_set = context.get(get_set(edge_map.edgetype_to_vertex, edge["type"]))
 
             tgt_set = self.check_relationships(context, tgt_set, tgt_ref)
 
@@ -114,9 +114,9 @@ class ActionRule:
             if "ref" in src_ref and "ref" in tgt_ref:
                 for tgt_vert in tgt_set:
                     if "highlight_target" in src_ref:
-                        highlight_map[tgt_vert].add(src_vert)
+                        highlight_map[self.vertex][tgt_vert].add(src_vert)
                     elif "highlight_target" in tgt_ref:
-                        highlight_map[src_vert].add(tgt_vert)
+                        highlight_map[self.vertex][src_vert].add(tgt_vert)
                     valid_tgt.add(tgt_vert)
                     add_dependencies(dependencies, src_vert, tgt_vert, src_hop, tgt_hop)
 
@@ -139,7 +139,7 @@ class ActionRule:
         tgt_hop = src_hop + 1
 
         if "ref" in src_ref:
-            src_set = context.get(src_ref["ref"], set())
+            src_set = context.get(src_ref["alias"], set()) if "alias" in src_ref else context.get(src_ref["ref"], set())
         elif "id" in src_ref:
             src_set = get_set(graph.vertices, src_ref["id"])
 
@@ -150,7 +150,7 @@ class ActionRule:
 
         no_src_tgts = set()
         if "ref" in tgt_ref:
-            no_src_tgts = context.get(tgt_ref["ref"], set())
+            no_src_tgts = context.get(tgt_ref["alias"], set())
 
         if "Not_Is" in edge:
             cleanup_set = src_set.intersection(no_src_tgts)
@@ -185,9 +185,11 @@ class ActionRule:
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
-        highlight_map = defaultdict(set)
+        highlight_map = defaultdict(defaultdict)
+        print(self.__class__)
+        print(self.__class__.patterns)
         for pattern in self.__class__.patterns:
-            dependencies = {}
+            dependencies = dict()
             context["removed"] = set()
             hop_count = defaultdict(set) # TODO: change to set?
             check_type = pattern["check_type"]
@@ -214,31 +216,27 @@ class ActionRule:
                     context[allow_scope + action] |= targets
             if (scope == PatternScope.terminal and
                     (PatternCheckType.allow, PatternCheckType.disallow)[success] == check_type):
-                return {}, {}, {}, False
+                return dict(), dict(), dict(), False
         context["allow"] -= context["disallow"]
         context["local_allow"] -= context["disallow"] + context["local_disallow"]
         target_set = {"allow":context["allow"], "disallow":context["disallow"]}
         local_target_set = {"allow":context["local_allow"], "disallow":context["local_disallow"]}
+        print("ERMMMM", target_set)
         return target_set, local_target_set, highlight_map, True
 
 
-class InheritedActionRule:
-
-    def __init__(self, vertex, rules, priority=0, replicate=True):
-        if replicate is True:
-            self.replicate(vertex)
-        super().__init__(vertex, rules, priority)
-
-    def replicate(self, vertex):
-        visited = set([vertex])
-        queue = [vertex]
+class InheritedActionRule(ActionRule):
+    def replicate(self, rule_map):
+        visited = set([self.vertex])
+        queue = [self.vertex]
         while len(queue) > 0:
             root = queue.pop(0)
+            print("TRAVERSE:", root)
             for edge in root.in_edges.edgetype_to_edge["Is"]:
-                child = self.graph.vertices[edge.src]
+                child = edge.src
                 if child in visited:
                     continue
-                self.__class__(child, edge.attr_map.get("priority", 0), False)
+                rule_map[child].append(self.__class__(child))
                 visited.add(child)
                 queue.append(child)
 
@@ -249,7 +247,7 @@ class r_Action(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego", "rel":(("Is>",set(["Person"])))}, {"null":""}, {})
+                ({"ref":"ego", "rel":(("Is>",set(["Person"])))}, {"null":""}, dict())
             )
         },
     )
@@ -277,7 +275,7 @@ class r_Interaction_Action(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego", "target":""}, {"null":""}, {})
+                ({"ref":"ego", "target":""}, {"null":""}, dict())
             )
         }
     )
@@ -446,7 +444,7 @@ class r_Attack(ActionRule):
         },
         {
             "check_type":PatternCheckType.disallow,
-            "scope":PatternScope.instance,
+            "scope":PatternScope.graph,
             "traversal":(
                 ({"id":"Person"}, {"type":"Is","dir":"<"}, {"ref":"allowed","alias":"v_0","target":"","not_rel":(("Participant>",set(["Combat_Context"])))})
             )
@@ -473,7 +471,7 @@ class r_Rest(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego", "target":""}, {"null":""}, {})
+                ({"ref":"ego", "target":""}, {"null":""}, dict())
             )
         }
     )
@@ -504,7 +502,7 @@ class r_Wait(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego", "target":""}, {"null":""}, {})
+                ({"ref":"ego", "target":""}, {"null":""}, dict())
             )
         }
     )

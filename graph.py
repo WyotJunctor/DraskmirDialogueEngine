@@ -1,12 +1,13 @@
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
+from pprint import pprint
 
 from clock import Clock
 from graph_event import GraphMessage, GraphRecord_Vertex, GraphRecord_Edge, EventType, EventTarget
 from graph_objs import Edge, Vertex
 from collections import defaultdict, Counter
-from utils import as_counter
+from utils import to_counter
 import itertools
 
 
@@ -16,6 +17,7 @@ class Graph:
         self.clock = clock
         self.vertices = dict()
         self.visgraph = nx.Graph()
+        self.shortcut_map = dict()
 
     def draw_graph(self):
         nx.draw(self.visgraph, with_labels=True)
@@ -23,13 +25,13 @@ class Graph:
 
     def split_edge_set(self, edge_set):
         primary_edge_set = {edge for edge in edge_set if "Is" in edge.edge_type}
-        return primary_edge_set, edge_set - primary_edge_set
+        return primary_edge_set, {edge for edge in edge_set if len(edge.edge_type) > 1 or "Is" not in edge.edge_type}
 
     def calculate_dependencies(self, queue, original_set, visited):
         while len(queue) > 0:
             root = queue.pop(0)
             for child in root.get_relationships("Is<"):
-                original_set.remove(child)
+                original_set.discard(child)
                 if child in visited:
                     visited[child][0] += 1
                 else:
@@ -41,8 +43,8 @@ class Graph:
         while len(queue) > 0:
             root = queue.pop(0)
             # apply update map removal
-            lineage_map[root] = root.update_relationships(update_map[root], add=add)
-            update_counter = as_counter(lineage_map[root])
+            lineage_map[root] = root.update_relationships("Is>", update_map[root], add=add)
+            update_counter = to_counter(lineage_map[root])
             for child in root.get_relationships("Is<"):
                 if child in visited: # this should always be true
                     update_map[child] += update_counter
@@ -59,6 +61,7 @@ class Graph:
         del_edges = set()
 
         realized_events, duplicate_records = events.realize(self)
+
         for event_key, event_set in realized_events.items():
 
             match event_key:
@@ -108,9 +111,9 @@ class Graph:
                 if v not in del_verts:
                     v.remove_edge(e, update_relationships=v == e.tgt) # this is basically a secondary edge
 
-        self.calculate_dependencies(self, queue, original_set, visited)
+        self.calculate_dependencies(queue, original_set, visited)
 
-        self.apply_primary_edges(self, original_set, visited, update_map, lineage_del_map, add=False)
+        self.apply_primary_edges(original_set, visited, update_map, lineage_del_map, add=False)
         # END DELETED PRIMARY EDGES
 
         # HANDLE DELETED SECONDARY EDGES
@@ -129,24 +132,24 @@ class Graph:
             original_set.add(e.src)
             queue.append(e.src)
             update_map[e.src] += e.tgt.get_relationships("Is>", as_counter=True)
-            e.src.add_edge(e, e.twoway, update_relationships=False)
-            e.tgt.add_edge(e, e.twoway, update_relationships=True)
+            e.src.add_edge(e, update_relationships=False)
+            e.tgt.add_edge(e, update_relationships=True)
 
-        self.calculate_dependencies(self, queue, original_set, visited)
+        self.calculate_dependencies(queue, original_set, visited)
 
-        self.apply_primary_edges(self, original_set, visited, update_map, lineage_add_map, add=True)
+        self.apply_primary_edges(original_set, visited, update_map, lineage_add_map, add=True)
         # END ADDED PRIMARY EDGES
 
         # PROPAGATE LINEAGE TO NEIGHBORS
         for lineage_map, add in ((lineage_del_map, False), (lineage_add_map,True)):
-            for v, updated_lineage in lineage_map:
+            for v, updated_lineage in lineage_map.items():
                 v.propagate_lineage_delta(updated_lineage, add=add)
                 # this is about propagating changes to neighbors via remaining secondary edges
 
         # HANDLE ADDED SECONDARY EDGES
         for e in add_s_edges:
-            e.src.add_edge(e, e.twoway, update_relationships=True)
-            e.tgt.add_edge(e, e.twoway, update_relationships=True)
+            e.src.add_edge(e, update_relationships=True)
+            e.tgt.add_edge(e, update_relationships=True)
 
         # HANDLE ADDED VERTS (POSSIBLE MERGING)
         for v in add_verts:

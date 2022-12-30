@@ -19,5 +19,5 @@ def get_set(target_map, key, fetch_lambda=lambda x, y: set(x[y]) ) :
 def get_key_set(target_map, key):
     return get_set(target_map, key, fetch_lambda=lambda x, y: set(x[y].keys()))
 
-def as_counter(target_set):
+def to_counter(target_set):
     return Counter({v:1 for v in target_set})

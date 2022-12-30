@@ -1,6 +1,7 @@
+import itertools
 from collections import defaultdict
 from enum import Enum
-import itertools
+from pprint import pprint
 
 from graph_objs import Edge, Vertex, GraphObject
 
@@ -18,12 +19,12 @@ class EventTarget(Enum):
 
 
 class GraphMessage:
-    def __init__(self, update_map:defaultdict):
-        self.update_map = update_map
+    def __init__(self, update_map:defaultdict=None):
+        self.update_map = update_map if update_map is not None else defaultdict(set)
 
     def merge(self, message):
         new_update_map = self.update_map.copy()
-        for key, val in message.items():
+        for key, val in message.update_map.items():
             new_update_map[key] = new_update_map[key] | val
         return GraphMessage(update_map=new_update_map)
 
@@ -48,12 +49,16 @@ class GraphMessage:
             event_target, event_act = iter_key
             event_key = (event_act, event_target)
             event_set = self.update_map.get(event_key)
+            if event_set is None:
+                continue
             if event_target == EventTarget.Vertex:
                 for vert_id in event_set:
                     if graph.vertices.get(vert_id) is None:
-                        realized[event_key].add(Vertex(
+                        realized_vert = Vertex(
                             vert_id, graph.clock.timestep, graph.clock.timestep
-                        ))
+                        )
+                        realized_verts[vert_id] = realized_vert
+                        realized[event_key].add(realized_vert)
                     else:
                         vert = graph.vertices.get(vert_id)
                         if event_act is EventType.Add:
@@ -86,7 +91,7 @@ class GraphMessage:
                             dupe_edge = True
                             break
                     if dupe_edge is False:
-                        realized[event_key].add(Edge(t_set, s_vert, t_vert, graph.clock.timestep))
+                        realized[event_key].add(Edge(t_set, s_vert, t_vert, graph.clock.timestep, graph.clock.timestep))
         return realized, duplicate_records
             
 

@@ -1,7 +1,8 @@
-import copy
 from collections import defaultdict
 from functools import reduce
+from pprint import pprint
 
+from action_rules import InheritedActionRule
 from choose import ChooseMaker
 from clock import Clock
 from graph import Graph
@@ -11,7 +12,7 @@ from utils import merge_targets
 
 class Reality:
 
-    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
+    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict):
         self.clock = clock
         self.graph = graph
 
@@ -22,13 +23,9 @@ class Reality:
             v_id = effect_key[2]
             effect_rule(graph.vertices[v_id], self.effect_rules[effect_key])
 
-        # for each shortcut, put it on a vertex
-        for v_id, shortcut_map in shortcut_maps.items():
-            self.graph.vertices[v_id].shortcut_map = shortcut_map
-
     def receive_message(self, message: GraphMessage):
         records = self.graph.update_graph(message)
-        effect_messages = set()
+        effect_messages = list()
 
         while len(records) > 0:
             record = records.pop()
@@ -41,31 +38,41 @@ class Reality:
 
                 records.extend(new_records)
 
-        effect_messages = reduce(effect_messages, lambda x,y: x.merge(y))
+        if len(effect_messages) > 1:
+            effect_messages = reduce(lambda x,y: x.merge(y), effect_messages)
+        elif len(effect_messages) == 1:
+            effect_messages = effect_messages.pop(0)
+        else:
+            effect_messages = GraphMessage()
         all_messages = message.merge(effect_messages)
 
         return all_messages, effect_messages
 
 class SubjectiveReality(Reality):
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, shortcut_maps: dict, action_rules_map: dict):
-        super().__init__(clock, graph, effect_rules_map, shortcut_maps)
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, action_rules_map: dict):
+        super().__init__(clock, graph, effect_rules_map)
 
         self.choosemaker = choosemaker
 
         ego_concept = graph.vertices["Ego"]
+        pprint(ego_concept.in_edges.edgetype_to_vertex)
         self.ego = list(ego_concept.in_edges.edgetype_to_vertex["Is"])[0]
 
         self.action_rules = defaultdict(list)
 
         # for each action rule in the map, instantiate it
         for v_id, action_rule in action_rules_map.items():
-            action_rule(graph.vertices[v_id], self.action_rules[v_id])
+            if v_id not in graph.vertices:
+                continue
+            vertex = graph.vertices[v_id]
+            rule_instance = action_rule(vertex) 
+            self.action_rules[vertex].append(rule_instance)
+            if isinstance(rule_instance, InheritedActionRule):
+                rule_instance.replicate(self.action_rules)
 
-        """
-        # initialize effect rules
-        for v_id, shortcut_map in shortcut_maps.items():
-            action_rule_class(vertex, self.action_rules[v_id])
-        """
+        pprint(self.action_rules)
+        # if the rule is inherited, propagate it down to all children...
+
 
 
     def choose_action(self):
@@ -82,10 +89,11 @@ class SubjectiveReality(Reality):
 
     def get_action_targets(self, action_rules, target_set):
         local_target_set = {"allow":set(), "disallow":set()}
+        highlight_map = defaultdict(defaultdict)
         for rule in action_rules:
             r_target_set, r_local_target_set, highlight_map, allow = rule.get_targets(self.ego, self.graph, target_set, local_target_set)
             if allow is False:
-                return {}, {}, {}, False
+                return dict(), dict(), dict(), False
             target_set = merge_targets(target_set, r_target_set)
             r_local_target_set["disallow"] = r_local_target_set["disallow"].union(target_set["disallow"])
             local_target_set = merge_targets(local_target_set, r_local_target_set)
@@ -96,33 +104,48 @@ class SubjectiveReality(Reality):
         # get root action
         action_vert = self.graph.vertices["Action"]
         instance_vert = self.graph.vertices["Instance"]
-        target_map = {action_vert: [{"allow":set(), "disallow":set()}, 0, 0]} # vertex: [target_set, num_calculated_dependencies, num_dependencies]
+        target_map = {action_vert: {"allow":set(), "disallow":set()}} # vertex: [target_set, num_calculated_dependencies, num_dependencies]
+        dependency_map = {action_vert: [0, 0]}
+        highlight_map = dict()
         queue = [action_vert]
         while len(queue) > 0:
             root = queue.pop(0)
-            target_set, local_target_set, allow = self.get_action_targets(self.action_rules[root.id], target_map[root][0])
+            target_set, local_target_set, highlight_map, allow = self.get_action_targets(self.action_rules[root.id], target_map[root])
             if allow is False:
                 continue
-            target_map[root][0] = merge_targets(target_set, local_target_set)
+            target_map[root] = merge_targets(target_set, local_target_set)
 
             for child in root.in_edges.edgetype_to_vertex["Is"]:
                 if instance_vert in child.relationship_map["Is>"]:
                     continue
                 if child not in target_map:
-                    target_map[child] = [
-                        copy.deepcopy(target_set), 1,
-                        len([v for v in child.out_edges.edgetype_to_id["Is"] if action_vert in v.relationship_map["Is>"]])
+                    target_map[child] = dict({"allow":target_set["allow"], "disallow": target_set["disallow"]})
+                    dependency_map[child] = [
+                        1,
+                        len([v for v in child.out_edges.edgetype_to_vertex["Is"] if action_vert in v.relationship_map["Is>"]])
                     ]
                 else:
-                    target_map[child][0] = merge_targets(target_map[child][0], target_set)
-                    target_map[child][1] += 1
-                if target_map[child][1] == target_map[child][2]:
+                    target_map[child] = merge_targets(target_map[child], target_set)
+                    dependency_map[child][0] += 1
+                if dependency_map[child][0] == dependency_map[child][1]:
                     queue.append(child)
 
-        return {
-            action: dumbass_list[0]["allow"] for action, dumbass_list in target_map.items() if len(dumbass_list[0]["allow"]) > 0
-        }
+        # TODO(Wyatt): Return here...
+        action_options = defaultdict(set)
+        for action, target_set in target_map.items():
+            if len(target_set["allow"]) > 0:
+                # check if action is contained in highlight map
+                # if so, iterate through allowed targets
+                # if allowed target is contained in sub_highlight_map,
+                # add that to the action options
+                if action in highlight_map:
+                    for allowed_target in target_set["allow"]:
+                        if allowed_target in highlight_map[action]:
+                            target_set["allow"].discard(allowed_target)
+                            target_set["allow"].add(highlight_map[action][allowed_target])
+                action_options["allow"] = target_set["allow"]
+        return action_options
 
 class ObjectiveReality(Reality):
-    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict, shortcut_maps: dict):
-        super().__init__(clock, graph, effect_rules_map, shortcut_maps)
+    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict):
+        super().__init__(clock, graph, effect_rules_map)
