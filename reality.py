@@ -57,7 +57,6 @@ class SubjectiveReality(Reality):
 
         ego_concept = graph.vertices["Ego"]
         self.ego = list(ego_concept.in_edges.edgetype_to_vertex["Is"])[0]
-
         self.action_rules = defaultdict(list)
 
         # for each action rule in the map, instantiate it
@@ -70,7 +69,6 @@ class SubjectiveReality(Reality):
             if isinstance(rule_instance, InheritedActionRule):
                 rule_instance.replicate(self.action_rules)
         # if the rule is inherited, propagate it down to all children...
-
 
 
     def choose_action(self):
@@ -108,7 +106,7 @@ class SubjectiveReality(Reality):
         queue = [action_vert]
         while len(queue) > 0:
             root = queue.pop(0)
-            target_set, local_target_set, highlight_map, allow = self.get_action_targets(self.action_rules[root.id], target_map[root])
+            target_set, local_target_set, highlight_map, allow = self.get_action_targets(self.action_rules[root], target_map[root])
             if allow is False:
                 continue
             target_map[root] = merge_targets(target_set, local_target_set)
@@ -130,6 +128,7 @@ class SubjectiveReality(Reality):
 
         # TODO(Wyatt): Return here...
         action_options = defaultdict(set)
+        print(target_map)
         for action, target_set in target_map.items():
             if len(target_set["allow"]) > 0:
                 # check if action is contained in highlight map
