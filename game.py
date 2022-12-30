@@ -4,9 +4,10 @@ from random import shuffle
 import json
 import re
 
-from action_rules import rules_map
+from action_rules import rules_map as action_rules_map
 from choose import PlayerChooseMaker
 from clock import Clock
+from effect_rules import rules_map as effect_rules_map
 from instancegen import get_next_instance_id
 from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
@@ -71,8 +72,8 @@ class Game:
             self.clock,
             choose_maker,
             subjective_graph,
-            dict(),
-            rules_map
+            effect_rules_map,
+            action_rules_map
         )
 
         full_message, effect_message = self.reality.receive_message(graph_message)
@@ -117,10 +118,10 @@ class Game:
                 {
                     (EventType.Add, EventTarget.Vertex): set([instance_id]),
                     (EventType.Add, EventTarget.Edge): set([
-                            (instance_id, "Target", action_tgt.id), 
-                            (src_vert.id, "Source", instance_id), 
-                            (instance_id, "Is", "Instance"), 
-                            (instance_id, "Is", action_vert.id)
+                            (instance_id, {"Target"}, action_tgt.id), 
+                            (instance_id, {"Is"}, action_vert.id)
+                            (src_vert.id, {"Source"}, instance_id), 
+                            (instance_id, {"Is"}, "Instance"), 
                         ]),
                 }
             ))

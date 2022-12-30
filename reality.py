@@ -33,10 +33,12 @@ class Reality:
 
             if effect_rule is not None:
                 new_message = effect_rule.receive_record(record)
-                effect_messages.add(new_message)
-                new_records = self.graph.update_graph(new_message)
 
-                records.extend(new_records)
+                if new_message is not None:
+                    effect_messages.add(new_message)
+                    new_records = self.graph.update_graph(new_message)
+
+                    records.extend(new_records)
 
         if len(effect_messages) > 1:
             effect_messages = reduce(lambda x,y: x.merge(y), effect_messages)
