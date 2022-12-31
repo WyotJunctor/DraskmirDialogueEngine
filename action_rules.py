@@ -364,7 +364,7 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.local,
             "traversal":(
-                ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}))}),
+                ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}),)}),
                 ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"), )}),
                 ({"ref":"allow","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
             )
