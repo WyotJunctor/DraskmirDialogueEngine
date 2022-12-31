@@ -2,8 +2,7 @@ from collections import defaultdict
 from pprint import pprint
 from os.path import join as pjoin
 from random import shuffle
-import json
-import re
+import re, os, json
 
 from action_rules import rules_map as action_rules_map
 from choose import PlayerChooseMaker
@@ -16,9 +15,10 @@ from graph_event import GraphMessage, EventType, EventTarget
 
 ENTITY_ID_REPLACE = re.compile(r"\$[^\$]*\$")
 
-obj_path = pjoin("Graphs", "obj_base_graph.json")
-subj_path = pjoin("Graphs", "subj_base_graph.json")
-player_path = pjoin("Graphs", "player_spawn_graph.json")
+filepath = os.path.dirname(__file__)
+obj_path = pjoin(filepath, "Graphs", "obj_base_graph.json")
+subj_path = pjoin(filepath, "Graphs", "subj_base_graph.json")
+player_path = pjoin(filepath, "Graphs", "player_spawn_graph.json")
 
 class Game:
 
