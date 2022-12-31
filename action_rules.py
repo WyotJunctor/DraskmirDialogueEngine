@@ -144,7 +144,7 @@ class ActionRule:
         if "ref" in src_ref:
             src_set = context.get(src_ref["alias"], set()) if "alias" in src_ref else context.get(src_ref["ref"], set())
         elif "id" in src_ref:
-            src_set = get_set(graph.vertices, src_ref["id"])
+            src_set = graph.get_verts_from_ids(src_ref["id"])
 
         src_set = self.check_relationships(graph, context, src_set, src_ref)
 
@@ -165,6 +165,7 @@ class ActionRule:
             # self, src_set, no_src_tgts, context, dependencies, hop_count
             valid_src, valid_tgt = self.check_src(src_set, no_src_tgts, context, dependencies, hop_count)
         else:
+            #  def check_step(self, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop):
             valid_src, valid_tgt = self.check_step(src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop)
         if len(valid_src) == 0 or (len(valid_tgt) == 0 and "null" not in edge):
             return False
