@@ -70,8 +70,8 @@ class ActionRule:
                     if rel_set.issubset(v.get_relationships(rel_key)) == False:
                         success = False
                         break
-            if "no_rel" in ref:
-                for rel_key, rel_set in ref["no_rel"]:
+            if "not_rel" in ref:
+                for rel_key, rel_set in ref["not_rel"]:
                     if isinstance(rel_set, str):
                         rel_set = context[rel_set]
                     elif isinstance(rel_set, set):
@@ -117,13 +117,13 @@ class ActionRule:
                     return set(), set()
                 continue
 
-            if "ref" in src_ref and "ref" in tgt_ref:
-                for tgt_vert in tgt_set:
-                    if "highlight_target" in src_ref:
-                        highlight_map[self.vertex][tgt_vert].add(src_vert)
-                    elif "highlight_target" in tgt_ref:
-                        highlight_map[self.vertex][src_vert].add(tgt_vert)
-                    valid_tgt.add(tgt_vert)
+            for tgt_vert in tgt_set:
+                if "highlight_target" in src_ref:
+                    highlight_map[self.vertex][tgt_vert].add(src_vert)
+                elif "highlight_target" in tgt_ref:
+                    highlight_map[self.vertex][src_vert].add(tgt_vert)
+                valid_tgt.add(tgt_vert)
+                if "ref" in src_ref and "ref" in tgt_ref:
                     add_dependencies(dependencies, src_vert, tgt_vert, src_hop, tgt_hop)
 
             valid_src.add(src_vert)
@@ -345,7 +345,7 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
                 (
                     {"ref":"v_1", "highlight_target":""},
                     {"type":"Source", "dir":"<"},
-                    {"ref":"v_2", "alias":"v_2", "target":"", "no_rel":( ("Is>", set( ["Ego"] ) ), )}
+                    {"ref":"v_2", "alias":"v_2", "target":"", "not_rel":( ("Is>", set( ["Ego"] ) ), )}
                 ),
             )
         },
@@ -486,21 +486,21 @@ Room <-In- v_0(Inherits:"Instance", Inherits:"Person", not: Ego)
 
 class r_Wait(ActionRule):
     patterns = (
-        # {
-        #     "check_type":PatternCheckType.allow,
-        #     "scope":PatternScope.terminal,
-        #     "traversal":(
-        #         (
-        #             {"id":"Immediate"}, 
-        #             {"type":"Is","dir":"<"}, 
-        #             {
-        #                 "ref":"v_0","alias":"v_0",
-        #                 "rel":(("Is>",{"Instance","Action"}),),
-        #                 "not_rel":( ("Is>", {"Inactive_Action"} ), )
-        #             }
-        #         ),
-        #     )
-        # },
+        {
+            "check_type":PatternCheckType.disallow,
+            "scope":PatternScope.terminal,
+            "traversal":(
+                (
+                    {"id":"Immediate"}, 
+                    {"type":"Is","dir":"<"}, 
+                    {
+                        "ref":"v_0","alias":"v_0",
+                        "rel":(("Is>",{"Instance","Action"}),),
+                        "not_rel":( ("Is>", {"Inactive_Action"} ), )
+                    }
+                ),
+            )
+        },
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,

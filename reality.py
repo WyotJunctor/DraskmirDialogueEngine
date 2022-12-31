@@ -108,6 +108,7 @@ class SubjectiveReality(Reality):
             root = queue.pop(0)
             target_set, local_target_set, highlight_map, allow = self.get_action_targets(self.action_rules[root], target_map[root])
             if allow is False:
+                target_map[root] = {"allow":set(), "disallow":set()}
                 continue
             target_map[root] = merge_targets(target_set, local_target_set)
 
@@ -126,10 +127,11 @@ class SubjectiveReality(Reality):
                 if dependency_map[child][0] == dependency_map[child][1]:
                     queue.append(child)
 
-        # TODO(Wyatt): Return here...
+        real_actions = { vertex for vertex in self.graph.vertices["Real_Action"].in_edges.edgetype_to_vertex["Is"] }
+
         action_options = defaultdict(set)
         for action, target_set in target_map.items():
-            if len(target_set["allow"]) > 0:
+            if len(target_set["allow"]) > 0 and action in real_actions:
                 # check if action is contained in highlight map
                 # if so, iterate through allowed targets
                 # if allowed target is contained in sub_highlight_map,
@@ -140,6 +142,7 @@ class SubjectiveReality(Reality):
                             target_set["allow"].discard(allowed_target)
                             target_set["allow"].add(highlight_map[action][allowed_target])
                 action_options[action] = target_set["allow"]
+
         return action_options
 
 class ObjectiveReality(Reality):

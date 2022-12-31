@@ -65,8 +65,19 @@ class Game:
         subjective_graph = Graph(self.clock)
 
         graph_message = self.convert_json_to_graph_message(self.subjective_json_path)
+        
+        for instance_v in self.reality.graph.vertices["Instance"].in_edges.edgetype_to_vertex["Is"]:
+            graph_message.update_map[(EventType.Add, EventTarget.Vertex)].add((instance_v.id))
+            for out_edge in instance_v.out_edges.edge_set:
+                graph_message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                    (out_edge.src.id, tuple(out_edge.edge_type), out_edge.tgt.id)
+                )
+            for in_edge in instance_v.in_edges.edge_set:
+                graph_message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                    (in_edge.src.id, tuple(in_edge.edge_type), in_edge.tgt.id)
+                )
+
         subjective_graph.update_graph(graph_message)
-        # subjective_graph.load_json_file(self.subjective_json_path)
 
         if entity_json_path is None:
             entity_json_path = self.entity_json_path
