@@ -52,6 +52,9 @@ class Graph:
                     if visited[child][1] == visited[child][0]:
                         queue.append(child)
 
+    def get_verts_from_ids(self, id_set):
+        return { self.vertices[v_id] for v_id in id_set }
+
     # TODO(Wyatt): add attribute updates
     def update_graph(self, events: GraphMessage):
 
