@@ -41,6 +41,39 @@ class Game:
             entity_json_path=self.player_json
         )
 
+        good_choose = False
+        while not good_choose:
+            print(f"'{self.player_entity.ego.id}', choose your equipment...")
+            print("[input '1' for nothing, '2' for a weapon only, '3' for armor only, '4' for both arms and armor]")
+            choose = input()
+
+            try:
+                choose = int(choose)
+
+                good_choose = choose in (1, 2, 3, 4)
+            except:
+                print(f"Choice '{choose}' invalid.")
+                continue
+        
+        if choose == 1:
+            return
+
+        message = GraphMessage()
+
+        if choose in (2, 4):
+            print(f"'{self.player_entity.ego.id}', you are Armed")
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (self.player_entity.ego.id, ("Has",), "Armed")
+            )
+        if choose in (3, 4):
+            print(f"'{self.player_entity.ego.id}', you are Armored")
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (self.player_entity.ego.id, ("Has",), "Armored")
+            )
+
+        self.player_entity.graph.update_graph(message)
+        self.reality.graph.update_graph(message)
+
     def convert_json_to_graph_message(self, json_path):
         with open(json_path) as f:
             globstring = f.read()

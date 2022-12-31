@@ -203,10 +203,22 @@ class er_Attack(EffectRule):
         attacker_armedness = int( "Armed" in attacker.get_relationships("Has>", as_ids=True) )
         attackee_armoredness = int( "Armored" in attackee.get_relationships("Has>", as_ids=True) )
 
+        print(f"'{attacker}' attacks '{attackee}'")
+
         if attacker_armedness < attackee_armoredness:
             print("bonk!")
             return None
-        elif attacker_armedness > attackee_armoredness or random.randint(0,1):
+        elif attacker_armedness > attackee_armoredness:
+            print("kazoingo!")
+            return GraphMessage(
+                update_map=defaultdict(set,
+                {
+                    (EventType.Add, EventTarget.Edge): set([
+                        (attackee.id, ("Has",), "Wounded")
+                    ])
+                })
+            )
+        elif attacker_armedness == attackee_armoredness and random.randint(0,1):
             print("boingo!")
             return GraphMessage(
                 update_map=defaultdict(set,
