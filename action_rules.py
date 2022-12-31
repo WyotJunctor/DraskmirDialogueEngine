@@ -356,7 +356,7 @@ Recent <-Has_Attr- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "
 """
 
 class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.local,
@@ -376,7 +376,7 @@ v_2(context:"allow", target) -Target-> v_1
 """
 
 class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
@@ -392,7 +392,7 @@ Ego -Hostile_Relationship-> v_0(Inherits:"Instance", Inherits:"Person", target)
 """
 
 class r_Greet(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
@@ -408,7 +408,7 @@ Ego -Acknowledged-> v_1(context:"allow", target)
 """
 
 class r_Engage(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
@@ -435,7 +435,7 @@ Combat_Context <-Participant- v_1(context:"allow")
 """
 
 class r_Attack(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
@@ -460,7 +460,7 @@ Person <-Is- v_0(context:"allow", Not: "Participant":"Combat_Context")
 """
 
 class r_Rest(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
@@ -483,7 +483,7 @@ Room <-In- v_0(Inherits:"Instance", Inherits:"Person", not: Ego)
 """
 
 class r_Wait(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
@@ -514,7 +514,7 @@ Immediate <-Is- v_0(Inherits:"Instance", Inherits:"Action", not: Inherits:"Inact
 """
 
 class r_Loot(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
@@ -539,7 +539,7 @@ Dead <-Is- v_0(Inherits:"Instance", Inherits:"Dead", "Was":"Person")
 """
 
 class r_Flee(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
@@ -564,7 +564,7 @@ Door <-Is- v_0(Inherits:"Instance", Inherits:"Door")
 """
 
 class r_Enter(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
@@ -580,7 +580,7 @@ Ego -Source-> v_0(Inherits:"Instance", Inherits:"Traverse", "Has":"Immediate")
 """
 
 class r_Traverse(ActionRule):
-    pattern = (
+    patterns = (
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
