@@ -63,7 +63,7 @@ class GraphMessage:
                         vert = graph.vertices.get(vert_id)
                         if event_act is EventType.Add:
                             for label in vert.get_relationships("Is>"):
-                                duplicate_records.add(GraphRecord_Vertex(EventType.Duplicate, graph.vertices.get(vert_id), label))
+                                duplicate_records.add(GraphRecord_Vertex(EventType.Duplicate, graph.vertices.get(vert_id), label.id))
                         else:
                             realized[event_key].add(vert)
             elif event_target == EventTarget.Edge:
@@ -86,13 +86,16 @@ class GraphMessage:
                     dupe_edge = False
                     for edge in s_vert.out_edges.id_to_edge.get(t_id, set()):
                         if edge.edge_type == t_set:
-                            for src_label, e_type, tgt_label in itertools.product(
-                                s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
-                                duplicate_records.add(GraphRecord_Edge(EventType.Duplicate, edge, src_label, e_type, tgt_label)) 
+                            if event_act == EventType.Delete:
+                                realized[event_key].add(edge)
+                            else:
+                                for src_label, e_type, tgt_label in itertools.product(
+                                    s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
+                                    duplicate_records.add(GraphRecord_Edge(EventType.Duplicate, edge, src_label.id, e_type, tgt_label.id)) 
                             dupe_edge = True
                             break
-                    if dupe_edge is False:
-                        realized[event_key].add(Edge(t_set, s_vert, t_vert, graph.clock.timestep, graph.clock.timestep))
+                    if dupe_edge is False and event_act == EventType.Add:
+                            realized[event_key].add(Edge(t_set, s_vert, t_vert, graph.clock.timestep, graph.clock.timestep))
         return realized, duplicate_records
             
 
@@ -102,18 +105,15 @@ class GraphRecord:
         self.act = act
         self.tgt = tgt
         self.o_ref = o_ref
-
-    def __hash__(self):
-        raise NotImplementedError()
+        self.key = None
 
 
 class GraphRecord_Vertex(GraphRecord):
     def __init__(self, act, o_ref, label):
         super().__init__(act, EventTarget.Vertex, o_ref)
         self.label = label
+        self.key = (self.act, EventTarget.Vertex, self.label)
 
-    def __hash__(self):
-        return hash((self.act, EventTarget.Vertex, self.label))
 
 class GraphRecord_Edge(GraphRecord):
     def __init__(self, act, o_ref, src_label, e_type, tgt_label):
@@ -121,9 +121,7 @@ class GraphRecord_Edge(GraphRecord):
         self.src_label = src_label
         self.e_type = e_type
         self.tgt_label = tgt_label
-        
-    def __hash__(self):
-        return hash((self.act, EventTarget.Edge, self.src_label, self.e_type, self.tgt_label))
+        self.key = (self.act, EventTarget.Edge, self.src_label, self.e_type, self.tgt_label)
 
 
 class GraphRecord_Attribute(GraphRecord):
@@ -131,6 +129,5 @@ class GraphRecord_Attribute(GraphRecord):
         super().__init__(act, EventTarget.Attribute, o_ref)
         self.attr_name = attr_name
         self.o_type = tuple(o_type)
+        self.key = (self.act, EventTarget.Attribute, self.attr_name, *self.o_type)
 
-    def __hash__(self):
-        return hash((self.act, EventTarget.Attribute, self.attr_name, *self.o_type))

@@ -101,7 +101,7 @@ class ActionRule:
 
             tgt_set = set()
             if "id" in tgt_ref and tgt_ref["id"] in get_key_set(edge_map.edgetype_to_id, edge["type"]):
-                tgt_set = get_set(graph.vertices, tgt_ref["id"])
+                tgt_set = graph.get_verts_from_ids(tgt_ref["id"])
             elif "ref" in tgt_ref:
                 if tgt_ref["alias"] in context:
                     tgt_set = context.get(tgt_ref["alias"], set()) & get_set(edge_map.edgetype_to_vertex, edge["type"])
@@ -415,8 +415,20 @@ class r_Engage(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(({"Is>","Instance","Conversation_Context"}),)}),
-            )
+                (
+                    {"ref":"ego"},
+                    {"type":"Participant","dir":">"},
+                    {
+                        "ref":"v_0",
+                        "alias":"v_0",
+                        "rel": (
+                            (
+                                "Is>", {"Instance","Conversation_Context"}
+                            )
+                        ,)
+                    }
+                ,)
+            ,)
         },
         {
             "check_type":PatternCheckType.disallow,

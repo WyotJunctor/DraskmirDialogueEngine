@@ -33,10 +33,12 @@ class Game:
         self.subjective_json_path = subjective_json
 
         self.entities = set()
+        self.player_json = player_json
 
+    def spawn_player(self):
         self.player_entity = self.create_entity(
             PlayerChooseMaker(),
-            entity_json_path=player_json
+            entity_json_path=self.player_json
         )
 
     def convert_json_to_graph_message(self, json_path):
@@ -108,6 +110,7 @@ class Game:
 
         actions = list()
 
+        dead_entities = set()
         for entity in self.entities:
             # action: (action_vert, action_target)
             action = entity.choose_action()
@@ -116,6 +119,10 @@ class Game:
                 actions.append(
                     ( entity, action )
                 )
+            else:
+                dead_entities.add(entity)
+
+        self.entities -= dead_entities
 
         shuffle(actions)
 

@@ -44,9 +44,9 @@ class EdgeMap:
                     if indexer[src_key] == 0:
                         del indexer[src_key][tgt_key]
                 elif index_type == "set":
-                    indexer[src_key].remove(tgt_key)
+                    indexer[src_key].discard(tgt_key)
                     if len(indexer[src_key]) == 0:
-                        del indexer[src_key][tgt_key]
+                        del indexer[src_key]
 
     def remove_edges_with(self, vertex):
 
@@ -92,13 +92,15 @@ class Vertex(GraphObject):
         self.relationship_map["Is>"][self] = 1
         super().__init__(created_timestep, updated_timestep, attr_map)
 
-    def get_relationships(self, key, exclude_self=False, as_counter=False):
+    def get_relationships(self, key, exclude_self=False, as_counter=False, as_ids=False):
         if key in self.relationship_map:
             result = set(self.relationship_map[key].keys())
             if exclude_self:
                 result.remove(self)
             if as_counter == True:
                 return to_counter(result)
+            if as_ids == True:
+                return [ r.id for r in result ]
             return result
         return set()
 
@@ -118,10 +120,12 @@ class Vertex(GraphObject):
                     result_set.add(key)
                 self.relationship_map[edge_type][key] += value
             elif key in self.relationship_map.get(edge_type, Counter()):
-                self.relationship_map[key] -= value
-                if self.relationship_map[key] <= 0:
-                    del self.relatipnship_map[key]
-                    result_set[key].add(key)
+                self.relationship_map[edge_type][key] -= value
+                if self.relationship_map[edge_type][key] <= 0:
+                    del self.relationship_map[edge_type][key]
+                    if len(self.relationship_map[edge_type]) == 0:
+                        del self.relationship_map[edge_type]
+                    result_set.add(key)
 
         return result_set
 

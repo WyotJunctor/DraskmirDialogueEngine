@@ -118,6 +118,9 @@ class AIChooseMaker(ChooseMaker):
 
     def consider(self, target_map, ego, graph):
 
+        if len(target_map) == 0:
+            return None, None
+
         action = sample(list(target_map.keys()), k=1)[0]
         target = sample(list(target_map[action]), k=1)[0]
 

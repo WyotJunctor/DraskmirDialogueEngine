@@ -168,7 +168,7 @@ class Graph:
             for edge in edge_set:
                 for src_label, e_type, tgt_label in itertools.product(
                         edge.src.get_relationships("Is>"), edge.edge_type, edge.tgt.get_relationships("Is>")):
-                    records.add(GraphRecord_Edge(event_type, edge, src_label, e_type, tgt_label))
+                    records.add(GraphRecord_Edge(event_type, edge, src_label.id, e_type, tgt_label.id))
 
         for delta_map, event_type, event_target in (
             (lineage_add_map, EventType.Add, EventTarget.Vertex), 
@@ -179,7 +179,7 @@ class Graph:
                 match event_target:
                     case EventTarget.Vertex:
                         for label in delta_set:
-                            records.add(GraphRecord_Vertex(event_type, obj, label))
+                            records.add(GraphRecord_Vertex(event_type, obj, label.id))
                     case EventTarget.Attribute:
                         pass
         

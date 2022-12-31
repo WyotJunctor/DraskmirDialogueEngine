@@ -37,13 +37,22 @@ if __name__ == "__main__":
 
     game = Game()
 
-    for _ in range(3):
+    # game.spawn_player()
+
+    for _ in range(50):
         game.create_entity(
             AIChooseMaker()
         )
 
-    for _ in range(5):
+    print(f"starting graph size: {len(game.reality.graph.vertices)} vertices", flush=True)
+
+    step_count = 0
+    while len(game.entities) > 1:
         game.step()
+        step_count += 1
+
+    print(f"it took {step_count} steps for everyone to kill each other", flush=True)
+    print(f"final graph size was: {len(game.reality.graph.vertices)} vertices", flush=True)
 
     """
     Start the world loop

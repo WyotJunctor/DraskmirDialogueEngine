@@ -28,16 +28,16 @@ class Reality:
 
         while len(records) > 0:
             record = records.pop()
-            effect_rule = self.effect_rules.get(record)
+            effect_rule = self.effect_rules.get(record.key)
 
             if effect_rule is not None:
                 new_message = effect_rule.receive_record(record)
 
                 if new_message is not None:
-                    effect_messages.add(new_message)
+                    effect_messages.append(new_message)
                     new_records = self.graph.update_graph(new_message)
 
-                    records.extend(new_records)
+                    records |= (new_records)
 
         if len(effect_messages) > 1:
             effect_messages = reduce(lambda x,y: x.merge(y), effect_messages)
@@ -74,6 +74,10 @@ class SubjectiveReality(Reality):
     def choose_action(self):
 
         target_map = self.get_targets()
+
+        if len(target_map) == 0:
+            return None
+
         action, target = self.choosemaker.consider(target_map, self.ego, self.graph)
 
         return (action, target) # (action vertex, action target)

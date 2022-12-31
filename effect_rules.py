@@ -22,7 +22,7 @@ class er_PersonSpawn(EffectRule):
         (EventType.Add, EventTarget.Vertex, "Person"),
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         look at all of the other people in the room,
@@ -39,17 +39,17 @@ class er_PersonSpawn(EffectRule):
         added_person = record.o_ref
 
         # find all the other people
-        unknown_rels = self.reality.graph.vertices["Unknown_Relationship"].get_relationships("Is>")
+        unknown_rels = tuple(self.reality.graph.vertices["Unknown_Relationship"].get_relationships("Is>", as_ids=True))
         person_v = self.reality.graph.vertices["Person"]
         for person_instance in person_v.in_edges.edgetype_to_vertex["Is"]:
             if person_instance is added_person:
                 continue
 
-            generated_message.update_map[(EventType.Add, EventTarget.Edge)].add((person_instance.id, unknown_rels.copy(), added_person.id))
-            generated_message.update_map[(EventType.Add, EventTarget.Edge)].add((added_person.id, unknown_rels.copy(), person_instance.id))
+            generated_message.update_map[(EventType.Add, EventTarget.Edge)].add((person_instance.id, unknown_rels, added_person.id))
+            generated_message.update_map[(EventType.Add, EventTarget.Edge)].add((added_person.id, unknown_rels, person_instance.id))
 
         calm_v = self.reality.graph.vertices["Calm_Context"]
-        byst_rels = self.reality.graph.vertices["Bystander"].get_relationships("Is>")
+        byst_rels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
         generated_message.update_map[(EventType.Add, EventTarget.Edge)].add((added_person.id, byst_rels, calm_v.id))
 
         return generated_message
@@ -68,7 +68,7 @@ class er_RelationshipMod(EffectRule):
         Unknown=float("-inf")
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         look at the existing Relationship edge between these two
@@ -119,7 +119,7 @@ class er_Participant(EffectRule):
         (EventType.Add, EventTarget.Edge, "Person", "Participant", "Context"),
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         when you become a participant in a context,
@@ -149,14 +149,14 @@ class er_Engage(EffectRule):
         (EventType.Add, EventTarget.Vertex, "Engage"),
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         when you engage someone,
             both you and the target join the combat context
         """
 
-        edge_types = tuple(self.reality.graph.vertices["Participant"].get_relationships("Is>"))
+        edge_types = tuple(self.reality.graph.vertices["Participant"].get_relationships("Is>", as_ids=True))
         combat_c = self.reality.graph.vertices["Combat_Context"]
         engage_v = record.o_ref
 
@@ -183,7 +183,7 @@ class er_Attack(EffectRule):
         (EventType.Add, EventTarget.Vertex, "Attack"),
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         when you attack somebody,
@@ -200,12 +200,14 @@ class er_Attack(EffectRule):
         attacker = list(attack_v.in_edges.edgetype_to_vertex["Source"])[0]
         attackee = list(attack_v.in_edges.edgetype_to_vertex["Target"])[0]
 
-        attacker_armedness = int( "Armed" in attacker.get_relationships("Has>") )
-        attackee_armoredness = int( "Armored" in attackee.get_relationships("Has>") )
+        attacker_armedness = int( "Armed" in attacker.get_relationships("Has>", as_ids=True) )
+        attackee_armoredness = int( "Armored" in attackee.get_relationships("Has>", as_ids=True) )
 
         if attacker_armedness < attackee_armoredness:
+            print("bonk!")
             return None
         elif attacker_armedness > attackee_armoredness or random.randint(0,1):
+            print("boingo!")
             return GraphMessage(
                 update_map=defaultdict(set,
                 {
@@ -215,6 +217,7 @@ class er_Attack(EffectRule):
                 })
             )
         else:
+            print("whiff!")
             return None
 
 
@@ -222,10 +225,10 @@ class er_Death(EffectRule):
     objective_rule = True
 
     record_keys = (
-        (EventType.Duplicate, EventTarget.Edge, "Person", "Has", "Wound"),
+        (EventType.Duplicate, EventTarget.Edge, "Person", "Has", "Wounded"),
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         when somebody who is already wounded gets wounded,
@@ -233,6 +236,8 @@ class er_Death(EffectRule):
         """
 
         person = record.o_ref.src
+
+        print(f"{person.id} is dead!")
 
         return GraphMessage(
             update_map=defaultdict(set,
@@ -254,7 +259,7 @@ class er_RemPerson(EffectRule):
         (EventType.Delete, EventTarget.Vertex, "Person"),
     )
 
-    def receive_record(self, _, record: GraphRecord):
+    def receive_record(self, record: GraphRecord):
 
         """
         when somebody stops being a person,
@@ -270,7 +275,7 @@ class er_RemPerson(EffectRule):
         message = GraphMessage()
 
         for del_edge in del_edges:
-            message.update_map[(EventType.Delete, EventTarget.Vertex)].add(
+            message.update_map[(EventType.Delete, EventTarget.Edge)].add(
                 (del_edge.src.id, tuple(del_edge.edge_type), del_edge.tgt.id)
             )
 
