@@ -91,7 +91,7 @@ class er_RelationshipMod(EffectRule):
                 update_map=defaultdict(set,
                 {
                     (EventType.Delete, EventTarget.Edge): set([
-                        (existing_rel.src.id, existing_rel.edge_type, existing_rel.tgt.id)
+                        (existing_rel.src.id, tuple(existing_rel.edge_type), existing_rel.tgt.id)
                     ])
                 })
             )
@@ -100,7 +100,7 @@ class er_RelationshipMod(EffectRule):
                 update_map=defaultdict(set,
                 {
                     (EventType.Delete, EventTarget.Edge): set([
-                        (new_edge.src.id, new_edge.edge_type, new_edge.tgt.id)
+                        (new_edge.src.id, tuple(new_edge.edge_type), new_edge.tgt.id)
                     ])
                 })
             )

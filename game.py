@@ -123,10 +123,10 @@ class Game:
                 {
                     (EventType.Add, EventTarget.Vertex): set([instance_id]),
                     (EventType.Add, EventTarget.Edge): set([
-                            (instance_id, {"Target"}, action_tgt.id), 
-                            (instance_id, {"Is"}, action_vert.id),
-                            (src_vert.id, {"Source"}, instance_id), 
-                            (instance_id, {"Is"}, "Instance"), 
+                            (instance_id, ("Target",), action_tgt.id), 
+                            (instance_id, ("Is",), action_vert.id),
+                            (src_vert.id, ("Source",), instance_id), 
+                            (instance_id, ("Is",), "Instance"), 
                         ]),
                 }
             ))
@@ -138,6 +138,6 @@ class Game:
             graph_message.strip_multitype_edges()
 
             for observing_entity in self.entities:
-                observing_entity.reveive_events(graph_message)
+                observing_entity.receive_message(graph_message)
 
         self.clock.step()

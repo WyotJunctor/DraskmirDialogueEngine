@@ -213,7 +213,7 @@ class ActionRule:
                     scope in (PatternScope.graph, PatternScope.local) and
                     check_type in (PatternCheckType.allow, PatternCheckType.disallow, PatternCheckType.x_allow)):
                 allow_scope = "" if scope == PatternScope.graph else "local_"
-                action = "disallow" if PatternCheckType.disallow else "allow"
+                action = "disallow" if check_type == PatternCheckType.disallow else "allow"
                 targets = context[context["target"]] - context["removed"]
                 if check_type == PatternCheckType.x_allow:
                     context[allow_scope + action] = targets
@@ -486,21 +486,21 @@ Room <-In- v_0(Inherits:"Instance", Inherits:"Person", not: Ego)
 
 class r_Wait(ActionRule):
     patterns = (
-        {
-            "check_type":PatternCheckType.disallow,
-            "scope":PatternScope.terminal,
-            "traversal":(
-                (
-                    {"id":"Immediate"}, 
-                    {"type":"Is","dir":"<"}, 
-                    {
-                        "ref":"v_0","alias":"v_0",
-                        "rel":(("Is>",{"Instance","Action"}),),
-                        "not_rel":( ("Is>", {"Inactive_Action"} ), )
-                    }
-                ),
-            )
-        },
+        # {
+        #     "check_type":PatternCheckType.allow,
+        #     "scope":PatternScope.terminal,
+        #     "traversal":(
+        #         (
+        #             {"id":"Immediate"}, 
+        #             {"type":"Is","dir":"<"}, 
+        #             {
+        #                 "ref":"v_0","alias":"v_0",
+        #                 "rel":(("Is>",{"Instance","Action"}),),
+        #                 "not_rel":( ("Is>", {"Inactive_Action"} ), )
+        #             }
+        #         ),
+        #     )
+        # },
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,

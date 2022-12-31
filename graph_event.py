@@ -69,6 +69,7 @@ class GraphMessage:
             elif event_target == EventTarget.Edge:
                 for edge_tuple in event_set:
                     s_id, t_set, t_id = edge_tuple
+                    t_set = set(t_set)
                     verts = [None, None]
                     for i, vert_id in enumerate((s_id, t_id)):
                         verts[i] = graph.vertices.get(

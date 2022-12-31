@@ -139,7 +139,7 @@ class SubjectiveReality(Reality):
                         if allowed_target in highlight_map[action]:
                             target_set["allow"].discard(allowed_target)
                             target_set["allow"].add(highlight_map[action][allowed_target])
-                action_options["allow"] = target_set["allow"]
+                action_options[action] = target_set["allow"]
         return action_options
 
 class ObjectiveReality(Reality):
