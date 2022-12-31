@@ -349,7 +349,7 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
                     {"ref":"v_2", "alias":"v_2", "target":"", "no_rel":( ("Is>", set( ["Ego"] ) ), )}
                 ),
             )
-        }
+        },
     )
 
 """
