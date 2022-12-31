@@ -1,5 +1,7 @@
 import inspect
 import sys
+import random
+from pprint import pprint
 
 from collections import defaultdict
 from graph_event import EventType, EventTarget, GraphRecord, GraphMessage
@@ -14,6 +16,8 @@ class EffectRule:
         pass
 
 class er_PersonSpawn(EffectRule):
+    objective_rule = False
+
     record_keys = (
         (EventType.Add, EventTarget.Vertex, "Person"),
     )
@@ -52,6 +56,8 @@ class er_PersonSpawn(EffectRule):
 
 
 class er_RelationshipMod(EffectRule):
+    objective_rule = False
+
     record_keys = (
         (EventType.Add, EventTarget.Edge, "Person", "Relationship", "Person"),
     )
@@ -105,9 +111,179 @@ class er_RelationshipMod(EffectRule):
                 })
             )
 
-rules_map = dict()
+
+class er_Participant(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Edge, "Person", "Participant", "Context"),
+    )
+
+    def receive_record(self, _, record: GraphRecord):
+
+        """
+        when you become a participant in a context,
+            delete all other participant edges
+        """
+
+        edge = record.o_ref
+        source_v = edge.src
+
+        other_part_es = { pedge for pedge in source_v.out_edges.edgetype_to_edge["Participant"] if pedge is not edge }
+
+        message = GraphMessage()
+
+        for pedge in other_part_es:
+            
+            message.update_map[(EventType.Delete, EventTarget.Edge)].add(
+                (pedge.src.id, tuple(pedge.edge_type), pedge.tgt.id)
+            )
+
+        return message
+
+
+class er_Engage(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Engage"),
+    )
+
+    def receive_record(self, _, record: GraphRecord):
+
+        """
+        when you engage someone,
+            both you and the target join the combat context
+        """
+
+        edge_types = tuple(self.reality.graph.vertices["Participant"].get_relationships("Is>"))
+        combat_c = self.reality.graph.vertices["Combat_Context"]
+        engage_v = record.o_ref
+
+        engager = list(engage_v.in_edges.edgetype_to_vertex["Source"])[0]
+        engagee = list(engage_v.in_edges.edgetype_to_vertex["Target"])[0]
+
+        message = GraphMessage(
+            update_map=defaultdict(set,
+            {
+                (EventType.Add, EventTarget.Edge): set([
+                    (engager.id, edge_types, combat_c.id),
+                    (engagee.id, edge_types, combat_c.id)
+                ])
+            })
+        )
+
+        return message
+
+
+class er_Attack(EffectRule):
+    objective_rule = True
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Attack"),
+    )
+
+    def receive_record(self, _, record: GraphRecord):
+
+        """
+        when you attack somebody,
+            if your armedness is equal to their armoredness:
+                50% chance to wound
+            if your armedness is greater than their armoredness:
+                100% chance to wound
+            else:
+                0% chance to wound
+        """
+
+        attack_v = record.o_ref
+
+        attacker = list(attack_v.in_edges.edgetype_to_vertex["Source"])[0]
+        attackee = list(attack_v.in_edges.edgetype_to_vertex["Target"])[0]
+
+        attacker_armedness = int( "Armed" in attacker.get_relationships("Has>") )
+        attackee_armoredness = int( "Armored" in attackee.get_relationships("Has>") )
+
+        if attacker_armedness < attackee_armoredness:
+            return None
+        elif attacker_armedness > attackee_armoredness or random.randint(0,1):
+            return GraphMessage(
+                update_map=defaultdict(set,
+                {
+                    (EventType.Add, EventTarget.Edge): set([
+                        (attackee.id, ("Has",), "Wounded")
+                    ])
+                })
+            )
+        else:
+            return None
+
+
+class er_Death(EffectRule):
+    objective_rule = True
+
+    record_keys = (
+        (EventType.Duplicate, EventTarget.Edge, "Person", "Has", "Wound"),
+    )
+
+    def receive_record(self, _, record: GraphRecord):
+
+        """
+        when somebody who is already wounded gets wounded,
+            kill em
+        """
+
+        person = record.o_ref.src
+
+        return GraphMessage(
+            update_map=defaultdict(set,
+            {
+                (EventType.Add, EventTarget.Edge): set([
+                    (person.id, ("Is",), "Dead")
+                ]),
+                (EventType.Delete, EventTarget.Edge): set([
+                    (person.id, ("Is",), "Person")
+                ]),
+            })
+        )
+
+
+class er_RemPerson(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Delete, EventTarget.Vertex, "Person"),
+    )
+
+    def receive_record(self, _, record: GraphRecord):
+
+        """
+        when somebody stops being a person,
+            they aren't part of contexts or any of that stuff anymore
+        """
+
+        person = record.o_ref
+
+        del_edges = person.out_edges.edgetype_to_edge["Involved"]
+        del_edges |= person.out_edges.edgetype_to_edge["Relationship"]
+        del_edges |= person.in_edges.edgetype_to_edge["Relationship"]
+
+        message = GraphMessage()
+
+        for del_edge in del_edges:
+            message.update_map[(EventType.Delete, EventTarget.Vertex)].add(
+                (del_edge.src.id, tuple(del_edge.edge_type), del_edge.tgt.id)
+            )
+
+        return message
+
+
+obj_effect_rules_map = dict()
+subj_effect_rules_map = dict()
  
 classes = [cls_obj for _, cls_obj in inspect.getmembers(sys.modules[__name__]) if inspect.isclass(cls_obj) and hasattr(cls_obj, "record_keys")]
 for class_obj in classes:
     for key in class_obj.record_keys:
-        rules_map[key] = class_obj
+        if class_obj.objective_rule:
+            obj_effect_rules_map[key] = class_obj
+        else:
+            subj_effect_rules_map[key] = class_obj

@@ -7,7 +7,7 @@ import re, os, json
 from action_rules import rules_map as action_rules_map
 from choose import PlayerChooseMaker
 from clock import Clock
-from effect_rules import rules_map as effect_rules_map
+from effect_rules import obj_effect_rules_map, subj_effect_rules_map
 from instancegen import get_next_instance_id
 from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
@@ -27,7 +27,7 @@ class Game:
 
         reality_graph = Graph(self.clock)
         reality_graph.load_json_file(objective_json)
-        self.reality = ObjectiveReality(self.clock, reality_graph, dict())
+        self.reality = ObjectiveReality(self.clock, reality_graph, obj_effect_rules_map)
 
         self.entity_json_path = entity_json
         self.subjective_json_path = subjective_json
@@ -88,7 +88,7 @@ class Game:
             self.clock,
             choose_maker,
             subjective_graph,
-            effect_rules_map,
+            subj_effect_rules_map,
             action_rules_map
         )
         graph_message.update_map[(EventType.Add, EventTarget.Edge)].remove((
@@ -136,7 +136,7 @@ class Game:
                 {
                     (EventType.Add, EventTarget.Vertex): set([instance_id]),
                     (EventType.Add, EventTarget.Edge): set([
-                            (instance_id, ("Target",), action_tgt.id), 
+                            (action_tgt.id, ("Target",), instance_id),
                             (instance_id, ("Is",), action_vert.id),
                             (src_vert.id, ("Source",), instance_id), 
                             (instance_id, ("Is",), "Instance"), 
