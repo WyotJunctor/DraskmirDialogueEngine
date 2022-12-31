@@ -35,6 +35,8 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
     cleanup_queue = list(cleanup_verts)
     while len(cleanup_queue) > 0:
         root = cleanup_queue.pop(0)
+        if root not in dependencies:
+            continue
         for hop, vert_set in dependencies[root]["dependent_on"].items():
             hop_count[hop].remove(root)
             if len(hop_count[hop]) <= 0:
