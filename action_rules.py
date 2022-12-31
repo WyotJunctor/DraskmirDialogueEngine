@@ -165,7 +165,7 @@ class ActionRule:
             # self, src_set, no_src_tgts, context, dependencies, hop_count
             valid_src, valid_tgt = self.check_src(src_set, no_src_tgts, context, dependencies, hop_count)
         else:
-            valid_src, valid_tgt = self.check_step(ego, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop)
+            valid_src, valid_tgt = self.check_step(src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop)
         if len(valid_src) == 0 or (len(valid_tgt) == 0 and "null" not in edge):
             return False
 
