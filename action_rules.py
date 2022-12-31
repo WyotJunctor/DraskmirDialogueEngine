@@ -386,7 +386,7 @@ class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
             "traversal":(
                 ({"ref":"ego"}, {"type":"Hostile_Relationship","dir":">"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance","Person"}),)}),
             )
-        }
+        },
     )
 
 """
@@ -402,7 +402,7 @@ class r_Greet(ActionRule):
             "traversal":(
                 ({"ref":"ego"}, {"type":"Acknowledged","dir":">"}, {"ref":"allow","alias":"v_0","target":""}),
             )
-        }
+        },
     )
 
 """
@@ -452,7 +452,7 @@ class r_Attack(ActionRule):
             "traversal":(
                 ({"id":"Person"}, {"type":"Is","dir":"<"}, {"ref":"allow","alias":"v_0","target":"","not_rel":(("Participant>",{"Combat_Context"}),)}),
             )
-        }
+        },
     )
 
 """
@@ -477,7 +477,7 @@ class r_Rest(ActionRule):
             "traversal":(
                 ({"ref":"ego", "target":""}, {"null":""}, dict()),
             )
-        }
+        },
     )
 
 """
@@ -508,7 +508,7 @@ class r_Wait(ActionRule):
             "traversal":(
                 ({"ref":"ego", "target":""}, {"null":""}, dict()),
             )
-        }
+        },
     )
 
 """
@@ -531,7 +531,7 @@ class r_Loot(ActionRule):
             "traversal":(
                 ({"id":"Dead"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance","Dead"}),("Was>",{"Person"}),)}),
             )
-        }
+        },
     )
 
 """
@@ -556,7 +556,7 @@ class r_Flee(ActionRule):
             "traversal":(
                 ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance"}),)}),
             )
-        }
+        },
     )
 
 """
@@ -574,7 +574,7 @@ class r_Enter(ActionRule):
             "traversal":(
                 ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Traverse"}),("Has_Attr>",{"Immediate"}),)}),
             )
-        }
+        },
     )
 
 """
@@ -597,7 +597,7 @@ class r_Traverse(ActionRule):
             "traversal":(
                 ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance"}),)}),
             )
-        }
+        },
     )
 
 """
