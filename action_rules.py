@@ -243,7 +243,7 @@ class r_Action(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego", "rel":(("Is>",set(["Person"])))}, {"null":""}, dict()),
+                ({"ref":"ego", "rel":(("Is>",{"Person"}),)}, {"null":""}, dict()),
             )
         },
     )
@@ -263,7 +263,7 @@ class r_Interaction_Action(ActionRule):
                 (
                     {"id":"Person"},
                     {"type":"Is", "dir":"<"},
-                    {"ref":"v_0", "alias":"v_0", "target":"", "rel":(("Is>",set(["Instance","Person"]))), "not_rel":(("Is>",set(["Ego"])))}
+                    {"ref":"v_0", "alias":"v_0", "target":"", "rel":(("Is>",{"Instance","Person"}),), "not_rel":(("Is>",set(["Ego"])),)}
                 ),
             )
         },
@@ -297,7 +297,7 @@ class r_Conversation_Action(ActionRule): # TODO: maybe rewrite
             "check_type":PatternCheckType.get,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Participant", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))}),
+                ({"ref":"ego"}, {"type":"Participant", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Conversation_Context"}),)}),
             )
         },
         {
@@ -325,20 +325,20 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.local,
             "traversal":(
-                ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
+                ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
                 (
                     {"id":"Recent"},
                     {"type":"Has_Attr","dir":"<"},
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",set(["Instance","Action"])),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allowed"))
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allowed"))
                     }
                 ),
                 (
                     {"ref":"v_1", "highlight_target":""},
                     {"type":"Source", "dir":"<"},
-                    {"ref":"v_2", "alias":"v_2", "target":"", "no_rel":( ("Is>", set( ["Ego"] )) )}
+                    {"ref":"v_2", "alias":"v_2", "target":"", "no_rel":( ("Is>", set( ["Ego"] ) ), )}
                 ),
             )
         }
@@ -356,8 +356,8 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.local,
             "traversal":(
-                ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Action"])))}),
-                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"))}),
+                ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}))}),
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"), )}),
                 ({"ref":"allowed","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
             )
         },
@@ -376,7 +376,7 @@ class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Hostile_Relationship","dir":">"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Person"])))}),
+                ({"ref":"ego"}, {"type":"Hostile_Relationship","dir":">"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance","Person"}),)}),
             )
         }
     )
@@ -408,7 +408,7 @@ class r_Engage(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Conversation_Context"])))}),
+                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(({"Is>","Instance","Conversation_Context"}),)}),
             )
         },
         {
@@ -442,7 +442,7 @@ class r_Attack(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Person"}, {"type":"Is","dir":"<"}, {"ref":"allowed","alias":"v_0","target":"","not_rel":(("Participant>",set(["Combat_Context"])))}),
+                ({"id":"Person"}, {"type":"Is","dir":"<"}, {"ref":"allowed","alias":"v_0","target":"","not_rel":(("Participant>",{"Combat_Context"}),)}),
             )
         }
     )
@@ -460,7 +460,7 @@ class r_Rest(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"id":"Room"}, {"type":"In","dir":"<"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Person"]))),"not_rel":(("Is>",set(["Ego"])))}),
+                ({"id":"Room"}, {"type":"In","dir":"<"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Person"}),),"not_rel":(("Is>",{"Ego"}),)}),
             )
         },
         {
@@ -488,8 +488,8 @@ class r_Wait(ActionRule):
                     {"type":"Is","dir":"<"}, 
                     {
                         "ref":"v_0","alias":"v_0",
-                        "rel":(("Is>",set(["Instance","Action"]))),
-                        "not_rel":( ("Is>", set(["Inactive_Action"]) ) )
+                        "rel":(("Is>",{"Instance","Action"}),),
+                        "not_rel":( ("Is>", {"Inactive_Action"} ), )
                     }
                 ),
             )
@@ -521,7 +521,7 @@ class r_Loot(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Dead"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance","Dead"])),("Was>",set(["Person"])))}),
+                ({"id":"Dead"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance","Dead"}),("Was>",{"Person"}),)}),
             )
         }
     )
@@ -546,7 +546,7 @@ class r_Flee(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance"])))}),
+                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance"}),)}),
             )
         }
     )
@@ -564,7 +564,7 @@ class r_Enter(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",set(["Instance","Traverse"])),("Has_Attr>",set(["Immediate"])))}),
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Traverse"}),("Has_Attr>",{"Immediate"}),)}),
             )
         }
     )
@@ -587,7 +587,7 @@ class r_Traverse(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",set(["Instance"])))}),
+                ({"id":"Door"}, {"type":"Is","dir":"<"}, {"ref":"v_0","alias":"v_0","target":"","rel":(("Is>",{"Instance"}),)}),
             )
         }
     )
