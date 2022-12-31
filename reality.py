@@ -107,6 +107,7 @@ class SubjectiveReality(Reality):
         while len(queue) > 0:
             root = queue.pop(0)
             target_set, local_target_set, highlight_map, allow = self.get_action_targets(self.action_rules[root], target_map[root])
+            print(root, allow)
             if allow is False:
                 continue
             target_map[root] = merge_targets(target_set, local_target_set)
@@ -128,19 +129,19 @@ class SubjectiveReality(Reality):
 
         # TODO(Wyatt): Return here...
         action_options = defaultdict(set)
-        print(target_map)
         for action, target_set in target_map.items():
-            if len(target_set["allow"]) > 0:
+            #if len(target_set["allow"]) > 0:
                 # check if action is contained in highlight map
                 # if so, iterate through allowed targets
                 # if allowed target is contained in sub_highlight_map,
                 # add that to the action options
-                if action in highlight_map:
-                    for allowed_target in target_set["allow"]:
-                        if allowed_target in highlight_map[action]:
-                            target_set["allow"].discard(allowed_target)
-                            target_set["allow"].add(highlight_map[action][allowed_target])
-                action_options["allow"] = target_set["allow"]
+            if action in highlight_map:
+                for allowed_target in target_set["allow"]:
+                    if allowed_target in highlight_map[action]:
+                        target_set["allow"].discard(allowed_target)
+                        target_set["allow"].add(highlight_map[action][allowed_target])
+            print("TARGET:", action, target_set)
+            action_options["allow"] = target_set["allow"]
         return action_options
 
 class ObjectiveReality(Reality):

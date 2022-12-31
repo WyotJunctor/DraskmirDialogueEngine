@@ -171,8 +171,7 @@ class ActionRule:
             valid_src, valid_tgt = self.check_step(src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop)
         if len(valid_src) == 0 or (len(valid_tgt) == 0 and "null" not in edge):
             return False
-
-        print("HEY THERE")
+            
         for ref, valid_set, hop in ((src_ref, valid_src, src_hop), (tgt_ref, valid_tgt, tgt_hop)):
             if "target" in ref:
                 context["target"] = ref["alias"] if "alias" in ref else ref["ref"]
