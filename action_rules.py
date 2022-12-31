@@ -104,7 +104,7 @@ class ActionRule:
                 if tgt_ref["alias"] in context:
                     tgt_set = context.get(tgt_ref["alias"], set()) & get_set(edge_map.edgetype_to_vertex, edge["type"])
                 else:
-                    tgt_set = context.get(get_set(edge_map.edgetype_to_vertex, edge["type"]))
+                    tgt_set = edge_map.edgetype_to_vertex.get(edge["type"])
 
             tgt_set = self.check_relationships(graph, context, tgt_set, tgt_ref)
 
