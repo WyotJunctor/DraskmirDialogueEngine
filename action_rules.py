@@ -173,7 +173,7 @@ class ActionRule:
         print("HEY THERE")
         for ref, valid_set, hop in ((src_ref, valid_src, src_hop), (tgt_ref, valid_tgt, tgt_hop)):
             if "target" in ref:
-                context["target"] = ref["alias"]
+                context["target"] = ref["alias"] if "alias" in ref else ref["ref"]
             if "alias" in ref:
                 context[ref["alias"]] = valid_set
             if "ref" in ref:

@@ -622,6 +622,10 @@
     {
         "attr_map": {},
         "label": "Announce_Exit"
+    },
+    {
+        "attr_map": {},
+        "label": "Door"
     }
     ]
 }
