@@ -45,7 +45,7 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
                 dependencies[dep_vert]["dependent_count"][hop] -= 1
                 if dependencies[dep_vert]["dependent_count"][hop] <= 0:
                     cleanup_queue.add(dep_vert)
-    context["removed"] += cleaned
+    context["removed"] |= cleaned
     return True
 
 class ActionRule:
@@ -55,7 +55,7 @@ class ActionRule:
         self.vertex = vertex
 
 
-    def check_relationships(self, context, check_set, ref):
+    def check_relationships(self, graph, context, check_set, ref):
         valid_set = set()
         for v in check_set:
             success = True
@@ -63,6 +63,8 @@ class ActionRule:
                 for rel_key, rel_set in ref["rel"]:
                     if isinstance(rel_set, str):
                         rel_set = context[rel_set]
+                    elif isinstance(rel_set, set):
+                        rel_set = graph.get_verts_from_ids(rel_set)
                     if rel_set.issubset(v.get_relationships(rel_key)) == False:
                         success = False
                         break
@@ -70,6 +72,8 @@ class ActionRule:
                 for rel_key, rel_set in ref["no_rel"]:
                     if isinstance(rel_set, str):
                         rel_set = context[rel_set]
+                    elif isinstance(rel_set, set):
+                        rel_set = graph.get_verts_from_ids(rel_set)
                     if rel_set.isdisjoint(v.get_relationships(rel_key)) == False:
                         success = False
                         break
@@ -102,7 +106,7 @@ class ActionRule:
                 else:
                     tgt_set = context.get(get_set(edge_map.edgetype_to_vertex, edge["type"]))
 
-            tgt_set = self.check_relationships(context, tgt_set, tgt_ref)
+            tgt_set = self.check_relationships(graph, context, tgt_set, tgt_ref)
 
             no_src_tgts -= tgt_set
 
@@ -142,7 +146,7 @@ class ActionRule:
         elif "id" in src_ref:
             src_set = get_set(graph.vertices, src_ref["id"])
 
-        src_set = self.check_relationships(context, src_set, src_ref)
+        src_set = self.check_relationships(graph, context, src_set, src_ref)
 
         if len(src_set) == 0:
             return False
@@ -158,12 +162,14 @@ class ActionRule:
             valid_src = src_set.difference(no_src_tgts)
             valid_tgt = no_src_tgts.difference(src_set)
         elif "null" in edge:
-            valid_src, valid_tgt = self.check_src(src_set, no_src_tgts, edge, tgt_ref, context, dependencies, hop_count, src_hop, tgt_hop)
+            # self, src_set, no_src_tgts, context, dependencies, hop_count
+            valid_src, valid_tgt = self.check_src(src_set, no_src_tgts, context, dependencies, hop_count)
         else:
             valid_src, valid_tgt = self.check_step(ego, src_set, no_src_tgts, src_ref, edge, tgt_ref, graph, context, highlight_map, dependencies, hop_count, src_hop, tgt_hop)
-        if len(valid_src) == 0 or len(valid_tgt) == 0:
+        if len(valid_src) == 0 or (len(valid_tgt) == 0 and "null" not in edge):
             return False
 
+        print("HEY THERE")
         for ref, valid_set, hop in ((src_ref, valid_src, src_hop), (tgt_ref, valid_tgt, tgt_hop)):
             if "target" in ref:
                 context["target"] = ref["alias"]
@@ -177,10 +183,10 @@ class ActionRule:
 
     def get_targets(self, ego, graph, target_set, local_target_set):
         context = {
-            "allowed": target_set["allow"].copy(),
-            "disallowed": target_set["disallow"].copy(),
-            "local_allowed": local_target_set["allow"].copy(),
-            "local_disallowed": local_target_set["disallow"].copy(),
+            "allow": target_set["allow"].copy(),
+            "disallow": target_set["disallow"].copy(),
+            "local_allow": local_target_set["allow"].copy(),
+            "local_disallow": local_target_set["disallow"].copy(),
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
@@ -194,7 +200,6 @@ class ActionRule:
             success = True
             hop = 0
             for traversal in pattern["traversal"]:
-                print(self.vertex, traversal)
                 #  ego, graph, traversal, context, highlight_map, dependencies, hop_count, src_hop):
                 success = self.check_traversal(ego, graph, traversal, context, highlight_map, dependencies, hop_count, hop)
                 if success == False:
@@ -216,7 +221,7 @@ class ActionRule:
                     (PatternCheckType.allow, PatternCheckType.disallow)[success] == check_type):
                 return dict(), dict(), dict(), False
         context["allow"] -= context["disallow"]
-        context["local_allow"] -= context["disallow"] + context["local_disallow"]
+        context["local_allow"] -= context["disallow"] | context["local_disallow"]
         target_set = {"allow":context["allow"], "disallow":context["disallow"]}
         local_target_set = {"allow":context["local_allow"], "disallow":context["local_disallow"]}
         return target_set, local_target_set, highlight_map, True
@@ -304,7 +309,7 @@ class r_Conversation_Action(ActionRule): # TODO: maybe rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"allowed","alias":"v_1","target":""}, {"type":"Participant","dir":">"}, {"ref":"v_0"}),
+                ({"ref":"allow","alias":"v_1","target":""}, {"type":"Participant","dir":">"}, {"ref":"v_0"}),
             )
         },
     )
@@ -315,7 +320,7 @@ Ego -Involved-> Combat_Context
 get
 Ego -Participant-> v_0(Inherits:"Instance", Inherits:"Conversation_Context")
 disallow instance graph
-v_1(context:"allowed", target) -Participant-> v_0
+v_1(context:"allow", target) -Participant-> v_0
 """
 
 class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
@@ -332,7 +337,7 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allowed"))
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow"))
                     }
                 ),
                 (
@@ -347,7 +352,7 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
 """
 allow local
 root -Can_Respond-> v_0(Inherits:"Action")
-Recent <-Has_Attr- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "Target":"Ego", "Is":v_0, "Source":context["allowed"], target)
+Recent <-Has_Attr- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "Target":"Ego", "Is":v_0, "Source":context["allow"], target)
 """
 
 class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
@@ -358,7 +363,7 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "traversal":(
                 ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}))}),
                 ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"), )}),
-                ({"ref":"allowed","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
+                ({"ref":"allow","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
             )
         },
     )
@@ -367,7 +372,7 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
 disallow instance local
 root -As_Unique-> v_0(Inherits:"Action")
 Ego -Source-> v_1(Inherits:v_0)
-v_2(context:"allowed", target) -Target-> v_1
+v_2(context:"allow", target) -Target-> v_1
 """
 
 class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
@@ -392,14 +397,14 @@ class r_Greet(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Acknowledged","dir":">"}, {"ref":"allowed","alias":"v_0","target":""}),
+                ({"ref":"ego"}, {"type":"Acknowledged","dir":">"}, {"ref":"allow","alias":"v_0","target":""}),
             )
         }
     )
 
 """
 disallow instance
-Ego -Acknowledged-> v_1(context:"allowed", target)
+Ego -Acknowledged-> v_1(context:"allow", target)
 """
 
 class r_Engage(ActionRule):
@@ -416,7 +421,7 @@ class r_Engage(ActionRule):
             "scope":PatternScope.graph,
             "traversal":(
                 ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Combat_Context"}),
-                ({"id":"Combat_Context"}, {"type":"Participant","dir":"<"}, {"ref":"allowed","alias":"v_1","target":""}),
+                ({"id":"Combat_Context"}, {"type":"Participant","dir":"<"}, {"ref":"allow","alias":"v_1","target":""}),
             )
         },
     )
@@ -426,7 +431,7 @@ disallow
 Ego -Participant-> v_0(Inherits:"Instance", Inherits:"Conversation_Context")
 disallow instance
 Ego -Participant-> Combat_Context
-Combat_Context <-Participant- v_1(context:"allowed")
+Combat_Context <-Participant- v_1(context:"allow")
 """
 
 class r_Attack(ActionRule):
@@ -442,7 +447,7 @@ class r_Attack(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"id":"Person"}, {"type":"Is","dir":"<"}, {"ref":"allowed","alias":"v_0","target":"","not_rel":(("Participant>",{"Combat_Context"}),)}),
+                ({"id":"Person"}, {"type":"Is","dir":"<"}, {"ref":"allow","alias":"v_0","target":"","not_rel":(("Participant>",{"Combat_Context"}),)}),
             )
         }
     )
@@ -451,7 +456,7 @@ class r_Attack(ActionRule):
 check
 Ego -Participant-> Combat_Context
 disallow instance
-Person <-Is- v_0(context:"allowed", Not: "Participant":"Combat_Context")
+Person <-Is- v_0(context:"allow", Not: "Participant":"Combat_Context")
 """
 
 class r_Rest(ActionRule):
