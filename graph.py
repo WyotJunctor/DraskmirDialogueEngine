@@ -53,7 +53,10 @@ class Graph:
                         queue.append(child)
 
     def get_verts_from_ids(self, id_set):
-        return { self.vertices[v_id] for v_id in id_set }
+        if isinstance(id_set, set):
+            return { self.vertices[v_id] for v_id in id_set }
+        else:
+            return { self.vertices[id_set] }
 
     # TODO(Wyatt): add attribute updates
     def update_graph(self, events: GraphMessage):
