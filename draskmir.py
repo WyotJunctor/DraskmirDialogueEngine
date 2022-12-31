@@ -1,4 +1,5 @@
 from game import Game
+from choose import AIChooseMaker
 
 """
 reality brain probably needs functions for:
@@ -35,6 +36,11 @@ loop
 if __name__ == "__main__":
 
     game = Game()
+
+    for _ in range(3):
+        game.create_entity(
+            AIChooseMaker()
+        )
 
     for _ in range(5):
         game.step()

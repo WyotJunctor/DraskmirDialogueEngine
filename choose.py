@@ -118,7 +118,7 @@ class AIChooseMaker(ChooseMaker):
 
     def consider(self, target_map, ego, graph):
 
-        action = sample(list(target_map.keys()), k=1)
-        target = sample(list(target_map[action]), k=1)
+        action = sample(list(target_map.keys()), k=1)[0]
+        target = sample(list(target_map[action]), k=1)[0]
 
-        return graph.vertices[action], graph.vertices[target]
+        return action, target

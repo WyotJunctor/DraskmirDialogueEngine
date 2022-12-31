@@ -80,7 +80,9 @@ class Game:
             effect_rules_map,
             action_rules_map
         )
-
+        graph_message.update_map[(EventType.Add, EventTarget.Edge)].remove((
+            subjective_reality.ego.id, ("Is",), "Ego"
+        ))
         full_message, effect_message = self.reality.receive_message(graph_message)
 
         for entity in self.entities:
