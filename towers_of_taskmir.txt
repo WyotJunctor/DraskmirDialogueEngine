@@ -5,41 +5,21 @@ ACTIVE TASKS
 shared effect rules
   add track time
   tick track time
-  add stative (edge?)
   ACTION RULES...
-    add action
-    add interaction action
 subjective effect rules
-  add shortcut
-  add person
-  del person
-  add involved
   tick involved
-  add combat context
   del involved
   ACTION RULES...
     add combat action
   tick combat context?
   tick ego (acknowledge rule?)
-  del pred?
-  del shortcut?
 objective effect rules
-  add person
-  del person
   ACTION RULES...
-entering and exiting
-action grouping
 tracery logging
 
 
 CONTINUOUS TASKS
-validate
-  action checking*
-  graph deltas
-  graph events
-  action selection
-  basic AI
-  basic action resolution
+
 
 
 COMPLETED TASKS
@@ -48,12 +28,23 @@ graph + rule initialization
 action check logic
 action check patterns
 type filter
-
+add person
+del person
+validate
+  action checking*
+  graph deltas
+  graph events
+  action selection
+  basic AI
+  basic action resolution
 $ = nothing active at the moment
 
 
-
-
-
-
+ICED TASKS
+  add stative (edge?)
+    add action
+    add interaction action
+  add shortcut
+  add involved
+  add combat context
   -
