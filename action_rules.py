@@ -387,7 +387,22 @@ Ego -Source-> v_1(Inherits:v_0)
 v_2(context:"allow", target) -Target-> v_1
 """
 
-class r_Friendly_Conversation_Action(ActionRule): # TODO: FINISH
+class r_Combat_Action(ActionRule):
+    patterns = (
+        {
+            "check_type":PatternCheckType.disallow,
+            "scope":PatternScope.graph,
+            "traversal":(
+                (
+                    {"ref":"ego"},
+                    {"type":"Friendly_Relationship", "dir":">"},
+                    {"ref":"allow", "target":""}
+                ),
+            )
+        },
+    )
+
+class r_Friendly_Conversation_Action(ActionRule):
     patterns = (
         {
             "check_type":PatternCheckType.disallow,
@@ -409,7 +424,7 @@ class r_Greet(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Acknowledged","dir":">"}, {"ref":"allow","alias":"v_0","target":""}),
+                ({"ref":"ego"}, {"type":"Known_Relationship","dir":">"}, {"ref":"allow","alias":"v_0","target":""}),
             )
         },
     )

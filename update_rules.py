@@ -26,11 +26,11 @@ class ur_TimeBucketing(UpdateRule):
         message = GraphMessage()
         visited_vertices = set()
 
-        for bucket_label, bucket_info in ur_TimeBucketing.bucket_infos:
+        for bucket_label, bucket_info in ur_TimeBucketing.bucket_infos.items():
             bucket_threshold, next_bucket = bucket_info
 
             bucket_members = {
-                vertex for vertex in self.reality.graph[bucket_label].in_edges.edgetype_to_vertex["Has"]
+                vertex for vertex in self.reality.graph.vertices[bucket_label].in_edges.edgetype_to_vertex["Has"]
                 if vertex not in visited_vertices
             }
             visited_vertices |= bucket_members
@@ -55,7 +55,7 @@ class ur_CombatEnd(UpdateRule):
         """
 
         non_past_combats = { 
-            vertex for vertex in self.reality.graph["Instance"].in_edges.edgetype_to_vertex["Is"]
+            vertex for vertex in self.reality.graph.vertices["Instance"].in_edges.edgetype_to_vertex["Is"]
             if "Past" not in vertex.get_relationships("Has>", as_ids=True)
             and "Combat_Action" in vertex.get_relationships("Is>", as_ids=True)
         }

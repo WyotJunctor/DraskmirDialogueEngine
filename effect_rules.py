@@ -169,7 +169,6 @@ class er_OnParticipantDelete(EffectRule):
         )
 
 
-
 class er_BystanderCulling(EffectRule):
     objective_rule = False
 
@@ -449,6 +448,10 @@ class er_Convo(EffectRule):
         conversator = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
         conversatee = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
 
+        known_rel_labels = tuple(self.reality.graph.vertices["Known_Relationship"].get_relationships("Is>"))
+
+        message.update_map[(EventType.Add, EventTarget.Edge)].add((conversator.id, known_rel_labels, conversatee.id))
+
         src_convos = [ 
             vertex for vertex in conversator.out_edges.edgetype_to_vertex["Participant"] 
             if "Conversation_Context" in vertex.get_relationships("Is>", as_ids=True)
@@ -480,6 +483,51 @@ class er_Convo(EffectRule):
         )
 
         return None
+
+class er_OnCombatAction(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Combat_Action"),
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        when add combat action, make relationship hostile
+        """
+        message = GraphMessage()
+
+        conv_v = record.o_ref
+
+        src_person = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
+        tgt_person = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
+
+        rel_labels = tuple(self.reality.graph.vertices["Hostile_Relationship"].get_relationships("Is>"))
+
+        message.update_map[(EventType.Add, EventTarget.Edge)].add((src_person.id, rel_labels, tgt_person.id))
+
+class er_OnFriendlyAction(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Friendly_Conversation_Action"),
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        when add combat action, make relationship hostile
+        """
+        message = GraphMessage()
+
+        conv_v = record.o_ref
+
+        src_person = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
+        tgt_person = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
+
+        rel_labels = tuple(self.reality.graph.vertices["Friendly_Relationship"].get_relationships("Is>"))
+
+        message.update_map[(EventType.Add, EventTarget.Edge)].add((src_person.id, rel_labels, tgt_person.id))
+
 
 
 obj_effect_rules_map = dict()
