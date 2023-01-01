@@ -46,6 +46,37 @@ class ur_TimeBucketing(UpdateRule):
         return message
 
 
+class ur_CombatEnd(UpdateRule):
+    objective_rule = False
+
+    def step(self):
+        """
+        If there are no Recent, non-Past Combat_Actions, end the combat
+        """
+
+        non_past_combats = { 
+            vertex for vertex in self.reality.graph["Instance"].in_edges.edgetype_to_vertex["Is"]
+            if "Past" not in vertex.get_relationships("Has>", as_ids=True)
+            and "Combat_Action" in vertex.get_relationships("Is>", as_ids=True)
+        }
+
+        # if there are non-past combat actions, fight continues
+        if len(non_past_combats) > 0:
+            return None
+
+        # otherwise end the fight
+
+        message = GraphMessage()
+        combat_v = self.reality.graph.vertices["Combat_Context"]
+
+        for part_v in combat_v.in_edges.edgetype_to_vertex["Participant"]:
+            part_v_rels = tuple(part_v.out_edges.id_to_edgetype["Combat_Context"])
+            message.update_map[(EventType.Delete, EventTarget.Edge)].add(
+                part_v.id, part_v_rels, combat_v.id
+            )
+
+        return message
+
 obj_update_rules = list()
 subj_update_rules = list()
  
