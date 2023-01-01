@@ -293,6 +293,35 @@ class er_RemPerson(EffectRule):
 
         return message
 
+class er_AddResponseAction(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Response_Conversation_Action"),
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        when someone responds to an action, it should actually target both the action and the source of the action
+        """
+        action = record.o_ref
+
+        # get source of action
+        target_action = list(action.in_edges.edgetype_to_vertex["Target"])[0]
+        target_person = list(target_action.in_edges.edgetype_to_vertex["Source"])
+        if len(target_person) == 0:
+            return None
+        target_person = target_person[0]
+
+        message = GraphMessage(update_map=defaultdict(
+            set,
+            {
+                (EventType.Add, EventTarget.Edge): (target_person.id, ("Target",), action.id)
+            }
+        ))
+
+        return message
+
 
 obj_effect_rules_map = dict()
 subj_effect_rules_map = dict()

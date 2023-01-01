@@ -137,6 +137,9 @@ class ActionRule:
 
     def check_traversal(self, ego, graph, traversal, context, highlight_map, dependencies, hop_count, src_hop):
         src_ref, edge, tgt_ref = traversal
+        for ref in (src_ref, tgt_ref):
+            if "ref" in ref and "alias" not in ref:
+                ref["alias"] = ref["ref"]
 
         valid_src = set()
         valid_tgt = set()
@@ -144,7 +147,7 @@ class ActionRule:
         tgt_hop = src_hop + 1
 
         if "ref" in src_ref:
-            src_set = context.get(src_ref["alias"], set()) if "alias" in src_ref else context.get(src_ref["ref"], set())
+            src_set = context.get(src_ref["alias"], set()) if "alias" in src_ref and src_ref["alias"] in context else context.get(src_ref["ref"], set())
         elif "id" in src_ref:
             src_set = graph.get_verts_from_ids(src_ref["id"])
 
@@ -192,10 +195,11 @@ class ActionRule:
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
-        highlight_map = defaultdict(defaultdict)
+        highlight_map = defaultdict(defaultdict)             
         for pattern in self.__class__.patterns:
             dependencies = dict()
             context["removed"] = set()
+            context["target"] = ""
             hop_count = defaultdict(set) # TODO: change to set?
             check_type = pattern["check_type"]
             scope = pattern["scope"]
@@ -219,6 +223,10 @@ class ActionRule:
                     context[allow_scope + action] = targets
                 else:
                     context[allow_scope + action] |= targets
+            elif (
+                    success == False and "target" in context and check_type == PatternCheckType.x_allow):
+                allow_scope = "" if scope == PatternScope.graph else "local_"
+                context[allow_scope + "disallow"] = context[allow_scope+"allow"].copy()
             if (scope == PatternScope.terminal and
                     (PatternCheckType.allow, PatternCheckType.disallow)[success] == check_type):
                 return dict(), dict(), dict(), False
@@ -357,6 +365,7 @@ root -Can_Respond-> v_0(Inherits:"Action")
 Recent <-Has_Attr- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "Target":"Ego", "Is":v_0, "Source":context["allow"], target)
 """
 
+
 class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
     patterns = (
         {
@@ -365,7 +374,7 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "traversal":(
                 ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}),)}),
                 ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"), )}),
-                ({"ref":"allow","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1"}),
+                ({"ref":"allow","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1", "alias":"v_1"}),
             )
         },
     )
@@ -408,6 +417,7 @@ class r_Greet(ActionRule):
 disallow instance
 Ego -Acknowledged-> v_1(context:"allow", target)
 """
+
 
 class r_Engage(ActionRule):
     patterns = (
@@ -479,7 +489,12 @@ class r_Rest(ActionRule):
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"id":"Room"}, {"type":"In","dir":"<"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Person"}),),"not_rel":(("Is>",{"Ego"}),)}),
+                (
+                    {"id":"Person"}, 
+                    {"type":"Is", "dir":"<"}, 
+                    {"ref":"v_0", "alias":"v_0", "rel": (("Is>", {"Instance", "Person"}),), "not_rel":(("Is>", {"Ego"}), ) }
+                ),
+                # ({"id":"Room"}, {"type":"In","dir":"<"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Person"}),),"not_rel":(("Is>",{"Ego"}),)}),
             )
         },
         {
@@ -611,6 +626,57 @@ class r_Traverse(ActionRule):
         },
     )
 
+
+class r_SendOff(ActionRule):
+    patterns = (
+        {
+            "check_type":PatternCheckType.x_allow,
+            "scope":PatternScope.graph,
+            "traversal":(
+                ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
+                (
+                    {"id":"Recent"},
+                    {"type":"Has_Attr","dir":"<"},
+                    {
+                        "ref":"v_1",
+                        "alias":"v_1",
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow"))
+                    }
+                ),
+                (
+                    {"ref":"v_1", "highlight_target":""},
+                    {"type":"Source", "dir":"<"},
+                    {"ref":"v_2", "alias":"v_2", "target":"", "not_rel":( ("Is>", set( ["Ego"] ) ), )}
+                ),
+            )
+        },
+    )
+
+class r_Share_Tags(ActionRule):
+    patterns = (
+        {
+            "check_type":PatternCheckType.x_allow,
+            "scope":PatternScope.graph,
+            "traversal":(
+                ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
+                (
+                    {"id":"Recent"},
+                    {"type":"Has_Attr","dir":"<"},
+                    {
+                        "ref":"v_1",
+                        "alias":"v_1",
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow"))
+                    }
+                ),
+                (
+                    {"ref":"v_1", "highlight_target":""},
+                    {"type":"Source", "dir":"<"},
+                    {"ref":"v_2", "alias":"v_2", "target":"", "not_rel":( ("Is>", set( ["Ego"] ) ), )}
+                ),
+            )
+        },
+    )
+
 """
 allow
 Ego -Participant-> Calm
@@ -634,4 +700,6 @@ rules_map = {
     "Flee": r_Flee,
     "Enter": r_Enter,
     "Traverse": r_Traverse,
+    "Send_Off": r_SendOff,
+    "Share_Tags": r_Share_Tags,
 }

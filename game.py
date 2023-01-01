@@ -41,6 +41,7 @@ class Game:
             entity_json_path=self.player_json
         )
 
+        """
         good_choose = False
         while not good_choose:
             print(f"'{self.player_entity.ego.id}', choose your equipment...")
@@ -73,6 +74,7 @@ class Game:
 
         self.player_entity.graph.update_graph(message)
         self.reality.graph.update_graph(message)
+        """
 
     def convert_json_to_graph_message(self, json_path):
         with open(json_path) as f:
@@ -171,6 +173,7 @@ class Game:
 
             src_vert = action_entity.ego
             instance_id = f"{src_vert.id}~{action_vert.id}~{action_tgt.id}~{self.clock.timestep}"
+            print(instance_id)
             message = GraphMessage(update_map=defaultdict(
                 set,
                 {

@@ -89,7 +89,7 @@ class SubjectiveReality(Reality):
 
     def get_action_targets(self, action_rules, target_set):
         local_target_set = {"allow":set(), "disallow":set()}
-        highlight_map = defaultdict(defaultdict)
+        highlight_map = defaultdict(defaultdict, defaultdict(set))
         for rule in action_rules:
             r_target_set, r_local_target_set, highlight_map, allow = rule.get_targets(self.ego, self.graph, target_set, local_target_set)
             if allow is False:
@@ -106,14 +106,19 @@ class SubjectiveReality(Reality):
         instance_vert = self.graph.vertices["Instance"]
         target_map = {action_vert: {"allow":set(), "disallow":set()}} # vertex: [target_set, num_calculated_dependencies, num_dependencies]
         dependency_map = {action_vert: [0, 0]}
-        highlight_map = dict()
+        highlight_map = defaultdict(defaultdict)
         queue = [action_vert]
         while len(queue) > 0:
             root = queue.pop(0)
-            target_set, local_target_set, highlight_map, allow = self.get_action_targets(self.action_rules[root], target_map[root])
+            target_set, local_target_set, r_highlight_map, allow = self.get_action_targets(self.action_rules[root], target_map[root])
             if allow is False:
                 target_map[root] = {"allow":set(), "disallow":set()}
                 continue
+
+            for action, vertex_map in r_highlight_map.items():
+                for target_vert, highlight_vert_set in vertex_map.items():
+                    highlight_map[action][target_vert] |= highlight_vert_set
+
             target_map[root] = merge_targets(target_set, local_target_set)
 
             for child in root.in_edges.edgetype_to_vertex["Is"]:
@@ -134,6 +139,8 @@ class SubjectiveReality(Reality):
         real_actions = { vertex for vertex in self.graph.vertices["Real_Action"].in_edges.edgetype_to_vertex["Is"] }
 
         action_options = defaultdict(set)
+        if len(highlight_map) > 0:
+            print(highlight_map)
         for action, target_set in target_map.items():
             if len(target_set["allow"]) > 0 and action in real_actions:
                 # check if action is contained in highlight map
@@ -141,6 +148,7 @@ class SubjectiveReality(Reality):
                 # if allowed target is contained in sub_highlight_map,
                 # add that to the action options
                 if action in highlight_map:
+                    print(action, highlight_map)
                     for allowed_target in target_set["allow"]:
                         if allowed_target in highlight_map[action]:
                             target_set["allow"].discard(allowed_target)

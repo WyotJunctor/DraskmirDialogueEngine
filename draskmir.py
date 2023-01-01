@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     game.spawn_player()
 
-    for _ in range(30):
+    for _ in range(2):
         game.create_entity(
             AIChooseMaker()
         )
