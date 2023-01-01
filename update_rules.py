@@ -90,8 +90,33 @@ class ur_ConvoEnd(UpdateRule):
         """
         If there are no Recent, non-Past Conversation_Actions, end the Conversation
         """
-
+        
         message = GraphMessage()
+        # get all conversation instances
+        conversations = (
+            vertex for vertex in self.reality.graph.vertices["Instance"].in_edges.edgetype_to_vertex["Is"]
+            if "Conversation_Context" in vertex.get_relationships("Is>", as_ids=True)
+        )
+
+        # get participants
+        # if no participants, delete the instance
+        # if no non-past actions by participants... delete the instance
+        for conversation in conversations:
+            participants = conversation.in_edges.edgetype_to_vertex.get("Participant", set())
+            if len(participants) == 0:
+                message.update_map[(EventType.Delete, EventTarget.Vertex)].add(conversation.id)
+                continue
+            conversation_ok = False
+            for participant in participants:
+                for action in participant.in_edges.edgetype_to_vertex.get("Source", set()):
+                    if "Past" not in action.get_relationships("Has>", as_ids=True) and participants.isdisjoint(action.get_relationships("<Target")):
+                        conversation_ok = True
+                        break
+                if conversation_ok is True:
+                    break
+            if conversation_ok is False:
+                message.update_map[(EventType.Delete, EventTarget.Vertex)].add(conversation.id)
+
         return message
 
 

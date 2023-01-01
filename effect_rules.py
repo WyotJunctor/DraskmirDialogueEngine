@@ -144,6 +144,32 @@ class er_ParticipantCulling(EffectRule):
         return message
 
 
+class er_OnParticipantDelete(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Delete, EventTarget.Edge, "Person", "Participant", "Context"),
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        when a participation edge is deleted, become a bystander of the calm context
+        """
+
+        # get person vertex
+        person = record.o_ref.src
+
+        # add edge
+        message = GraphMessage()
+
+        bystander_labels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>"))
+
+        message.update_map[(EventType.Add, EventTarget.Edge)].add(
+            (person.id, bystander_labels, "Calm_Context")
+        )
+
+
+
 class er_BystanderCulling(EffectRule):
     objective_rule = False
 
