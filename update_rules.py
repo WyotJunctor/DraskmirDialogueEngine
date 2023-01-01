@@ -68,14 +68,32 @@ class ur_CombatEnd(UpdateRule):
 
         message = GraphMessage()
         combat_v = self.reality.graph.vertices["Combat_Context"]
+        calm_v = self.reality.graph.vertices["Calm_Context"]
+        byst_rels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
 
         for part_v in combat_v.in_edges.edgetype_to_vertex["Participant"]:
             part_v_rels = tuple(part_v.out_edges.id_to_edgetype["Combat_Context"])
             message.update_map[(EventType.Delete, EventTarget.Edge)].add(
-                part_v.id, part_v_rels, combat_v.id
+                (part_v.id, part_v_rels, combat_v.id)
+            )
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (part_v.id, byst_rels, calm_v.id)
             )
 
         return message
+
+
+class ur_ConvoEnd(UpdateRule):
+    objective_rule = False
+
+    def step(self):
+        """
+        If there are no Recent, non-Past Conversation_Actions, end the Conversation
+        """
+
+        message = GraphMessage()
+        return message
+
 
 obj_update_rules = list()
 subj_update_rules = list()

@@ -5,6 +5,7 @@ from pprint import pprint
 
 from collections import defaultdict
 from graph_event import EventType, EventTarget, GraphRecord, GraphMessage
+from instancegen import get_next_instance_id
 
 class EffectRule:
 
@@ -112,11 +113,12 @@ class er_RelationshipMod(EffectRule):
             )
 
 
-class er_Participant(EffectRule):
+class er_ParticipantCulling(EffectRule):
     objective_rule = False
 
     record_keys = (
         (EventType.Add, EventTarget.Edge, "Person", "Participant", "Context"),
+        (EventType.Duplicate, EventTarget.Edge, "Person", "Participant", "Context"),
     )
 
     def receive_record(self, record: GraphRecord):
@@ -129,17 +131,44 @@ class er_Participant(EffectRule):
         edge = record.o_ref
         source_v = edge.src
 
-        other_part_es = { pedge for pedge in source_v.out_edges.edgetype_to_edge["Participant"] if pedge is not edge }
+        other_involve_es = { iedge for iedge in source_v.out_edges.edgetype_to_edge["Involved"] if iedge is not edge }
 
         message = GraphMessage()
 
-        for pedge in other_part_es:
+        for iedge in other_involve_es:
             
             message.update_map[(EventType.Delete, EventTarget.Edge)].add(
-                (pedge.src.id, tuple(pedge.edge_type), pedge.tgt.id)
+                (iedge.src.id, tuple(iedge.edge_type), iedge.tgt.id)
             )
 
         return message
+
+
+class er_BystanderCulling(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Edge, "Person", "Bystander", "Context")
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        If the person is becoming a Bystander and is already a participant, delete the Bystander
+        """
+
+        new_edge = record.o_ref
+        source_person = new_edge.src
+        target_context = new_edge.tgt
+
+        # if the person is already a participant in the context, delete the bystanderitude
+        if target_context in source_person.get_relationships("Participant>"):
+            return GraphMessage(defaultdict(set,{
+                (EventType.Delete, EventTarget.Edge): set([
+                    (source_person.id, tuple(new_edge.edgetype), target_context.id)
+                ])
+            }))
+
+        return None
 
 
 class er_Engage(EffectRule):
@@ -372,6 +401,59 @@ class er_Immediateify(EffectRule):
                 (record.o_ref.id, "Has", "Immediate")
             ])
         }))
+
+
+class er_Convo(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Conversation_Action")
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        if neither person is in a conversation, create one, add source as participant, target as bystander
+        if one persion is in a conversation, 
+        """
+
+        message = GraphMessage()
+
+        conv_v = record.o_ref
+
+        conversator = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
+        conversatee = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
+
+        src_convos = [ 
+            vertex for vertex in conversator.out_edges.edgetype_to_vertex["Participant"] 
+            if "Conversation_Context" in vertex.get_relationships("Is>", as_ids=True)
+        ]
+        tgt_convos = [ 
+            vertex for vertex in conversatee.out_edges.edgetype_to_vertex["Participant"] 
+            if "Conversation_Context" in vertex.get_relationships("Is>", as_ids=True)
+        ]
+
+        convo_id = None
+
+        if len(src_convos) > 0:
+            convo_id = src_convos[0].id
+        elif len(tgt_convos) > 0:
+            convo_id = tgt_convos[0].id
+
+        if convo_id is None:
+            instance_id = get_next_instance_id()
+            message.update_map[(EventType.Add, EventTarget.Vertex)].add(instance_id)
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (instance_id, "Is", "Conversation_Context")
+            )
+
+        message.update_map[(EventType.Add, EventTarget.Edge)].add(
+            (conversator.id, "Participant", convo_id)
+        )
+        message.update_map[(EventType.Add, EventTarget.Edge)].add(
+            (conversatee.id, "Bystander", convo_id)
+        )
+
+        return None
 
 
 obj_effect_rules_map = dict()
