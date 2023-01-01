@@ -323,6 +323,38 @@ class er_AddResponseAction(EffectRule):
         return message
 
 
+class er_CombatContextJoin(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Edge, "Person", "Participant", "Combat_Context")
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        When anybody starts participating in combat, everyone else becomes a bystander
+        """
+
+        message = GraphMessage()
+
+        bystander_labels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
+        people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]
+
+        for person in people:
+            combat_relationship = person.out_edges.id_to_edge.get("Combat_Context")
+
+            # if the person already has a relationship to Combat, don't set anything up
+            if combat_relationship is not None:
+                continue
+
+            # otherwise, the person needs to be a bystander
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (person.id, bystander_labels, "Combat_Context")
+            )
+
+        return message
+
+
 obj_effect_rules_map = dict()
 subj_effect_rules_map = dict()
  
