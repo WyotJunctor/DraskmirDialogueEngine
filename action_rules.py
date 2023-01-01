@@ -512,25 +512,26 @@ disallow
 Room <-In- v_0(Inherits:"Instance", Inherits:"Person", not: Ego)
 """
 
+"""
+{
+    "check_type":PatternCheckType.disallow,
+    "scope":PatternScope.terminal,
+    "traversal":(
+        (
+            {"id":"Immediate"}, 
+            {"type":"Is","dir":"<"}, 
+            {
+                "ref":"v_0","alias":"v_0",
+                "rel":(("Is>",{"Instance","Action"}),),
+                "not_rel":( ("Is>", {"Inactive_Action"} ), )
+            }
+        ),
+    )
+},
+"""
+
 class r_Wait(ActionRule):
     patterns = (
-        """
-        {
-            "check_type":PatternCheckType.disallow,
-            "scope":PatternScope.terminal,
-            "traversal":(
-                (
-                    {"id":"Immediate"}, 
-                    {"type":"Is","dir":"<"}, 
-                    {
-                        "ref":"v_0","alias":"v_0",
-                        "rel":(("Is>",{"Instance","Action"}),),
-                        "not_rel":( ("Is>", {"Inactive_Action"} ), )
-                    }
-                ),
-            )
-        },
-        """
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
