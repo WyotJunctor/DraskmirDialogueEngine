@@ -12,7 +12,7 @@ from utils import merge_targets
 
 class Reality:
 
-    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict):
+    def __init__(self, clock: Clock, graph: Graph, update_rules: list, effect_rules_map: dict):
         self.clock = clock
         self.graph = graph
 
@@ -21,6 +21,13 @@ class Reality:
         # for each effect in the map, instantiate it
         for effect_key, effect_rule in effect_rules_map.items():
             self.effect_rules[effect_key] = effect_rule(self)
+
+        self.update_rules = [ update_rule(self) for update_rule in update_rules ]
+
+    def step(self):
+
+        for update_rule in self.update_rules:
+            update_rule.step()
 
     def receive_message(self, message: GraphMessage):
         records = self.graph.update_graph(message)
@@ -49,8 +56,9 @@ class Reality:
 
         return all_messages, effect_messages
 
+
 class SubjectiveReality(Reality):
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, effect_rules_map: dict, action_rules_map: dict):
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, update_rules: list, effect_rules_map: dict, action_rules_map: dict):
         super().__init__(clock, graph, effect_rules_map)
 
         self.choosemaker = choosemaker
@@ -69,7 +77,6 @@ class SubjectiveReality(Reality):
             if isinstance(rule_instance, InheritedActionRule):
                 rule_instance.replicate(self.action_rules)
         # if the rule is inherited, propagate it down to all children...
-
 
     def choose_action(self):
 
@@ -158,5 +165,5 @@ class SubjectiveReality(Reality):
         return action_options
 
 class ObjectiveReality(Reality):
-    def __init__(self, clock: Clock, graph: Graph, effect_rules_map: dict):
+    def __init__(self, clock: Clock, graph: Graph, update_rules: list, effect_rules_map: dict):
         super().__init__(clock, graph, effect_rules_map)

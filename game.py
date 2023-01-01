@@ -12,6 +12,7 @@ from instancegen import get_next_instance_id
 from reality import SubjectiveReality, ObjectiveReality
 from graph import Graph
 from graph_event import GraphMessage, EventType, EventTarget
+from update_rules import obj_update_rules, subj_update_rules
 
 ENTITY_ID_REPLACE = re.compile(r"\$[^\$]*\$")
 
@@ -27,7 +28,7 @@ class Game:
 
         reality_graph = Graph(self.clock)
         reality_graph.load_json_file(objective_json)
-        self.reality = ObjectiveReality(self.clock, reality_graph, obj_effect_rules_map)
+        self.reality = ObjectiveReality(self.clock, reality_graph, obj_update_rules, obj_effect_rules_map)
 
         self.entity_json_path = entity_json
         self.subjective_json_path = subjective_json
@@ -125,6 +126,7 @@ class Game:
             self.clock,
             choose_maker,
             subjective_graph,
+            subj_update_rules,
             subj_effect_rules_map,
             action_rules_map
         )
@@ -142,6 +144,10 @@ class Game:
         return subjective_reality
 
     def step(self):
+
+        self.reality.step()
+        for entity in self.entities:
+            entity.step()
 
         actions = list()
 

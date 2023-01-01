@@ -355,6 +355,25 @@ class er_CombatContextJoin(EffectRule):
         return message
 
 
+class er_Immediateify(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Vertex, "Track_Time")
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        When a track time is added, it needs to be put in the "Immediate" time bucket
+        """
+
+        return GraphMessage(update_map=defaultdict(set,{
+            (EventType.Add, EventTarget.Edge): set([
+                (record.o_ref.id, "Has", "Immediate")
+            ])
+        }))
+
+
 obj_effect_rules_map = dict()
 subj_effect_rules_map = dict()
  
