@@ -704,6 +704,7 @@ rules_map = {
     "Response_Conversation_Action": r_Response_Conversation_Action,
     "Unique_Conversation_Action": r_Unique_Conversation_Action,
     "Friendly_Conversation_Action": r_Friendly_Conversation_Action,
+    "Combat_Action": r_Combat_Action,
     "Greet": r_Greet,
     "Engage": r_Engage,
     "Attack": r_Attack,
