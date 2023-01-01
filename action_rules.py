@@ -342,12 +342,13 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "traversal":(
                 ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
                 (
-                    {"id":"Recent"},
-                    {"type":"Has_Attr","dir":"<"},
+                    {"id":"Immediate"},
+                    {"type":"Has","dir":"<"},
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow"))
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
+                        "not_rel":(("Has",{"Recent"}),),
                     }
                 ),
                 (
@@ -362,7 +363,7 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
 """
 allow local
 root -Can_Respond-> v_0(Inherits:"Action")
-Recent <-Has_Attr- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "Target":"Ego", "Is":v_0, "Source":context["allow"], target)
+Recent <-Has- v_1(Inherits:"Instance", Inherits:"Action", "Has":"Recent", "Target":"Ego", "Is":v_0, "Source":context["allow"], target)
 """
 
 
@@ -513,6 +514,7 @@ Room <-In- v_0(Inherits:"Instance", Inherits:"Person", not: Ego)
 
 class r_Wait(ActionRule):
     patterns = (
+        """
         {
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.terminal,
@@ -528,6 +530,7 @@ class r_Wait(ActionRule):
                 ),
             )
         },
+        """
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.graph,
@@ -536,11 +539,6 @@ class r_Wait(ActionRule):
             )
         },
     )
-
-"""
-disallow
-Immediate <-Is- v_0(Inherits:"Instance", Inherits:"Action", not: Inherits:"InactiveAction")
-"""
 
 class r_Loot(ActionRule):
     patterns = (
@@ -592,20 +590,17 @@ allow instance graph
 Door <-Is- v_0(Inherits:"Instance", Inherits:"Door")
 """
 
+"""
 class r_Enter(ActionRule):
     patterns = (
         {
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Traverse"}),("Has_Attr>",{"Immediate"}),)}),
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Instance","Traverse"}),("Has>",{"Immediate"}),)}),
             )
         },
     )
-
-"""
-allow, force
-Ego -Source-> v_0(Inherits:"Instance", Inherits:"Traverse", "Has":"Immediate")
 """
 
 class r_Traverse(ActionRule):
@@ -635,12 +630,13 @@ class r_SendOff(ActionRule):
             "traversal":(
                 ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
                 (
-                    {"id":"Recent"},
-                    {"type":"Has_Attr","dir":"<"},
+                    {"id":"Immediate"},
+                    {"type":"Has","dir":"<"},
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow"))
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
+                        "not_rel":(("Has",{"Recent"}),),
                     }
                 ),
                 (
@@ -660,12 +656,13 @@ class r_Share_Tags(ActionRule):
             "traversal":(
                 ({"ref":"root"}, {"type":"Can_Respond","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
                 (
-                    {"id":"Recent"},
-                    {"type":"Has_Attr","dir":"<"},
+                    {"id":"Immediate"},
+                    {"type":"Has","dir":"<"},
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow"))
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
+                        "not_rel":(("Has",{"Recent"}),),
                     }
                 ),
                 (
@@ -698,7 +695,7 @@ rules_map = {
     "Wait": r_Wait,
     "Loot": r_Loot,
     "Flee": r_Flee,
-    "Enter": r_Enter,
+    # "Enter": r_Enter,
     "Traverse": r_Traverse,
     "Send_Off": r_SendOff,
     "Share_Tags": r_Share_Tags,
