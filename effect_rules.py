@@ -478,6 +478,34 @@ class er_Convo(EffectRule):
 
         return message
 
+
+class er_KnownRelationship(EffectRule):
+    objective_rule = False
+
+    record_keys = (
+        (EventType.Add, EventTarget.Edge, "Person", "Known_Relationship", "Person"),
+    )
+
+    def receive_record(self, record: GraphRecord):
+        """
+        if the src and tgt previously had an Unknown_Relationship, then remove that
+        as the relationship is now known. Otherwise do nothing
+        """
+
+        unknown_rel_types = tuple(self.reality.graph.vertices["Unknown_Relationship"].get_relationships("Is>", as_ids=True))
+        new_rel = record.o_ref
+
+        if new_rel.tgt in new_rel.src.out_edges.edgetype_to_vertex["Unknown_Relationship"]:
+            return GraphMessage(defaultdict(set,{
+                (EventType.Delete, EventTarget.Edge): set([
+                    (new_rel.src.id, unknown_rel_types, new_rel.tgt.id)
+                ])
+            }))
+
+        return None
+
+
+
 class er_OnCombatAction(EffectRule):
     objective_rule = False
 
