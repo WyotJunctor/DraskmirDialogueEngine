@@ -155,7 +155,7 @@ class SubjectiveReality(Reality):
                     for allowed_target in target_set["allow"]:
                         if allowed_target in highlight_map[action]:
                             target_set["allow"].discard(allowed_target)
-                            target_set["allow"].add(highlight_map[action][allowed_target])
+                            target_set["allow"] |= (highlight_map[action][allowed_target])
                 action_options[action] = target_set["allow"]
 
         return action_options

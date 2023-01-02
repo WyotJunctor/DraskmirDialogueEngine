@@ -38,7 +38,7 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
         if root not in dependencies:
             continue
         for hop, vert_set in dependencies[root]["dependent_on"].items():
-            hop_count[hop].remove(root)
+            hop_count[hop].discard(root)
             if len(hop_count[hop]) <= 0:
                 return False
             for dep_vert in vert_set:
@@ -82,6 +82,9 @@ class ActionRule:
             if "not_rel" in ref:
                 for rel_key, rel_set in ref["not_rel"]:
                     if isinstance(rel_set, str):
+                        if rel_set not in context:
+                            success = False
+                            break
                         rel_set = context.get(rel_set, set())
                     elif isinstance(rel_set, set):
                         rel_set = graph.get_verts_from_ids(rel_set)
@@ -205,7 +208,8 @@ class ActionRule:
             "ego":set([ego]),
         }
         highlight_map = defaultdict(lambda: defaultdict(set))    
-   
+        if self.vertex.id == "Ask_Tags" and self.__class__.__name__ == "r_Ask_Tags":
+            print("")
         for pattern in self.__class__.patterns:
             dependencies = dict()
             context["removed"] = set()
@@ -394,13 +398,6 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
         },
     )
 
-"""
-disallow instance local
-root -As_Unique-> v_0(Inherits:"Action")
-Ego -Source-> v_1(Inherits:v_0)
-v_2(context:"allow", target) -Target-> v_1
-"""
-
 class r_Combat_Action(ActionRule):
     patterns = (
         {
@@ -576,7 +573,7 @@ class r_Loot(ActionRule):
             "check_type":PatternCheckType.allow,
             "scope":PatternScope.terminal,
             "traversal":(
-                ({"ref":"ego"}, {"type":"Participant","dir":">"}, {"id":"Calm_Context"}),
+                ({"ref":"ego"}, {"type":"Bystander","dir":">"}, {"id":"Calm_Context"}),
             )
         },
         {
@@ -699,6 +696,27 @@ class r_Share_Tags(ActionRule):
                     {"ref":"v_1", "highlight_target":""},
                     {"type":"Source", "dir":"<"},
                     {"ref":"v_2", "alias":"v_2", "target":"", "not_rel":( ("Is>", set( ["Ego"] ) ), )}
+                ),
+            )
+        },
+    )
+
+class r_Ask_Tags(ActionRule):
+    patterns = (
+        {
+            "check_type":PatternCheckType.disallow,
+            "scope":PatternScope.terminal,
+            "traversal":(
+                ({"ref":"root"}, {"type":"Answered_By","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
+                (
+                    {"id":"Immediate"},
+                    {"type":"Has","dir":"<"},
+                    {
+                        "ref":"v_1",
+                        "alias":"v_1",
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
+                        "not_rel":(("Has",{"Recent"}),),
+                    }
                 ),
             )
         },

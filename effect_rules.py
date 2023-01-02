@@ -103,7 +103,7 @@ class er_RelationshipMod(EffectRule):
         message = GraphMessage()
         for rel in existing_rels:
             message.update_map[(EventType.Delete, EventTarget.Edge)].add((rel.src.id, tuple(rel.edge_type), rel.tgt.id))
-
+        return message
 
 class er_ParticipantCulling(EffectRule):
     objective_rule = False
@@ -384,10 +384,15 @@ class er_CombatContextJoin(EffectRule):
         message = GraphMessage()
 
         bystander_labels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
-        people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]
+        people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]    
 
         for person in people:
             combat_relationship = person.out_edges.id_to_edge.get("Combat_Context")
+
+            if len(people) == 1:
+                message.update_map[(EventType.Delete, EventTarget.Edge)].add(
+                    (person.id, tuple(combat_relationship.edge_type), "Combat_Context")
+                ) 
 
             # if the person already has a relationship to Combat, don't set anything up
             if combat_relationship is not None:
@@ -464,7 +469,7 @@ class er_Convo(EffectRule):
             convo_id = get_next_instance_id()
             message.update_map[(EventType.Add, EventTarget.Vertex)].add(convo_id)
             message.update_map[(EventType.Add, EventTarget.Edge)].add(
-                (convo_id, "Is", "Conversation_Context")
+                (convo_id, ("Is",), "Conversation_Context")
             )
 
         part_labels = tuple(self.reality.graph.vertices["Participant"].get_relationships("Is>", as_ids=True))
@@ -477,33 +482,6 @@ class er_Convo(EffectRule):
         )
 
         return message
-
-
-class er_KnownRelationship(EffectRule):
-    objective_rule = False
-
-    record_keys = (
-        (EventType.Add, EventTarget.Edge, "Person", "Known_Relationship", "Person"),
-    )
-
-    def receive_record(self, record: GraphRecord):
-        """
-        if the src and tgt previously had an Unknown_Relationship, then remove that
-        as the relationship is now known. Otherwise do nothing
-        """
-
-        unknown_rel_types = tuple(self.reality.graph.vertices["Unknown_Relationship"].get_relationships("Is>", as_ids=True))
-        new_rel = record.o_ref
-
-        if new_rel.tgt in new_rel.src.out_edges.edgetype_to_vertex["Unknown_Relationship"]:
-            return GraphMessage(defaultdict(set,{
-                (EventType.Delete, EventTarget.Edge): set([
-                    (new_rel.src.id, unknown_rel_types, new_rel.tgt.id)
-                ])
-            }))
-
-        return None
-
 
 
 class er_OnCombatAction(EffectRule):

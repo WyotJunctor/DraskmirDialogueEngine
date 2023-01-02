@@ -18,7 +18,7 @@
     {
     "src": "$player_v1$",
     "tgt": "Calm_Context",
-    "types": "Bystander"
+    "types": ["Bystander", "Involved"]
     }
 ],
 "vertices": [
