@@ -219,6 +219,27 @@ class er_Engage(EffectRule):
             })
         )
 
+        bystander_types = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
+        participant_types = tuple(self.reality.graph.vertices["Participant"].get_relationships("Is>", as_ids=True))
+        people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]
+
+        for person in people:
+            if person in (engager, engagee):
+                continue
+
+            # add bystander edge to Combat
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (person.id, bystander_types, combat_c.id)
+            )
+
+            # remove participation in other contexts
+            person_participations = person.out_edges.edgetype_to_id["Participant"]
+
+            for participation_id in person_participations:
+                message.update_map[(EventType.Delete, EventTarget.Edge)].add(
+                    (person.id, participant_types, participation_id)
+                )
+
         return message
 
 
@@ -384,7 +405,7 @@ class er_CombatContextJoin(EffectRule):
         message = GraphMessage()
 
         bystander_labels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
-        people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]    
+        people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]
 
         for person in people:
             combat_relationship = person.out_edges.id_to_edge.get("Combat_Context")
@@ -508,6 +529,8 @@ class er_OnCombatAction(EffectRule):
         message.update_map[(EventType.Add, EventTarget.Edge)].add((tgt_person.id, rel_labels, src_person.id))
 
         return message
+
+
 class er_OnFriendlyAction(EffectRule):
     objective_rule = False
 
