@@ -62,12 +62,12 @@ class er_RelationshipMod(EffectRule):
     record_keys = (
         (EventType.Add, EventTarget.Edge, "Person", "Relationship", "Person"),
     )
-    rel_prios = dict(
-        Hostile=float("inf"),
-        Friendly=1000.0,
-        Known=0.0,
-        Unknown=float("-inf")
-    )
+    rel_prios = {
+        "Hostile_Relationship":float("inf"),
+        "Friendly_Relationship":1000.0,
+        "Known_Relationship":0.0,
+        "Unknown_Relationship":-1000.0,
+    }
 
     def receive_record(self, record: GraphRecord):
 
@@ -79,38 +79,30 @@ class er_RelationshipMod(EffectRule):
 
         new_edge = record.o_ref
         new_tgt = record.o_ref.tgt
-        existing_rels = [
-            ex_edge for ex_edge in new_edge.src.out_edges.edgetype_to_edge["Relationship"] if ex_edge is not new_edge and ex_edge.tgt is new_tgt 
-        ]
 
-        assert(len(existing_rels) <= 1)
+
+        existing_rels = set([
+            ex_edge for ex_edge in new_edge.src.out_edges.edgetype_to_edge["Relationship"] if ex_edge.tgt is new_tgt
+        ])
+
+        # assert(len(existing_rels) <= 1)
 
         if len(existing_rels) == 0:
             return None
 
-        existing_rel = existing_rels[0]
+        highest_prio_rel, highest_prio = None, float("-inf")
+        for rel in existing_rels:
+            highest_key = max(rel.edge_type, key=lambda x: self.__class__.rel_prios.get(x, float("-inf")))
+            prio = self.__class__.rel_prios.get(highest_key, float("-inf"))
+            if prio >= highest_prio:
+                highest_prio_rel = rel
+                highest_prio = prio
 
-        new_rel_prio = er_RelationshipMod.rel_prios[new_edge.ref_vert.id]
-        ex_rel_prio = er_RelationshipMod.rel_prios[existing_rel.ref_vert.id]
+        existing_rels.discard(highest_prio_rel)
 
-        if new_rel_prio >= ex_rel_prio:
-            return GraphMessage(
-                update_map=defaultdict(set,
-                {
-                    (EventType.Delete, EventTarget.Edge): set([
-                        (existing_rel.src.id, tuple(existing_rel.edge_type), existing_rel.tgt.id)
-                    ])
-                })
-            )
-        else:
-            return GraphMessage(
-                update_map=defaultdict(set,
-                {
-                    (EventType.Delete, EventTarget.Edge): set([
-                        (new_edge.src.id, tuple(new_edge.edge_type), new_edge.tgt.id)
-                    ])
-                })
-            )
+        message = GraphMessage()
+        for rel in existing_rels:
+            message.update_map[(EventType.Delete, EventTarget.Edge)].add((rel.src.id, tuple(rel.edge_type), rel.tgt.id))
 
 
 class er_ParticipantCulling(EffectRule):
@@ -413,7 +405,7 @@ class er_Immediateify(EffectRule):
     objective_rule = False
 
     record_keys = (
-        (EventType.Add, EventTarget.Vertex, "Track_Time")
+        (EventType.Add, EventTarget.Vertex, "Track_Time"),
     )
 
     def receive_record(self, record: GraphRecord):
@@ -423,7 +415,7 @@ class er_Immediateify(EffectRule):
 
         return GraphMessage(update_map=defaultdict(set,{
             (EventType.Add, EventTarget.Edge): set([
-                (record.o_ref.id, "Has", "Immediate")
+                (record.o_ref.id, ("Has",), "Immediate")
             ])
         }))
 
@@ -432,7 +424,7 @@ class er_Convo(EffectRule):
     objective_rule = False
 
     record_keys = (
-        (EventType.Add, EventTarget.Vertex, "Conversation_Action")
+        (EventType.Add, EventTarget.Vertex, "Conversation_Action"),
     )
 
     def receive_record(self, record: GraphRecord):
@@ -448,7 +440,7 @@ class er_Convo(EffectRule):
         conversator = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
         conversatee = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
 
-        known_rel_labels = tuple(self.reality.graph.vertices["Known_Relationship"].get_relationships("Is>"))
+        known_rel_labels = tuple(self.reality.graph.vertices["Known_Relationship"].get_relationships("Is>", as_ids=True))
 
         message.update_map[(EventType.Add, EventTarget.Edge)].add((conversator.id, known_rel_labels, conversatee.id))
 
@@ -469,20 +461,22 @@ class er_Convo(EffectRule):
             convo_id = tgt_convos[0].id
 
         if convo_id is None:
-            instance_id = get_next_instance_id()
-            message.update_map[(EventType.Add, EventTarget.Vertex)].add(instance_id)
+            convo_id = get_next_instance_id()
+            message.update_map[(EventType.Add, EventTarget.Vertex)].add(convo_id)
             message.update_map[(EventType.Add, EventTarget.Edge)].add(
-                (instance_id, "Is", "Conversation_Context")
+                (convo_id, "Is", "Conversation_Context")
             )
 
+        part_labels = tuple(self.reality.graph.vertices["Participant"].get_relationships("Is>", as_ids=True))
+        byst_labels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
         message.update_map[(EventType.Add, EventTarget.Edge)].add(
-            (conversator.id, "Participant", convo_id)
+            (conversator.id, part_labels, convo_id)
         )
         message.update_map[(EventType.Add, EventTarget.Edge)].add(
-            (conversatee.id, "Bystander", convo_id)
+            (conversatee.id, byst_labels, convo_id)
         )
 
-        return None
+        return message
 
 class er_OnCombatAction(EffectRule):
     objective_rule = False
@@ -502,10 +496,12 @@ class er_OnCombatAction(EffectRule):
         src_person = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
         tgt_person = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
 
-        rel_labels = tuple(self.reality.graph.vertices["Hostile_Relationship"].get_relationships("Is>"))
+        rel_labels = tuple(self.reality.graph.vertices["Hostile_Relationship"].get_relationships("Is>", as_ids=True))
 
         message.update_map[(EventType.Add, EventTarget.Edge)].add((src_person.id, rel_labels, tgt_person.id))
+        message.update_map[(EventType.Add, EventTarget.Edge)].add((tgt_person.id, rel_labels, src_person.id))
 
+        return message
 class er_OnFriendlyAction(EffectRule):
     objective_rule = False
 
@@ -524,11 +520,11 @@ class er_OnFriendlyAction(EffectRule):
         src_person = list(conv_v.in_edges.edgetype_to_vertex["Source"])[0]
         tgt_person = list(conv_v.in_edges.edgetype_to_vertex["Target"])[0]
 
-        rel_labels = tuple(self.reality.graph.vertices["Friendly_Relationship"].get_relationships("Is>"))
+        rel_labels = tuple(self.reality.graph.vertices["Friendly_Relationship"].get_relationships("Is>", as_ids=True))
 
         message.update_map[(EventType.Add, EventTarget.Edge)].add((src_person.id, rel_labels, tgt_person.id))
 
-
+        return message
 
 obj_effect_rules_map = dict()
 subj_effect_rules_map = dict()

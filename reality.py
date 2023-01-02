@@ -25,7 +25,6 @@ class Reality:
         self.update_rules = [ update_rule(self) for update_rule in update_rules ]
 
     def step(self):
-
         for update_rule in self.update_rules:
             update_rule.step()
 
@@ -113,7 +112,7 @@ class SubjectiveReality(Reality):
         instance_vert = self.graph.vertices["Instance"]
         target_map = {action_vert: {"allow":set(), "disallow":set()}} # vertex: [target_set, num_calculated_dependencies, num_dependencies]
         dependency_map = {action_vert: [0, 0]}
-        highlight_map = defaultdict(defaultdict)
+        highlight_map = defaultdict(lambda: defaultdict(set))
         queue = [action_vert]
         while len(queue) > 0:
             root = queue.pop(0)
@@ -146,8 +145,6 @@ class SubjectiveReality(Reality):
         real_actions = { vertex for vertex in self.graph.vertices["Real_Action"].in_edges.edgetype_to_vertex["Is"] }
 
         action_options = defaultdict(set)
-        if len(highlight_map) > 0:
-            print(highlight_map)
         for action, target_set in target_map.items():
             if len(target_set["allow"]) > 0 and action in real_actions:
                 # check if action is contained in highlight map
@@ -155,7 +152,6 @@ class SubjectiveReality(Reality):
                 # if allowed target is contained in sub_highlight_map,
                 # add that to the action options
                 if action in highlight_map:
-                    print(action, highlight_map)
                     for allowed_target in target_set["allow"]:
                         if allowed_target in highlight_map[action]:
                             target_set["allow"].discard(allowed_target)

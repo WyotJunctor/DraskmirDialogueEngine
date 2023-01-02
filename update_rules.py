@@ -40,7 +40,7 @@ class ur_TimeBucketing(UpdateRule):
 
                 if delta >= bucket_threshold:
                     message.update_map[(EventType.Add, EventTarget.Edge)].add(
-                        (member.id, "Has", next_bucket)
+                        (member.id, ("Has",), next_bucket)
                     )
 
         return message

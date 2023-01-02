@@ -64,16 +64,25 @@ class ActionRule:
             if "rel" in ref:
                 for rel_key, rel_set in ref["rel"]:
                     if isinstance(rel_set, str):
-                        rel_set = context[rel_set]
+                        rel_set = context.get(rel_set, set())
                     elif isinstance(rel_set, set):
                         rel_set = graph.get_verts_from_ids(rel_set)
                     if rel_set.issubset(v.get_relationships(rel_key)) == False:
                         success = False
                         break
+            elif "any_rel" in ref:
+                for rel_key, rel_set in ref["any_rel"]:
+                    if isinstance(rel_set, str):
+                        rel_set = context.get(rel_set, set())
+                    elif isinstance(rel_set, set):
+                        rel_set = graph.get_verts_from_ids(rel_set)
+                    if rel_set.isdisjoint(v.get_relationships(rel_key)) == True:
+                        success = False
+                        break
             if "not_rel" in ref:
                 for rel_key, rel_set in ref["not_rel"]:
                     if isinstance(rel_set, str):
-                        rel_set = context[rel_set]
+                        rel_set = context.get(rel_set, set())
                     elif isinstance(rel_set, set):
                         rel_set = graph.get_verts_from_ids(rel_set)
                     if rel_set.isdisjoint(v.get_relationships(rel_key)) == False:
@@ -195,7 +204,8 @@ class ActionRule:
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
-        highlight_map = defaultdict(defaultdict)             
+        highlight_map = defaultdict(lambda: defaultdict(set))    
+   
         for pattern in self.__class__.patterns:
             dependencies = dict()
             context["removed"] = set()
@@ -319,7 +329,11 @@ class r_Conversation_Action(ActionRule): # TODO: maybe rewrite
             "check_type":PatternCheckType.disallow,
             "scope":PatternScope.graph,
             "traversal":(
-                ({"ref":"allow","alias":"v_1","target":""}, {"type":"Participant","dir":">"}, {"ref":"v_0"}),
+                (
+                    {"ref":"allow","alias":"v_1","target":"", "not_rel":(("Participant>", "v_0"),)}, 
+                    {"type":"Participant", "dir":">"}, 
+                    {"ref":"v_2", "rel":(("Is>", {"Context"}),)}
+                ),
             )
         },
     )
@@ -374,7 +388,7 @@ class r_Unique_Conversation_Action(InheritedActionRule): # TODO: rewrite
             "scope":PatternScope.local,
             "traversal":(
                 ({"ref":"root"}, {"type":"As_Unique", "dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}),)}),
-                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","rel":(("Is>","v_0"), )}),
+                ({"ref":"ego"}, {"type":"Source","dir":">"}, {"ref":"v_1","alias":"v_1","any_rel":(("Is>","v_0"), )}),
                 ({"ref":"allow","alias":"v_2","target":""}, {"type":"Target","dir":">"}, {"ref":"v_1", "alias":"v_1"}),
             )
         },
