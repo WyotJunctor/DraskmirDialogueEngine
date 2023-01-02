@@ -209,8 +209,6 @@ class ActionRule:
             "ego":set([ego]),
         }
         highlight_map = defaultdict(lambda: defaultdict(set))    
-        if self.vertex.id == "Offer_Tags" and self.__class__.__name__ == "r_Offer_Tags":
-            print("")
         for pattern in self.__class__.patterns:
             dependencies = dict()
             context["removed"] = set()
