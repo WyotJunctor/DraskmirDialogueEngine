@@ -70,7 +70,7 @@ class ActionRule:
                     if rel_set.issubset(v.get_relationships(rel_key)) == False:
                         success = False
                         break
-            elif "any_rel" in ref:
+            if success is True and "any_rel" in ref:
                 for rel_key, rel_set in ref["any_rel"]:
                     if isinstance(rel_set, str):
                         rel_set = context.get(rel_set, set())
@@ -79,7 +79,7 @@ class ActionRule:
                     if rel_set.isdisjoint(v.get_relationships(rel_key)) == True:
                         success = False
                         break
-            if "not_rel" in ref:
+            if success is True and "not_rel" in ref:
                 for rel_key, rel_set in ref["not_rel"]:
                     if isinstance(rel_set, str):
                         if rel_set not in context:
@@ -91,7 +91,7 @@ class ActionRule:
                     if rel_set.isdisjoint(v.get_relationships(rel_key)) == False:
                         success = False
                         break
-            if success == True:
+            if success is True:
                 valid_set.add(v)
         return valid_set
 
@@ -208,7 +208,7 @@ class ActionRule:
             "ego":set([ego]),
         }
         highlight_map = defaultdict(lambda: defaultdict(set))    
-        if self.vertex.id == "Ask_Tags" and self.__class__.__name__ == "r_Ask_Tags":
+        if self.vertex.id == "Share_Tags" and self.__class__.__name__ == "r_Response_Conversation_Action":
             print("")
         for pattern in self.__class__.patterns:
             dependencies = dict()
@@ -240,7 +240,7 @@ class ActionRule:
             elif (
                     success == False and "target" in context and check_type == PatternCheckType.x_allow):
                 allow_scope = "" if scope == PatternScope.graph else "local_"
-                context[allow_scope + "disallow"] = context[allow_scope+"allow"].copy()
+                context[allow_scope + "disallow"] |= context[allow_scope+"allow"].copy()
             if (scope == PatternScope.terminal and
                     (PatternCheckType.allow, PatternCheckType.disallow)[success] == check_type):
                 return dict(), dict(), dict(), False
@@ -365,8 +365,9 @@ class r_Response_Conversation_Action(InheritedActionRule): # TODO: rewrite
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
-                        "not_rel":(("Has",{"Recent"}),),
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),),
+                        "any_rel":(("Source<","allow"),),
+                        "not_rel":(("Has>",{"Recent"}),),
                     }
                 ),
                 (
@@ -662,8 +663,9 @@ class r_SendOff(ActionRule):
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
-                        "not_rel":(("Has",{"Recent"}),),
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),),
+                        "any_rel":(("Source<","allow"),),
+                        "not_rel":(("Has>",{"Recent"}),),
                     }
                 ),
                 (
@@ -688,8 +690,9 @@ class r_Share_Tags(ActionRule):
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
-                        "not_rel":(("Has",{"Recent"}),),
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),),
+                        "any_rel":(("Source<","allow"),),
+                        "not_rel":(("Has>",{"Recent"}),),
                     }
                 ),
                 (

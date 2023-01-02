@@ -97,6 +97,8 @@ class SubjectiveReality(Reality):
         local_target_set = {"allow":set(), "disallow":set()}
         highlight_map = defaultdict(defaultdict, defaultdict(set))
         for rule in action_rules:
+            if rule.__class__.__name__ == "r_Share_Tags":
+                print("")
             r_target_set, r_local_target_set, highlight_map, allow = rule.get_targets(self.ego, self.graph, target_set, local_target_set)
             if allow is False:
                 return dict(), dict(), dict(), False
@@ -155,7 +157,7 @@ class SubjectiveReality(Reality):
                     for allowed_target in target_set["allow"]:
                         if allowed_target in highlight_map[action]:
                             target_set["allow"].discard(allowed_target)
-                            target_set["allow"] |= (highlight_map[action][allowed_target])
+                            target_set["allow"] |= highlight_map[action][allowed_target]
                 action_options[action] = target_set["allow"]
 
         return action_options

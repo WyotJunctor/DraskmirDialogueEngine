@@ -383,7 +383,7 @@ class er_AddResponseAction(EffectRule):
         message = GraphMessage(update_map=defaultdict(
             set,
             {
-                (EventType.Add, EventTarget.Edge): (target_person.id, ("Target",), action.id)
+                (EventType.Add, EventTarget.Edge): {(target_person.id, ("Target",), action.id)}
             }
         ))
 
