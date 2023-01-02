@@ -72,7 +72,7 @@ class ur_CombatEnd(UpdateRule):
         byst_rels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
 
         for invol_v in combat_v.in_edges.edgetype_to_vertex["Involved"]:
-            invol_v_rels = tuple(invol_v.out_edges.id_to_edgetype["Combat_Context"])
+            invol_v_rels = tuple(invol_v.out_edges.id_to_edgetype["Combat_Context"].keys())
             message.update_map[(EventType.Delete, EventTarget.Edge)].add(
                 (invol_v.id, invol_v_rels, combat_v.id)
             )

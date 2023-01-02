@@ -41,8 +41,10 @@ class EdgeMap:
                     src_key = other_key
                 if index_type == "counter":
                     indexer[src_key].update({tgt_key:-1})
-                    if indexer[src_key] == 0:
+                    if indexer[src_key][tgt_key] == 0:
                         del indexer[src_key][tgt_key]
+                    if len(indexer[src_key]) == 0:
+                        del indexer[src_key]
                 elif index_type == "set":
                     indexer[src_key].discard(tgt_key)
                     if len(indexer[src_key]) == 0:
