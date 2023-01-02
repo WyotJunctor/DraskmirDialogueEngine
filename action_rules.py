@@ -676,7 +676,7 @@ class r_SendOff(ActionRule):
         },
     )
 
-class r_Share_Tags(ActionRule):
+class r_Respond_Smalltalk(ActionRule):
     patterns = (
         {
             "check_type":PatternCheckType.x_allow,
@@ -719,7 +719,7 @@ class r_Share_Tags(ActionRule):
     )
 
 
-class r_Ask_Tags(ActionRule):
+class r_Ask_Smalltalk(ActionRule):
     patterns = (
         {
             "check_type":PatternCheckType.disallow,
@@ -740,7 +740,7 @@ class r_Ask_Tags(ActionRule):
         },
     )
 
-class r_Offer_Tags(ActionRule):
+class r_Offer_Smalltalk(ActionRule):
     patterns = (
         {
             "check_type":PatternCheckType.disallow,
@@ -793,6 +793,6 @@ rules_map = {
     # "Enter": r_Enter,
     "Traverse": r_Traverse,
     "Send_Off": r_SendOff,
-    "Share_Tags": r_Share_Tags,
-    "Offer_Tags": r_Offer_Tags,
+    "Respond_Smalltalk": r_Respond_Smalltalk,
+    "Offer_Smalltalk": r_Offer_Smalltalk,
 }

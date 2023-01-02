@@ -21,8 +21,8 @@
         "types": "Is"
     },
     {
-        "src": "Share_Tags",
-        "tgt": "Ask_Tags",
+        "src": "Respond_Smalltalk",
+        "tgt": "Ask_Smalltalk",
         "types": "Can_Respond"
     },
     {
@@ -46,7 +46,7 @@
         "types": "Is"
     },
     {
-        "src": "Share_Tags",
+        "src": "Respond_Smalltalk",
         "tgt": "Unique_Conversation_Action",
         "types": "Is"
     },
@@ -81,7 +81,7 @@
         "types": "Is"
     },
     {
-        "src": "Share_Tags",
+        "src": "Respond_Smalltalk",
         "tgt": "Real_Action",
         "types": "Is"
     },
@@ -96,8 +96,8 @@
         "types": "Is"
     },
     {
-        "src": "Share_Tags",
-        "tgt": "Offer_Tags",
+        "src": "Respond_Smalltalk",
+        "tgt": "Offer_Smalltalk",
         "types": "As_Unique"
     },
     {
@@ -116,12 +116,12 @@
         "types": "Is"
     },
     {
-        "src": "Ask_Tags",
-        "tgt": "Ask_Tags",
+        "src": "Ask_Smalltalk",
+        "tgt": "Ask_Smalltalk",
         "types": "As_Unique"
     },
     {
-        "src": "Share_Tags",
+        "src": "Respond_Smalltalk",
         "tgt": "Response_Conversation_Action",
         "types": "Is"
     },
@@ -166,18 +166,18 @@
         "types": "Can_Respond"
     },
     {
-        "src": "Ask_Tags",
+        "src": "Ask_Smalltalk",
         "tgt": "Real_Action",
         "types": "Is"
     },
     {
-        "src": "Offer_Tags",
+        "src": "Offer_Smalltalk",
         "tgt": "Unique_Conversation_Action",
         "types": "Is"
     },
     {
-        "src": "Share_Tags",
-        "tgt": "Share_Tags",
+        "src": "Respond_Smalltalk",
+        "tgt": "Respond_Smalltalk",
         "types": "As_Unique"
     },
     {
@@ -206,8 +206,8 @@
         "types": "As_Unique"
     },
     {
-        "src": "Ask_Tags",
-        "tgt": "Share_Tags",
+        "src": "Ask_Smalltalk",
+        "tgt": "Respond_Smalltalk",
         "types": "Answered_By"
     },
     {
@@ -261,7 +261,7 @@
         "types": "Is"
     },
     {
-        "src": "Ask_Tags",
+        "src": "Ask_Smalltalk",
         "tgt": "Unique_Conversation_Action",
         "types": "Is"
     },
@@ -291,12 +291,12 @@
         "types": "Is"
     },
     {
-        "src": "Offer_Tags",
-        "tgt": "Offer_Tags",
+        "src": "Offer_Smalltalk",
+        "tgt": "Offer_Smalltalk",
         "types": "As_Unique"
     },
     {
-        "src": "Offer_Tags",
+        "src": "Offer_Smalltalk",
         "tgt": "Real_Action",
         "types": "Is"
     },
@@ -311,8 +311,8 @@
         "types": "Is"
     },
     {
-        "src": "Offer_Tags",
-        "tgt": "Share_Tags",
+        "src": "Offer_Smalltalk",
+        "tgt": "Respond_Smalltalk",
         "types": "As_Unique"
     },
     {
@@ -321,8 +321,8 @@
         "types": "Is"
     },
     {
-        "src": "Ask_Tags",
-        "tgt": "Offer_Tags",
+        "src": "Ask_Smalltalk",
+        "tgt": "Offer_Smalltalk",
         "types": "Answered_By"
     },
     {
@@ -331,7 +331,7 @@
         "types": "Is"
     },
     {
-        "src": "Offer_Tags",
+        "src": "Offer_Smalltalk",
         "tgt": "Friendly_Conversation_Action",
         "types": "Is"
     },
@@ -418,7 +418,7 @@
     },
     {
         "attr_map": {},
-        "label": "Share_Tags"
+        "label": "Respond_Smalltalk"
     },
     {
         "attr_map": {},
@@ -582,7 +582,7 @@
     },
     {
         "attr_map": {},
-        "label": "Ask_Tags"
+        "label": "Ask_Smalltalk"
     },
     {
         "attr_map": {},
@@ -602,7 +602,7 @@
     },
     {
         "attr_map": {},
-        "label": "Offer_Tags"
+        "label": "Offer_Smalltalk"
     },
     {
         "attr_map": {},
