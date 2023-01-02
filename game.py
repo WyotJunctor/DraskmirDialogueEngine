@@ -36,13 +36,15 @@ class Game:
         self.entities = set()
         self.player_json = player_json
 
-    def spawn_player(self):
+    def spawn_player(self, choose_weapons=False):
         self.player_entity = self.create_entity(
             PlayerChooseMaker(),
             entity_json_path=self.player_json
         )
 
-        """
+        if not choose_weapons:
+            return
+
         good_choose = False
         while not good_choose:
             print(f"'{self.player_entity.ego.id}', choose your equipment...")
@@ -75,7 +77,6 @@ class Game:
 
         self.player_entity.graph.update_graph(message)
         self.reality.graph.update_graph(message)
-        """
 
     def convert_json_to_graph_message(self, json_path):
         with open(json_path) as f:

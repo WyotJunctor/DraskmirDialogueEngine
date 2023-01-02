@@ -26,7 +26,10 @@ class Reality:
 
     def step(self):
         for update_rule in self.update_rules:
-            update_rule.step()
+            message = update_rule.step()
+
+            if message is not None:
+                self.receive_message(message)
 
     def receive_message(self, message: GraphMessage):
         records = self.graph.update_graph(message)

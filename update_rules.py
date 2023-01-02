@@ -36,7 +36,7 @@ class ur_TimeBucketing(UpdateRule):
             visited_vertices |= bucket_members
 
             for member in bucket_members:
-                delta = member.created_timestep - self.reality.clock.timestep
+                delta = self.reality.clock.timestep - member.created_timestep
 
                 if delta >= bucket_threshold:
                     message.update_map[(EventType.Add, EventTarget.Edge)].add(
@@ -71,13 +71,13 @@ class ur_CombatEnd(UpdateRule):
         calm_v = self.reality.graph.vertices["Calm_Context"]
         byst_rels = tuple(self.reality.graph.vertices["Bystander"].get_relationships("Is>", as_ids=True))
 
-        for part_v in combat_v.in_edges.edgetype_to_vertex["Participant"]:
-            part_v_rels = tuple(part_v.out_edges.id_to_edgetype["Combat_Context"])
+        for invol_v in combat_v.in_edges.edgetype_to_vertex["Involved"]:
+            invol_v_rels = tuple(invol_v.out_edges.id_to_edgetype["Combat_Context"])
             message.update_map[(EventType.Delete, EventTarget.Edge)].add(
-                (part_v.id, part_v_rels, combat_v.id)
+                (invol_v.id, invol_v_rels, combat_v.id)
             )
             message.update_map[(EventType.Add, EventTarget.Edge)].add(
-                (part_v.id, byst_rels, calm_v.id)
+                (invol_v.id, byst_rels, calm_v.id)
             )
 
         return message
