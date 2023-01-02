@@ -31,7 +31,7 @@ def add_dependencies(dependencies, src, tgt, src_hop, tgt_hop):
 
 
 def cleanup(cleanup_verts, context, dependencies, hop_count):
-    cleaned = cleanup_verts
+    cleaned = set(cleanup_verts)
     cleanup_queue = list(cleanup_verts)
     while len(cleanup_queue) > 0:
         root = cleanup_queue.pop(0)
@@ -46,7 +46,8 @@ def cleanup(cleanup_verts, context, dependencies, hop_count):
                     continue
                 dependencies[dep_vert]["dependent_count"][hop] -= 1
                 if dependencies[dep_vert]["dependent_count"][hop] <= 0:
-                    cleanup_queue.add(dep_vert)
+                    cleaned.add(dep_vert)
+                    cleanup_queue.append(dep_vert)
     context["removed"] |= cleaned
     return True
 
@@ -208,7 +209,7 @@ class ActionRule:
             "ego":set([ego]),
         }
         highlight_map = defaultdict(lambda: defaultdict(set))    
-        if self.vertex.id == "Share_Tags" and self.__class__.__name__ == "r_Response_Conversation_Action":
+        if self.vertex.id == "Offer_Tags" and self.__class__.__name__ == "r_Offer_Tags":
             print("")
         for pattern in self.__class__.patterns:
             dependencies = dict()
@@ -702,7 +703,23 @@ class r_Share_Tags(ActionRule):
                 ),
             )
         },
+        {
+            "check_type":PatternCheckType.disallow,
+            "scope":PatternScope.graph,
+            "traversal":(
+                (
+                    {"id":"Person"},
+                    {"type":"Is", "dir":"<"},
+                    {
+                        "ref":"v_3", "alias":"v_3", "target":"", 
+                        "rel":(("Is>",{"Instance","Person"}),), 
+                        "not_rel":((("Is>", "v_2"),))
+                    }
+                ),
+            )
+        },
     )
+
 
 class r_Ask_Tags(ActionRule):
     patterns = (
@@ -721,6 +738,34 @@ class r_Ask_Tags(ActionRule):
                         "not_rel":(("Has",{"Recent"}),),
                     }
                 ),
+            )
+        },
+    )
+
+class r_Offer_Tags(ActionRule):
+    patterns = (
+        {
+            "check_type":PatternCheckType.disallow,
+            "scope":PatternScope.graph,
+            "traversal":(
+                ({"ref":"root"}, {"type":"Answered_By","dir":"<"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
+                (
+                    {"ref":"v_0"},
+                    {"type":"Is","dir":"<"},
+                    {
+                        "ref":"v_1",
+                        "alias":"v_1",
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"]))),
+                    }
+                ),
+                (
+                    {"ref":"v_1"},
+                    {"type":"Source", "dir":"<"},
+                    {
+                        "ref":"v_2",
+                        "target":"",
+                    }
+                )
             )
         },
     )
@@ -751,4 +796,5 @@ rules_map = {
     "Traverse": r_Traverse,
     "Send_Off": r_SendOff,
     "Share_Tags": r_Share_Tags,
+    "Offer_Tags": r_Offer_Tags,
 }
