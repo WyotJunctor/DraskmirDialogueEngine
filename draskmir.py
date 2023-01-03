@@ -38,13 +38,14 @@ if __name__ == "__main__":
     game = Game()
 
     game.spawn_player()
-    # game.spawn_player()
-    # game.spawn_player()
-
+    game.spawn_player()
+    game.spawn_player()
+    """
     for _ in range(2):
         game.create_entity(
             AIChooseMaker()
         )
+    """
 
     print(f"starting graph size: {len(game.reality.graph.vertices)} vertices", flush=True)
 

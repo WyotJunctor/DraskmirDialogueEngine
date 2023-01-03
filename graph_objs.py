@@ -31,7 +31,7 @@ class EdgeMap:
             (self.id_to_edgetype, "counter", endpoint.id, "tgt"),
             (self.edgetype_to_id, "counter", endpoint.id, "src"),
             (self.edgetype_to_edge, "set", edge, "src"),
-            (self.edgetype_to_vertex, "set", endpoint, "tgt")):
+            (self.edgetype_to_vertex, "set", endpoint, "src")):
             for edge_type in edge.edge_type:
                 if edge_key == "src":
                     src_key = edge_type
