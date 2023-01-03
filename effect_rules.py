@@ -79,9 +79,6 @@ class er_RelationshipMod(EffectRule):
 
         new_edge = record.o_ref
         new_tgt = record.o_ref.tgt
-
-        if "Hostile_Relationship" in new_edge.edge_type:
-            print("")
         existing_rels = set([
             ex_edge for ex_edge in new_edge.src.out_edges.edgetype_to_edge["Relationship"] if ex_edge.tgt is new_tgt
         ])
