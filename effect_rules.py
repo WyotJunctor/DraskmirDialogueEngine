@@ -488,6 +488,7 @@ class er_Convo(EffectRule):
         if convo_id is None:
             convo_id = get_next_instance_id()
             message.update_map[(EventType.Add, EventTarget.Vertex)].add(convo_id)
+            message.update_map[(EventType.Add, EventTarget.Edge)].add((convo_id, ("Is",), "Instance"))
             message.update_map[(EventType.Add, EventTarget.Edge)].add(
                 (convo_id, ("Is",), "Conversation_Context")
             )

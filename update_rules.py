@@ -14,8 +14,8 @@ class ur_TimeBucketing(UpdateRule):
 
     bucket_infos = {
         "Past": (float("inf"), "Past"),
-        "Recent": (3.0, "Past"),
-        "Immediate": (1.0, "Recent"),
+        "Recent": (4.0, "Past"),
+        "Immediate": (2.0, "Recent"),
     }
 
     def step(self):
@@ -103,13 +103,14 @@ class ur_ConvoEnd(UpdateRule):
         # if no non-past actions by participants... delete the instance
         for conversation in conversations:
             participants = conversation.in_edges.edgetype_to_vertex.get("Participant", set())
+            involved = conversation.in_edges.edgetype_to_vertex.get("Involved", set())
             if len(participants) == 0:
                 message.update_map[(EventType.Delete, EventTarget.Vertex)].add(conversation.id)
                 continue
             conversation_ok = False
             for participant in participants:
                 for action in participant.in_edges.edgetype_to_vertex.get("Source", set()):
-                    if "Past" not in action.get_relationships("Has>", as_ids=True) and participants.isdisjoint(action.get_relationships("<Target")):
+                    if "Past" not in action.get_relationships("Has>", as_ids=True) and not involved.isdisjoint(action.get_relationships("<Target")):
                         conversation_ok = True
                         break
                 if conversation_ok is True:

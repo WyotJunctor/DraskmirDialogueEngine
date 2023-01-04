@@ -1,3 +1,4 @@
+from collections import defaultdict
 from random import sample
 from string import ascii_lowercase
 from pprint import pprint
@@ -26,10 +27,55 @@ class ChooseMaker:
 
 
 class PlayerChooseMaker(ChooseMaker):
+
+    context_priority_map = {
+        "Combat_Context": 2,
+        "Conversation_Context": 1,
+        "Calm_Context": 0
+    }
+
+    relationship_priority_map = {
+        "Hostile_Relationship":3,
+        "Friendly_Relationship":2,
+        "Known_Relationship":1,
+        "Unknown_Relationship":0,
+    }
+
     def __init__(self):
         self.make = "player choose"
 
     def consider(self, target_map, ego, graph):
+
+        # print context
+        context_set = list(ego.out_edges.edgetype_to_vertex.get("Participant", set()))
+        if len(context_set) == 0:
+            context_set = ego.out_edges.edgetype_to_vertex.get("Bystander", set())
+        context_id, context_priority = "Calm_Context", 0
+        for context in context_set:
+            if "Instance" in context.get_relationships("Is>", as_ids=True):
+                context_parents = [p for p in context.out_edges.edgetype_to_vertex.get("Is") 
+                    if "Context" in p.get_relationships("Is>", as_ids=True)]
+                if len(context_parents) > 0:
+                    new_context_id = context_parents[0].id
+            else:
+                new_context_id = context.id
+            priority = self.__class__.context_priority_map.get(new_context_id, -1)
+            if priority > context_priority:
+                context_priority = priority
+                context_id = new_context_id
+
+        print(f"You are in: {context_id}")
+
+        # print relationships
+        relationship_map = defaultdict(lambda: ("Unknown_Relationship", -1))
+        for edge in ego.out_edges.edgetype_to_edge.get("Relationship", set()):
+            highest_key = max(edge.edge_type, key=lambda x: self.__class__.relationship_priority_map.get(x, float("-inf")))
+            priority = self.__class__.relationship_priority_map.get(highest_key, -1)
+            if priority > relationship_map[edge.tgt][1]:
+                relationship_map[edge.tgt] = (highest_key, priority)
+
+        for target_person, relationship in relationship_map.items():
+            print(f"You have {relationship[0]} with {target_person.id}")
 
         if len(target_map) == 0:
             print(f"No actions to take, '{ego.id}'!")

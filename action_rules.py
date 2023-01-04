@@ -208,6 +208,8 @@ class ActionRule:
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
+        if self.vertex.id == "Respond_Smalltalk" and self.__class__.__name__ == "r_Respond_Smalltalk":
+            pass
         highlight_map = defaultdict(lambda: defaultdict(set))    
         for pattern in self.__class__.patterns:
             dependencies = dict()
@@ -407,7 +409,7 @@ class r_Combat_Action(ActionRule):
                 (
                     {"ref":"ego"},
                     {"type":"Friendly_Relationship", "dir":">"},
-                    {"ref":"allow", "target":""}
+                    {"ref":"allow", "alias":"v0", "target":""}
                 ),
             )
         },

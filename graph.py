@@ -95,14 +95,15 @@ class Graph:
         queue = list()
         # HANDLE DELETED VERTICES
         for v in del_verts:
-            del self.vertices[v.id]
+            if v.id in self.vertices:
+                del self.vertices[v.id]
             lineage_del_map[v] = v.get_relationships("Is>")
             for edge_map in (v.out_edges, v.in_edges):
                 for edge_type, edge_set in edge_map.edgetype_to_edge.items():
                     if edge_type == "Is":
-                        del_p_edges += edge_set
+                        del_p_edges |= edge_set
                     else:
-                        del_s_edges += edge_set
+                        del_s_edges |= edge_set
 
         # BEGIN DELETED PRIMARY EDGES
         for e in del_p_edges:
@@ -127,6 +128,11 @@ class Graph:
             for v in (e.src, e.tgt):
                 if v not in del_verts:
                     v.remove_edge(e)
+
+        # HANDLE ADDED VERTS (POSSIBLE MERGING)
+        for v in add_verts:
+            self.vertices[v.id] = v
+        # if the v.id already exists and doesn't equal v, we have to figure out merging...
 
         # BEGIN ADDED PRIMARY EDGES
         update_map = defaultdict(Counter)
@@ -156,11 +162,6 @@ class Graph:
         for e in add_s_edges:
             e.src.add_edge(e, update_relationships=True)
             e.tgt.add_edge(e, update_relationships=True)
-
-        # HANDLE ADDED VERTS (POSSIBLE MERGING)
-        for v in add_verts:
-            self.vertices[v.id] = v
-        # if the v.id already exists and doesn't equal v, we have to figure out merging...
 
         records = set()
         # iterate through secondary edge additions/deletions and generate edge delta maps 

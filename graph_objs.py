@@ -29,9 +29,8 @@ class EdgeMap:
 
         for indexer, index_type, other_key, edge_key in (
             (self.id_to_edgetype, "counter", endpoint.id, "tgt"),
-            (self.edgetype_to_id, "counter", endpoint.id, "src"),
-            (self.edgetype_to_edge, "set", edge, "src"),
-            (self.edgetype_to_vertex, "set", endpoint, "src")):
+            (self.edgetype_to_id, "counter_del", endpoint.id, "src"),
+            (self.edgetype_to_edge, "set", edge, "src")):
             for edge_type in edge.edge_type:
                 if edge_key == "src":
                     src_key = edge_type
@@ -42,6 +41,10 @@ class EdgeMap:
                 if index_type == "counter":
                     indexer[src_key].update({tgt_key:-1})
                     if indexer[src_key][tgt_key] == 0:
+                        if edge_key == "src": # NOTE(Wyatt): NOT GOOD! NOT GOOD AT ALL! BURN IT ALL DOWN!
+                            self.edgetype_to_vertex[edge_key].discard(endpoint)
+                            if len(self.edgetype_to_vertex[edge_key] == 0):
+                                del self.edgetype_to_vertex[edge_key]
                         del indexer[src_key][tgt_key]
                     if len(indexer[src_key]) == 0:
                         del indexer[src_key]
