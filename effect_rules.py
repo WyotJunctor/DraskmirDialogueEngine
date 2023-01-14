@@ -176,6 +176,9 @@ class er_BystanderCulling(EffectRule):
         source_person = new_edge.src
         target_context = new_edge.tgt
 
+        if "Combat_Context" in new_edge.tgt.get_relationships("Is>", as_ids=True):
+            return None
+
         # if the person is already a participant in the context, delete the bystanderitude
         if target_context in source_person.get_relationships("Participant>"):
             return GraphMessage(defaultdict(set,{
@@ -223,13 +226,7 @@ class er_Engage(EffectRule):
         people = self.reality.graph.vertices["Person"].in_edges.edgetype_to_vertex["Is"]
 
         for person in people:
-            if person in (engager, engagee):
-                continue
 
-            # add bystander edge to Combat
-            message.update_map[(EventType.Add, EventTarget.Edge)].add(
-                (person.id, bystander_types, combat_c.id)
-            )
 
             # remove participation in other contexts
             person_participations = person.out_edges.edgetype_to_id["Participant"]
@@ -238,6 +235,15 @@ class er_Engage(EffectRule):
                 message.update_map[(EventType.Delete, EventTarget.Edge)].add(
                     (person.id, participant_types, participation_id)
                 )
+            
+            if person in (engager, engagee):
+                continue
+            
+
+            # add bystander edge to Combat
+            message.update_map[(EventType.Add, EventTarget.Edge)].add(
+                (person.id, bystander_types, combat_c.id)
+            )
 
         return message
 

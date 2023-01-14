@@ -115,7 +115,7 @@ class Vertex(GraphObject):
         self.relationship_map["Is>"] = lineage
 
     def __repr__(self):
-        return f"|{self.id}| {id(self)}" # f"{self.id}, {self.attr_map}"
+        return f"|{self.id}|" # {id(self)}" # f"{self.id}, {self.attr_map}"
 
     def update_relationships(self, edge_type, target_counter:Counter, add:bool):
         result_set = set()

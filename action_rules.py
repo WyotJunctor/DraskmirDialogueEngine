@@ -208,7 +208,7 @@ class ActionRule:
             "root":set([self.vertex]),
             "ego":set([ego]),
         }
-        if self.vertex.id == "Respond_Smalltalk" and self.__class__.__name__ == "r_Respond_Smalltalk":
+        if self.vertex.id == "Ask_Smalltalk" and self.__class__.__name__ == "r_Ask_Smalltalk":
             pass
         highlight_map = defaultdict(lambda: defaultdict(set))    
         for pattern in self.__class__.patterns:
@@ -725,19 +725,26 @@ class r_Ask_Smalltalk(ActionRule):
     patterns = (
         {
             "check_type":PatternCheckType.disallow,
-            "scope":PatternScope.terminal,
+            "scope":PatternScope.graph,
             "traversal":(
                 ({"ref":"root"}, {"type":"Answered_By","dir":">"}, {"ref":"v_0","alias":"v_0","rel":(("Is>",{"Action"}), )}),
                 (
-                    {"id":"Immediate"},
-                    {"type":"Has","dir":"<"},
+                    {"ref":"v_0"},
+                    {"type":"Is","dir":"<"},
                     {
                         "ref":"v_1",
                         "alias":"v_1",
-                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"])),("Is>","v_0"),("Source<","allow")),
-                        "not_rel":(("Has",{"Recent"}),),
+                        "rel":(("Is>",{"Instance","Action"}),("Target<",set(["Ego"]))),
                     }
                 ),
+                (
+                    {"ref":"v_1"},
+                    {"type":"Source", "dir":"<"},
+                    {
+                        "ref":"v_2",
+                        "target":"",
+                    }
+                )
             )
         },
     )
