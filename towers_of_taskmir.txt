@@ -2,20 +2,22 @@ TASKS
 note: if an effect rule appears in both the subjective and objective list, it means they should probably have unique implementations
 
 ACTIVE TASKS
-shared effect rules
-  add track time
-  tick track time
-  ACTION RULES...
-subjective effect rules
-  tick involved
-  del involved
-  ACTION RULES...
-    add combat action
-  tick combat context?
-  tick ego (acknowledge rule?)
-objective effect rules
-  ACTION RULES...
-tracery logging
+update reality constructor to correctly instantiate rules and rule references
+rewrite game and reality instantiation
+objective reality instantiation
+  reality profile (objective concept graph, effect rule map)
+    instantiate concept graph
+    instantiate rules on vertices
+subjective reality instantiation
+  reality profile (subjective concept graph, ego description, effect rule map, action rule map, choosemaker)
+    instantiate concept graph
+    instantiate effect and action rules on vertices
+    instantiate ego subgraph using description
+    send objective state to new entity
+    special message pass to objective reality "add_entity"
+      send downstream updates to new entity
+      send full updates to all other entities
+    add subjective reality to entity set
 
 
 CONTINUOUS TASKS
@@ -23,28 +25,34 @@ CONTINUOUS TASKS
 
 
 COMPLETED TASKS
-ingest concept graph JSON
-graph + rule initialization
-action check logic
-action check patterns
-type filter
-add person
-del person
-validate
-  action checking*
-  graph deltas
-  graph events
-  action selection
-  basic AI
-  basic action resolution
-$ = nothing active at the moment
+
 
 
 ICED TASKS
-  add stative (edge?)
-    add action
-    add interaction action
-  add shortcut
-  add involved
-  add combat context
-  -
+
+
+NOTES
+
+when the game spawns a reality,
+effect rules get added to vertices
+all children vertices get references to their parents' effect rules
+
+effect and action rule maps are static string -> class tables
+reality profiles will reference these string keys (vertex ids)
+
+add edge to/from/type
+remove edge to/from/type
+
+Edges should be typed by referent vertices
+Edgemaps should have a (id, edge_type) -> edge obj map
+Vertices need references to their rules
+Add a bunch of helper methods
+Make action rules very general and put most of the semantics in the graph
+Better testing
+Scene management as a core engine feature
+Entity creation:
+  Brain profile (concepts, brain stereotype)
+  Instance tags
+  Specialized graph update on objective realityto get objective consequences
+Handling missing concepts
+  if a receiving graph doesn't know a type, it asks the sender for the whole lineage
