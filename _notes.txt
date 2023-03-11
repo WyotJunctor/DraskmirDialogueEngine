@@ -1,0 +1,50 @@
+
+Plannin and shit
+
+Notions -
+ * planning graph
+    - aggregated view of entity types & associations w/ aggregated outcomes
+ * entity labels / categories
+    - entities associated with these to drive planning
+ * effect rules "summarized" as result nodes in planning graph
+    - results labeled with importance, certainty, probability & causal entities
+ * curious vs. remediative actions
+    - curious minimizes uncertainty, remediative minimizes risk
+    - weighting between them - remediative usually weighted higher (significantly)
+ * ideals vs. needs
+    - parameters for ideals (what is understood as satisfying them)
+    - ideals drive long-term strategy, needs drive short-term planning
+ * importance, certainty, probability
+    - used to score actions & results for desirability & undesirability
+ * actions vs. reactions in the action resolution process
+    - reactions for deconflicting invalidated actions
+ * planning rules used to label planning graph nodes w/ imp, cert, prob
+    - cold associations between entity labels & results, hot labeling of real entities
+ * action rules determine which plans are possible, plans which actions desirable
+    - dot prod of desirability of plan w/ suitability of action
+ * player-facing info driven by AI-like planning and judgement graphs
+    - suggestions and easy-read info provided by AI-oriented filters
+ * NPC generation rules relative to player character state
+    - e.g. narrative driven by generating NPC w/ aligned goals but misaligned ideals
+
+
+Action & Reaction Game Loop
+
+1. Game prompts entities for actions
+2. Actions handed as a bundle to Objective Reality (O.R.)
+3. O.R. iterates over actions, running validation rules
+    a. automatically transforms invalid actions to valid if no conflict
+    b. marks conflicting invalid actions dirty for future processing
+4. O.R. attempts to deconflict invalid actions with subjective input
+    a. pulling action-local subgraph & possible objectively-possible reactions
+    b. subjective reality prunes reactions & adds dumb shit
+    c. chooses best reaction based on its effect when applied to the subgraph
+5. O.R. takes fully valid action set & adds to graph
+6. O.R. runs in parallel 'setup' effect rules, adding contexts, relationships, etc.
+7. O.R. runs in parallel 'result' effect rules, producing mechanical changes
+    . (e.g. adding 'dead' from wounds)
+8. O.R. runs in parallel 'teardown' effect rules, removing contexts, nodes, etc.
+    . (e.g. removing 'person' from dead)
+9. O.R. bundles all deltas into graph message
+    a. propagates to subjective graphs
+10. repeat!
