@@ -48,3 +48,28 @@ Action & Reaction Game Loop
 9. O.R. bundles all deltas into graph message
     a. propagates to subjective graphs
 10. repeat!
+
+
+---
+
+API for the model:
+. would be cool to insert an AI entity into other simulation things
+. could instantiate an AI in - say - Ben's tabletop engine
+. hardest part would be telling the entity what's going on in the open table play
+- perhaps could understand the map abstractly
+   . just says its priorities ('take me to a defensible location', 'perform an offensive maneuver')
+     and the game runner must figure out how to make that happen on the map, or to just look at a
+     lower priority item
+
+---
+
+Batch processing on input throughout the day relating to ideals.
+When they go to sleep they process their experiences & are more receptive to change once they've "thought about it".
+Unlikely to convince them in the moment, but maybe they'll come around over time.
+Under the hood, can batch process in parallel in the background as entities 'ruminate'.
+They could be game-mechanically more open to changing their mind during sleep.
+
+---
+
+Notes: https://en.m.wikipedia.org/wiki/Algorithmic_probability
+- occam's razor could be telling the mind to bucket others into the fewest entity types possible
