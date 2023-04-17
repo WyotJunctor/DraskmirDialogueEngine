@@ -5,32 +5,56 @@ from pprint import pprint
 from action_rules import InheritedActionRule
 from choose import ChooseMaker
 from clock import Clock
-from graph import Graph
+from graph import Graph, Vertex
 from graph_event import GraphMessage, EventType
-from graph_objs import Vertex
 from utils import merge_targets
+
+"""
+(actions)
+s.r. sends proposal actions to o.r. (action rules, planning)
+o.r. processes deltas (validation rules, effect rules)
+sends deltas back to s.r.
+s.r. processes deltas (validation rules, effect rules)
+sends 'follow-through' reactions (reaction rules, planning?)
+o.r. processes deltas (validation rules, effect rules)
+sends deltas back to s.r.
+s.r. processes deltas (validation rules, effect rules)
+(spawning, do this sequentially for now)
+spawn s.r. (already starts with concept graph)
+special send deltas to o.r.
+o.r. special processes and sends only downstream deltas to spawning s.r.
+sends full message to other s.r.
+
+validation rules process deltas and temporarily add (and do all the lineage stuff)
+then they remove or transform the graph
+then effect rules can generate additional deltas (which get processed by validation rules...)
+"""
 
 class Reality:
 
-    def __init__(self, clock: Clock, graph: Graph, update_rules: list, effect_rules_map: dict):
+    def __init__(self, clock: Clock, graph: Graph, update_rules: list, validation_rules: dict, effect_rules: dict):
         self.clock = clock
         self.graph = graph
+        self.validation_rules = defaultdict(dict)
+        self.effect_rules = defaultdict(dict)
 
-        self.effect_rules = defaultdict(list)
-
-        # for each effect in the map, instantiate it
-        for effect_key, effect_rule in effect_rules_map.items():
-            self.effect_rules[effect_key] = effect_rule(self)
+        for rules, self_rules in ((validation_rules, self.validation_rules), (effect_rules, self.effect_rules)):
+            for rule_key, rule_class in rules.items():
+                self_rules[graph.vertices[rule_key.v_id]][rule_key] = rule_class(graph.vertices[rule_key.v_id])
 
         self.update_rules = [ update_rule(self) for update_rule in update_rules ]
 
-    def step(self):
+    def update_self(self):
         for update_rule in self.update_rules:
             message = update_rule.step()
-
             if message is not None:
                 self.receive_message(message)
 
+    # rewrite this
+    # pass records through validation
+    # pass records through effect rules
+    # iterate and accumulate
+    # return cumulative records
     def receive_message(self, message: GraphMessage):
         records = self.graph.update_graph(message)
         effect_messages = list()
@@ -60,8 +84,8 @@ class Reality:
 
 
 class SubjectiveReality(Reality):
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, update_rules: list, effect_rules_map: dict, action_rules_map: dict):
-        super().__init__(clock, graph, update_rules, effect_rules_map)
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, update_rules: list, validation_rules: dict, effect_rules: dict, action_rules: dict):
+        super().__init__(clock, graph, update_rules, validation_rules, effect_rules)
 
         self.choosemaker = choosemaker
 
@@ -69,6 +93,8 @@ class SubjectiveReality(Reality):
         self.ego = list(ego_concept.in_edges.edgetype_to_vertex["Is"])[0]
         self.action_rules = defaultdict(list)
 
+        # rewrite this, we shouldn't have any inherited stuff...
+        # specialized templates should just be different.
         # for each action rule in the map, instantiate it
         for v_id, action_rule in action_rules_map.items():
             if v_id not in graph.vertices:
@@ -78,7 +104,6 @@ class SubjectiveReality(Reality):
             self.action_rules[vertex].append(rule_instance)
             if isinstance(rule_instance, InheritedActionRule):
                 rule_instance.replicate(self.action_rules)
-        # if the rule is inherited, propagate it down to all children...
 
     def choose_action(self):
 
@@ -164,5 +189,5 @@ class SubjectiveReality(Reality):
         return action_options
 
 class ObjectiveReality(Reality):
-    def __init__(self, clock: Clock, graph: Graph, update_rules: list, effect_rules_map: dict):
-        super().__init__(clock, graph, update_rules, effect_rules_map)
+    def __init__(self, clock: Clock, graph: Graph, update_rules: list, validation_rules: dict, effect_rules: dict):
+        super().__init__(clock, graph, update_rules, validation_rules, effect_rules)

@@ -53,6 +53,6 @@ Scene management as a core engine feature
 Entity creation:
   Brain profile (concepts, brain stereotype)
   Instance tags
-  Specialized graph update on objective realityto get objective consequences
+  Specialized graph update on objective reality to get objective consequences
 Handling missing concepts
   if a receiving graph doesn't know a type, it asks the sender for the whole lineage
