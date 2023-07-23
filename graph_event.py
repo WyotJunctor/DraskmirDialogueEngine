@@ -19,8 +19,9 @@ class EventTarget(Enum):
 
 
 class GraphMessage:
-    def __init__(self, update_map:defaultdict=None):
-        self.update_map = update_map if update_map is not None else defaultdict(set)
+    def __init__(self, update_map: defaultdict = None):
+        self.update_map = update_map if update_map is not None else defaultdict(
+            set)
 
     def merge(self, message):
         new_update_map = self.update_map.copy()
@@ -32,12 +33,12 @@ class GraphMessage:
         if self.update_map.get((EventType.Add, EventTarget.Edge)) is not None:
             self.update_map[
                 (EventType.Add, EventTarget.Edge)
-                ] = { edge for edge in self.update_map.get((EventType.Add, EventTarget.Edge)) if len(edge[1]) == 1 }
-        
+            ] = {edge for edge in self.update_map.get((EventType.Add, EventTarget.Edge)) if len(edge[1]) == 1}
+
         if self.update_map.get((EventType.Delete, EventTarget.Edge)) is not None:
             self.update_map[
                 (EventType.Delete, EventTarget.Edge)
-                ] = { edge for edge in self.update_map.get((EventType.Delete, EventTarget.Edge)) if len(edge[1]) == 1 }        
+            ] = {edge for edge in self.update_map.get((EventType.Delete, EventTarget.Edge)) if len(edge[1]) == 1}
 
     # TODO(Wyatt): add attribute updates
     def realize(self, graph):
@@ -45,7 +46,7 @@ class GraphMessage:
         duplicate_records = set()
         realized_verts = dict()
         for iter_key in itertools.product(
-            (EventTarget.Vertex, EventTarget.Edge), (EventType.Add, EventType.Delete)):
+                (EventTarget.Vertex, EventTarget.Edge), (EventType.Add, EventType.Delete)):
             event_target, event_act = iter_key
             event_key = (event_act, event_target)
             event_set = self.update_map.get(event_key)
@@ -63,7 +64,8 @@ class GraphMessage:
                         vert = graph.vertices.get(vert_id)
                         if event_act is EventType.Add:
                             for label in vert.get_relationships("Is>"):
-                                duplicate_records.add(GraphRecord_Vertex(EventType.Duplicate, graph.vertices.get(vert_id), label.id))
+                                duplicate_records.add(GraphRecord_Vertex(
+                                    EventType.Duplicate, graph.vertices.get(vert_id), label.id))
                         else:
                             realized[event_key].add(vert)
             elif event_target == EventTarget.Edge:
@@ -74,7 +76,7 @@ class GraphMessage:
                     for i, vert_id in enumerate((s_id, t_id)):
                         verts[i] = graph.vertices.get(
                             vert_id,
-                            realized_verts.get(vert_id)    
+                            realized_verts.get(vert_id)
                         )
                         """
                         if verts[i] is None:
@@ -90,14 +92,15 @@ class GraphMessage:
                                 realized[event_key].add(edge)
                             else:
                                 for src_label, e_type, tgt_label in itertools.product(
-                                    s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
-                                    duplicate_records.add(GraphRecord_Edge(EventType.Duplicate, edge, src_label.id, e_type, tgt_label.id)) 
+                                        s_vert.get_relationships("Is>"), t_set, t_vert.get_relationships("Is>")):
+                                    duplicate_records.add(GraphRecord_Edge(
+                                        EventType.Duplicate, edge, src_label.id, e_type, tgt_label.id))
                             dupe_edge = True
                             break
                     if dupe_edge is False and event_act == EventType.Add:
-                            realized[event_key].add(Edge(t_set, s_vert, t_vert, graph.clock.timestep, graph.clock.timestep))
+                        realized[event_key].add(
+                            Edge(t_set, s_vert, t_vert, graph.clock.timestep, graph.clock.timestep))
         return realized, duplicate_records
-            
 
 
 class GraphRecord:
@@ -121,7 +124,8 @@ class GraphRecord_Edge(GraphRecord):
         self.src_label = src_label
         self.e_type = e_type
         self.tgt_label = tgt_label
-        self.key = (self.act, EventTarget.Edge, self.src_label, self.e_type, self.tgt_label)
+        self.key = (self.act, EventTarget.Edge, self.src_label,
+                    self.e_type, self.tgt_label)
 
 
 class GraphRecord_Attribute(GraphRecord):
@@ -129,5 +133,29 @@ class GraphRecord_Attribute(GraphRecord):
         super().__init__(act, EventTarget.Attribute, o_ref)
         self.attr_name = attr_name
         self.o_type = tuple(o_type)
-        self.key = (self.act, EventTarget.Attribute, self.attr_name, *self.o_type)
+        self.key = (self.act, EventTarget.Attribute,
+                    self.attr_name, *self.o_type)
 
+
+class UpdateRecord:
+    def __init__(self):
+        self.add_records = dict()
+        self.del_records = dict()
+
+    def add_edge(self, edge, add):
+        if add == True:
+            self.add_records[edge] = list()
+        else:
+            self.del_records[edge] = list()
+
+    def check_rules(self, rules):
+        # TODO: apply rule-checking and generate a graph message
+        # iterate over add_records, it's always going to be an edge,
+        # visit source vertex first, then check native rules and then added rules
+        # then iterate over patterns? or over edge types? what about other vertex types?
+        # complex rules? they don't have simple entry points, they just have to be evaluated... but when?
+        # rule keys are light-weight entry-points to enter the more intensive pattern check
+        pass
+
+    def update_with(self, records):
+        pass
