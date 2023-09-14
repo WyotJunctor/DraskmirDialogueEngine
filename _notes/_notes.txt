@@ -28,6 +28,8 @@ Notions -
     - e.g. narrative driven by generating NPC w/ aligned goals but misaligned ideals
 
 
+
+
 Action & Reaction Game Loop
 
 1. Game prompts entities for actions
@@ -73,3 +75,20 @@ They could be game-mechanically more open to changing their mind during sleep.
 
 Notes: https://en.m.wikipedia.org/wiki/Algorithmic_probability
 - occam's razor could be telling the mind to bucket others into the fewest entity types possible
+
+---
+
+Potential target for demo: Strategy object
+- encapsulates either remediative or exploratory behavior
+- takes in a judgement graph and produces a next action
+
+Certainty is a purely subjective element of the judgement graph
+- probability and importance will be rather static
+- however certainty is the strength of your bucketing
+- I have a low certainty that this person is an axe murderer
+   - but axe murders have a high probability of killing
+   - and killing has a very high importance
+
+Situations are composed of Activities
+Activities expect Participants
+Entities are Participants
