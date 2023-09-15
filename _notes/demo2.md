@@ -55,7 +55,16 @@ Judgements
 
 Activities
 * Conversing
+    * Greeting
+    * Content
+    * Farewell
 * Fighting
+    * Square off
+    * Combat
+    * EITHER
+        * Victory
+    * OR
+        * Draw
 
 Situations
 * Conversation
