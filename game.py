@@ -2,7 +2,9 @@ from collections import defaultdict
 from pprint import pprint
 from os.path import join as pjoin
 from random import shuffle
-import re, os, json
+import re
+import os
+import json
 
 from action_rules import rules_map as action_rules_map
 from choose import PlayerChooseMaker
@@ -21,6 +23,7 @@ obj_path = pjoin(filepath, "Graphs", "obj_base_graph.json")
 subj_path = pjoin(filepath, "Graphs", "subj_base_graph.json")
 player_path = pjoin(filepath, "Graphs", "player_spawn_graph.json")
 
+
 class Game:
 
     def __init__(self, objective_json=obj_path, subjective_json=subj_path, entity_json=player_path, player_json=player_path):
@@ -28,7 +31,8 @@ class Game:
 
         reality_graph = Graph(self.clock)
         reality_graph.load_json_file(objective_json)
-        self.reality = ObjectiveReality(self.clock, reality_graph, obj_update_rules, obj_effect_rules_map)
+        self.reality = ObjectiveReality(
+            self.clock, reality_graph, obj_update_rules, obj_effect_rules_map)
 
         self.entity_json_path = entity_json
         self.subjective_json_path = subjective_json
@@ -48,7 +52,8 @@ class Game:
         good_choose = False
         while not good_choose:
             print(f"'{self.player_entity.ego.id}', choose your equipment...")
-            print("[input '1' for nothing, '2' for a weapon only, '3' for armor only, '4' for both arms and armor]")
+            print(
+                "[input '1' for nothing, '2' for a weapon only, '3' for armor only, '4' for both arms and armor]")
             choose = input()
 
             try:
@@ -58,7 +63,7 @@ class Game:
             except:
                 print(f"Choice '{choose}' invalid.")
                 continue
-        
+
         if choose == 1:
             return
 
@@ -91,19 +96,27 @@ class Game:
 
         message_map = defaultdict(set)
         for vertex in glob["vertices"]:
-            message_map[(EventType.Add, EventTarget.Vertex)].add(vertex["label"])
+            message_map[(EventType.Add, EventTarget.Vertex)
+                        ].add(vertex["label"])
 
         for edge in glob["edges"]:
             message_map[(EventType.Add, EventTarget.Edge)].add((
-                edge["src"], tuple(sorted([edge["types"]] if isinstance(edge["types"], str) else edge["types"])), edge["tgt"]
+                edge["src"], tuple(sorted([edge["types"]] if isinstance(
+                    edge["types"], str) else edge["types"])), edge["tgt"]
             ))
         return GraphMessage(update_map=message_map)
 
     def create_entity(self, choose_maker, entity_json_path=None):
+        # convert json to graph message
+        # invoke object reality.receive message
+        # propagate message to subjective brains
+        # invoke spawn method on new subjective brain
+        # add subjective brain to list
 
         subjective_graph = Graph(self.clock)
 
-        graph_message = self.convert_json_to_graph_message(self.subjective_json_path)
+        graph_message = self.convert_json_to_graph_message(
+            self.subjective_json_path)
 
         subjective_graph.update_graph(graph_message)
 
@@ -123,13 +136,15 @@ class Game:
         graph_message.update_map[(EventType.Add, EventTarget.Edge)].remove((
             subjective_reality.ego.id, ("Is",), "Ego"
         ))
-        full_message, effect_message = self.reality.receive_message(graph_message)
+        full_message, effect_message = self.reality.receive_message(
+            graph_message)
 
         for entity in self.entities:
             entity.receive_message(full_message)
 
         for instance_v in self.reality.graph.vertices["Instance"].in_edges.edgetype_to_vertex["Is"]:
-            effect_message.update_map[(EventType.Add, EventTarget.Vertex)].add((instance_v.id))
+            effect_message.update_map[(EventType.Add, EventTarget.Vertex)].add(
+                (instance_v.id))
             for out_edge in instance_v.out_edges.edge_set:
                 effect_message.update_map[(EventType.Add, EventTarget.Edge)].add(
                     (out_edge.src.id, tuple(out_edge.edge_type), out_edge.tgt.id)
@@ -159,7 +174,7 @@ class Game:
 
             if action is not None:
                 actions.append(
-                    ( entity, action )
+                    (entity, action)
                 )
             else:
                 dead_entities.add(entity)
@@ -170,7 +185,6 @@ class Game:
 
         for action_entity, action_pair in actions:
             action_vert, action_tgt = action_pair
-
 
             if action_vert is None:
                 continue
@@ -186,11 +200,11 @@ class Game:
                 {
                     (EventType.Add, EventTarget.Vertex): set([instance_id]),
                     (EventType.Add, EventTarget.Edge): set([
-                            (action_tgt.id, ("Target",), instance_id),
-                            (instance_id, ("Is",), action_vert.id),
-                            (src_vert.id, ("Source",), instance_id), 
-                            (instance_id, ("Is",), "Instance"), 
-                        ]),
+                        (action_tgt.id, ("Target",), instance_id),
+                        (instance_id, ("Is",), action_vert.id),
+                        (src_vert.id, ("Source",), instance_id),
+                        (instance_id, ("Is",), "Instance"),
+                    ]),
                 }
             ))
 
