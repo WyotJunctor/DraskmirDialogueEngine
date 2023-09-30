@@ -2,6 +2,16 @@ TASKS
 note: if an effect rule appears in both the subjective and objective list, it means they should probably have unique implementations
 
 ACTIVE TASKS
+  DEV TASKS
+    review graph message
+    do reality spawning code
+
+  DESIGN TASKS
+    base concept map
+    MVP for rules (update, deconflict, effect, action)
+    figure out how action rules work
+    come up with ideas about planning
+
 update reality constructor to correctly instantiate rules and rule references
 rewrite game and reality instantiation
 objective reality instantiation

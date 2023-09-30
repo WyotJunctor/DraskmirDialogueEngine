@@ -4,51 +4,123 @@ from pprint import pprint
 
 from choose import ChooseMaker
 from clock import Clock
-from graph import Graph, Vertex
-from graph_event import GraphMessage, EventType
+from graph import Graph, Vertex, Edge
+from graph_event import GraphMessage, UpdateRecord
 from utils import merge_targets
 
+# make a copy of a rule object
+# make a singleton reference of a rule object
+# custom checker as to whether to copy
 
-def construct_rules_map():
-    return {"native": defaultdict(
-            lambda: defaultdict(list)), "added": defaultdict(
-            lambda: defaultdict(list))}
+
+class SpawnRule:
+    def __init__(self, graph: Graph):
+        self.graph = graph
+
+    def check_rule(self, ego_id: str) -> GraphMessage:
+        message = GraphMessage()
+        return message
+
+
+class Rule:
+
+    def __init__(self, rule_id: str, graph: Graph, vertex: Vertex, root_vertex: Vertex):
+        self.rule_id = rule_id
+        self.singleton = False
+        self.graph = graph
+        self.vertex = vertex
+        self.root_vertex = root_vertex
+
+    def check_rule(self, edge: Edge, add: bool) -> GraphMessage:
+        message = GraphMessage()
+        return message
+
+    def check_add(self, vertex: Vertex):
+        # if singleton, just return a reference to this rule
+        if self.singleton is True:
+            return self
+        # otherwise, return a copy of this rule
+        return Rule(self.rule_id, self.graph, vertex, self.root_vertex)
+
+
+class RuleMap:
+
+    def __init__(self):
+        self.id_rules = defaultdict(dict)
+        self.active_rules = defaultdict(dict)
+
+    def init_rules(self, graph: Graph, vertex: Vertex, rules: dict):
+        for rule_id, rule_class in rules.items():
+            rule_obj = rule_class(rule_id, graph, vertex, vertex)
+            self.id_rules[vertex][rule_id] = rule_obj
+            active_rule = rule_obj.check_add(vertex)
+            if active_rule is not None:
+                self.active_rules[vertex][rule_id] = active_rule
+
+    # given a vertex and a set of add or removed labels (ids), recalculate active rules for the vertex
+    def recalculate_rules(self, labels: set, add: bool, vertex: Vertex):
+        if add is False and vertex.id in labels:
+            del self.id_rules[vertex]
+            del self.active_rules[vertex]
+
+        for label in labels:
+            for rule_id, rule in self.id_rules.get(label, {}):
+                if add is True:
+                    active_rule = rule.check_add(vertex)
+                    if active_rule is not None:
+                        self.active_rules[vertex.id][rule_id] = active_rule
+                else:
+                    self.active_rules[vertex.id].pop(rule_id)
+
+    def check_rules(self, records: UpdateRecord) -> GraphMessage:
+        message = GraphMessage()
+        for edges, add in ((records.add_records, True), (records.del_records, True)):
+            for edge in edges:
+                for vert in (edge.src, edge.tgt):
+                    for _, rule in self.active_rules[vert].items():
+                        message.merge(rule.check_rule(edge, add))
+        return message
 
 
 class Reality:
 
-    def __init__(self, clock: Clock, graph: Graph, update_rules: list, deconflicting_rules: dict, effect_rules: dict):
+    def __init__(self, clock: Clock, graph: Graph, update_rules: list, deconflict_rules: dict, effect_rules: dict):
         self.clock = clock
         self.graph = graph
-        self.vertex_rules = dict()
-        self.vertex_rules["deconflict"] = construct_rules_map()
-        self.vertex_rules["effect"] = construct_rules_map()
+        self.deconflict_rules = RuleMap()
+        self.effect_rules = RuleMap()
 
-        for rules, self_rules in ((deconflicting_rules, self.vertex_rules["deconflict"]), (effect_rules, self.vertex_rules["effect"])):
-            self.initialize_rules(rules, self_rules)
+        self.initialize_rules(deconflict_rules, self.deconflict_rules)
+        self.initialize_rules(effect_rules, self.effect_rules)
 
         self.update_rules = [update_rule(self) for update_rule in update_rules]
 
     def initialize_rules(self, input_rules, self_rules):
-        for rule_key, rule_class in input_rules.items():
-            self_rules[rule_key.v_id][rule_key].append(
-                rule_class(self.graph.vertices[rule_key.v_id]))
+        for v_id, rules in input_rules.items():
+            self_rules.init_rules(self.graph, self.graph.vertices[v_id], rules)
 
-    def update_graph(self, message: GraphMessage):
-        # iterates vertices/edges to be added/removed
-        return self.graph.update_graph(message, self.vertex_rules["deconflict"], self.vertex_rules["effect"])
+    def _update_graph(self, message: GraphMessage):
+        records, lineage_add_map, lineage_del_map = self.graph.update_graph(
+            message)
+        for lineage_map, add in ((lineage_add_map, True), (lineage_del_map, False)):
+            for vertex, labels in lineage_map.items():
+                self.deconflict_rules.recalculate_rules(labels, add, vertex)
+        return records
 
-    def receive_message(self, message: GraphMessage):
-        # define records object
-        records = self.update_graph(message)
+    def receive_message(self, message: GraphMessage) -> GraphMessage:
+        full_message = message.copy()
+        records = self._update_graph(message)
 
-        while records.not_empty() == True:
-            message = records.check_rules(self.vertex_rules["deconflict"])
-            # why not overwrite initial records? because some deltas don't have applicable deconflicting rules,
-            # but we might still want their effect rules to trigger
-            records.update_with(self.graph.update_graph(message))
-            message = records.check_rules(self.vertex_rules["effect"])
-            records = self.graph.update_graph(message)
+        while records.is_empty() is False:
+            message = self.deconflict_rules.check_rules(records)
+            full_message.merge(message)
+            deconflict_records = self._update_graph(message)
+            records.update_with(deconflict_records)
+            message = self.effect_rules.check_rules(records)
+            full_message.merge(message)
+            records = self._update_graph(message)
+
+        return full_message
 
     def check_update_rules(self):
         for update_rule in self.update_rules:
@@ -58,17 +130,25 @@ class Reality:
 
 
 class SubjectiveReality(Reality):
-    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, update_rules: list, deconflicting_rules: dict, effect_rules: dict, action_rules: dict):
+    def __init__(self, clock: Clock, choosemaker: ChooseMaker, graph: Graph, ego_id: str, update_rules: list, deconflicting_rules: dict, effect_rules: dict, spawn_rules: list):
         super().__init__(clock, graph, update_rules, deconflicting_rules, effect_rules)
 
         self.choosemaker = choosemaker
+        self.ego_id = ego_id
+        self.ego = None
+        self.spawn_rules = spawn_rules
 
-        ego_concept = graph.vertices["Ego"]
-        self.ego = list(ego_concept.in_edges.edgetype_to_vertex["Is"])[0]
-        self.vertex_rules["action"] = construct_rules_map()
+        # self.vertex_rules["action"] = construct_rules_map()
+        # self.initialize_rules(action_rules, self.vertex_rules["action"])
 
-        self.initialize_rules(action_rules, self.vertex_rules["action"])
+    def spawn(self, message: GraphMessage):
+        self._update_graph(message)
+        message = GraphMessage()
+        for rule in self.spawn_rules:
+            message.merge(rule.check_rule(self.ego_id))
+        self.ego = self.graph.vertices[self.ego_id]
 
+    """
     def choose_action(self):
 
         target_map = self.get_targets()
@@ -161,6 +241,7 @@ class SubjectiveReality(Reality):
                 action_options[action] = target_set["allow"]
 
         return action_options
+        """
 
 
 class ObjectiveReality(Reality):

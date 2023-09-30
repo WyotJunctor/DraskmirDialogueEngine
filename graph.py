@@ -4,24 +4,48 @@ import matplotlib.pyplot as plt
 from pprint import pprint
 
 from clock import Clock
-from graph_event import GraphMessage, GraphRecord_Vertex, GraphRecord_Edge, EventType, EventTarget, UpdateRecord
+from graph_event import GraphMessage, EventType, EventTarget, UpdateRecord
 from collections import defaultdict, Counter
+from enum import Enum
 from utils import to_counter
 import itertools
 
+# id to edgetypes, edges, or vref
+# id and vref to edge
+# edgetype to ids, edges, or vertex
+
+class EdgeMapTarget(Enum):
+    EdgeType = 0
+    Edge = 1
+    VertexId = 2
+    VertRef = 3
+    Vertex = 4
+
+class InternalEdgeMap:
+    def __init__(self, **key_types):
+        self.map = dict()
+        for key_type, value_type in key_types.items():
+            self.map[key_type] = value_type()
+            
 
 class EdgeMap:
     def __init__(self):
         self.edge_set = set()
         self.id_to_edgetype = defaultdict(Counter)
         self.id_to_edge = defaultdict(set)
+        self.id_to_vref = defaultdict(set)
         self.edgetype_to_id = defaultdict(Counter)
         self.edgetype_to_edge = defaultdict(set)
         self.edgetype_to_vertex = defaultdict(set)
 
+    def get_target(self, target_id: str, target_type: EdgeMapTarget):
+
+        pass
+
     def add(self, edge, endpoint):
         self.edge_set.add(edge)
         self.id_to_edge[endpoint.id].add(edge)
+        self.id_to_vref[endpoint.id].add(edge.ref_vert)
         for edge_type in edge.edge_type:
             self.id_to_edgetype[endpoint.id].update({edge_type: 1})
             self.edgetype_to_id[edge_type].update({endpoint.id: 1})
@@ -34,6 +58,9 @@ class EdgeMap:
         self.id_to_edge[endpoint.id].remove(edge)
         if len(self.id_to_edge[endpoint.id]) == 0:
             del self.id_to_edge[endpoint.id]
+
+        del self.id_to_vref[]
+        # remove vref
 
         for indexer, index_type, other_key, edge_key in (
             (self.id_to_edgetype, "counter", endpoint.id, "tgt"),
@@ -88,23 +115,16 @@ class GraphObject:
         self.attr_map = dict() if attr_map is None else attr_map
         self.event_map = defaultdict(set)
 
-    def subscribe(self, subscriber, event_key):
-        self.event_map[event_key].add(subscriber)
-
-    def delete(self):
-        for subscriber in self.event_map["delete"]:
-            subscriber()  # NOTE: when we need templated event-listener we'll add it
-
 
 class Vertex(GraphObject):
 
-    def __init__(self, id, created_timestep, updated_timestep, attr_map=None, edge_ref=None):
+    def __init__(self, id, created_timestep, updated_timestep, attr_map=None):
         self.id = id
         self.in_edges = EdgeMap()
         self.out_edges = EdgeMap()
         self.relationship_map = defaultdict(Counter)
         self.relationship_map["Is>"][self] = 1
-        self.edge_ref = edge_ref
+        self.edge_ref = set()
         super().__init__(created_timestep, updated_timestep, attr_map)
 
     def get_relationships(self, key, exclude_self=False, as_counter=False, as_ids=False):
@@ -194,8 +214,7 @@ class Vertex(GraphObject):
 
 class Edge(GraphObject):
 
-    def __init__(self, edge_type: set, src: Vertex, tgt: Vertex, created_timestep, updated_timestep, attr_map=None, ref_vert=None):
-        self.edge_type = edge_type
+    def __init__(self, src: Vertex, tgt: Vertex, ref_vert: Vertex, created_timestep, updated_timestep, attr_map=None):
         self.src = src
         self.tgt = tgt
         self.ref_vert = ref_vert
@@ -212,20 +231,47 @@ class Graph:
         self.vertices = dict()
         self.visgraph = nx.Graph()
         self.shortcut_map = dict()
-
+    """
     def draw_graph(self):
         nx.draw(self.visgraph, with_labels=True)
         plt.savefig("reality.png")
+    """
 
-    def update_rules(self, vertex, updated_lineage, rules, add):
-        for vert_id in updated_lineage:
-            # iterate through each rule key -> this maps to a rule_id : rule_obj maps
-            for rule_key, rule_map in rules[vert_id].items():
-                if add == True:
-                    rules[vertex.id].get(rule_key, {}).update(rule_map)
-                else:
-                    for rule_id, _ in rules[vert_id]:
-                        rules[vertex.id].get(rule_key, {}).pop(rule_id)
+    def realize_message(self, message: GraphMessage) -> tuple:
+        vert_ids = dict()
+        add_verts = set()
+        del_verts = set()
+        add_edges = set()
+        del_edges = set()
+
+        for vert_id in message.update_map[(EventType.Add, EventTarget.Vertex)]:
+            vert = Vertex(vert_id, self.clock.timestep, self.clock.timestep
+                          if vert_id not in self.vertices else self.vertices[vert_id])
+            add_verts.add(vert)
+            vert_ids[vert_id] = vert
+
+        for vert_id in message.update_map[(EventType.Delete, EventTarget.Vertex)]:
+            vert = Vertex(vert_id, self.clock.timestep, self.clock.timestep
+                          if vert_id not in self.vertices else self.vertices[vert_id])
+            if vert_id in self.vertices:
+                del_verts.add(self.vertices[vert])
+            vert_ids[vert_id] = vert
+
+        for event_type, target_set in ((EventType.Add, add_edges), (EventType.Delete, del_edges)):
+            for src, tgt, ref_vert in message.update_map[(event_type, EventTarget.Edge)]:
+                if all(v in vert_ids for v in (tgt, src, ref_vert)):
+                    edge = None
+                    if src in self.vertices and ref_vert in self.vertices[src].out_edges.id_to_vref.get(tgt, set()):
+                        edge = self.vertices[src].out_edges.id_to_vref[tgt]
+                    elif tgt in self.vertices and ref_vert in self.vertices[tgt].in_edges.id_to_vref.get(src, set()):
+                        edge = self.vertices[tgt].out_edges.id_to_vref[src]
+                    if event_type == EventType.Add and edge != None:
+                        edge = Edge(vert_ids[src], vert_ids[tgt], vert_ids[ref_vert],
+                                    self.clock.timestep, self.clock.timestep)
+                    if (edge != None):
+                        target_set.add(edge)
+
+        return add_verts, del_verts, add_edges, del_edges
 
     def split_edge_set(self, edge_set):
         primary_edge_set = {
@@ -264,25 +310,15 @@ class Graph:
         else:
             return {self.vertices[id_set]}
 
-    def update_graph(self, events: GraphMessage, vertex_rules):
+    def update_graph(self, message: GraphMessage):
 
         add_verts = set()
         add_edges = set()
         del_verts = set()
         del_edges = set()
 
-        realized_events, duplicate_records = events.realize(self)
-
-        for event_key, event_set in realized_events.items():
-            match event_key:
-                case (EventType.Add, EventTarget.Vertex):
-                    add_verts = event_set
-                case (EventType.Add, EventTarget.Edge):
-                    add_edges = event_set
-                case (EventType.Delete, EventTarget.Vertex):
-                    del_verts = event_set
-                case (EventType.Delete, EventTarget.Edge):
-                    del_edges = event_set
+        add_verts, del_verts, add_edges, del_edges = self.realize_message(
+            message)
 
         add_edges = set(
             [e for e in add_edges if e.src not in del_verts and e.tgt not in del_verts])
@@ -304,10 +340,11 @@ class Graph:
                 del self.vertices[v.id]
             # TODO: check if this is correct
             if v.edge_ref is not None:
-                if "Is" in v.get_relationships("Is>"):
-                    del_p_edges.add(v.edge_ref)
-                else:
-                    del_s_edges.add(v.edge_ref)
+                for edge in v.edge_ref:
+                    if "Is" in v.get_relationships("Is>"):
+                        del_p_edges.add(edge)
+                    else:
+                        del_s_edges.add(edge)
             lineage_del_map[v] = v.get_relationships("Is>")
             for edge_map in (v.out_edges, v.in_edges):
                 for edge_type, edge_set in edge_map.edgetype_to_edge.items():
@@ -326,6 +363,8 @@ class Graph:
                     "Is>", as_counter=True)
             if e.src in del_verts and e.tgt in del_verts:
                 continue
+            e.src.edge_ref.remove(e)
+            e.tgt.edge_ref.remove(e)
             records.add_edge(e, False)
             for v in (e.src, e.tgt):
                 if v not in del_verts:
@@ -340,6 +379,8 @@ class Graph:
 
         # HANDLE DELETED SECONDARY EDGES
         for e in del_s_edges:
+            e.src.edge_ref.remove(e)
+            e.tgt.edge_ref.remove(e)
             records.add_edge(e, False)
             for v in (e.src, e.tgt):
                 if v not in del_verts:
@@ -371,11 +412,9 @@ class Graph:
             original_set, visited, update_map, lineage_add_map, add=True)
         # END ADDED PRIMARY EDGES
 
-        # PROPAGATE LINEAGE TO NEIGHBORS
+        # PROPAGATE LINEAGE TO NEIGHBORS AND UPDATE RULES
         for lineage_map, add in ((lineage_del_map, False), (lineage_add_map, True)):
             for v, updated_lineage in lineage_map.items():
-                for _, rules in vertex_rules.items():
-                    self.update_rules(v, updated_lineage, rules, add)
                 v.propagate_lineage_delta(updated_lineage, add=add)
                 # this is about propagating changes to neighbors via remaining secondary edges
 
@@ -385,11 +424,7 @@ class Graph:
             e.src.add_edge(e, update_relationships=True)
             e.tgt.add_edge(e, update_relationships=True)
 
-        for v in del_verts:
-            for _, rules in vertex_rules.items():
-                del rules[v.id]
-
-        return records
+        return records, lineage_add_map, lineage_del_map
 
     def load_vert(self, vert):
         label = vert["label"]
@@ -404,17 +439,19 @@ class Graph:
     def load_edge(self, edge_glob):
         src_id = edge_glob["src"]
         tgt_id = edge_glob["tgt"]
+        ref_vert_id = edge_glob["ref_vert"]
         src = self.vertices[src_id]
         tgt = self.vertices[tgt_id]
+        ref_vert = self.vertices[ref_vert_id]
 
         edge_types = set([edge_glob["types"]] if isinstance(
             edge_glob["types"], str) else edge_glob["types"])
         attr_map = edge_glob.get("attr_map", dict())
 
         edge = Edge(
-            edge_types,
             src,
             tgt,
+            ref_vert,
             self.clock.timestep,
             self.clock.timestep,
             attr_map=attr_map
