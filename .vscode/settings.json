@@ -4,5 +4,9 @@
   },
   "python.formatting.provider": "none",
   "python.analysis.typeCheckingMode": "basic",
-  "dotnet.defaultSolution": "GraphmirSharp.sln"
+  "dotnet.defaultSolution": "GraphmirSharp.sln",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.acceptSuggestionOnEnter": "smart",
+  "editor.autoClosingBrackets": "never",
+  "editor.renderWhitespace": "trailing"
 }
