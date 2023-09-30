@@ -69,3 +69,19 @@ Activities
 Situations
 * Conversation
 * Fight
+
+---------------------------------------------------
+
+Goal oriented stuff.  
+
+Need high-level strategy-oriented actions.  
+Strategy first.  
+
+NPCs should be sticky. They'll be more characterful this way.  
+
+## Axes of Personality
+ * Pacifist..Murderer
+ * Genteel..Rude
+ * Honest..Liar
+
+
