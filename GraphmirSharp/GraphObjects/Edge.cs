@@ -4,13 +4,17 @@ namespace Graphmir.GraphObjects {
         public Vertex src;
         public Vertex tgt;
         public Vertex refVert;
-        public uint LastUpdated;
     
-        public Edge(Vertex src, Vertex tgt, Vertex refVert, uint lastUpdated) {
+        public Edge(Vertex src, Vertex tgt, Vertex refVert) {
             this.src = src;
             this.tgt = tgt;
             this.refVert = refVert;
-            this.LastUpdated = lastUpdated;
         }
+
+        public override int GetHashCode()
+        {
+            return new {src, tgt, refVert}.GetHashCode();
+        }
+
     }
 }
