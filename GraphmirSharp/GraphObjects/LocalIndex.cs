@@ -7,6 +7,7 @@ namespace Graphmir.GraphObjects {
         // contains labels, ref verts, and tgt verts
         // traversals are just label -(refVert/tgtVert)-> label
         
-        // should also contains invRefVert (vertices in whose local index this vertex is a ref vert)
+        // should also contains invSrcRefVert/invTgtRefVert (vertices in whose local index this vertex is a ref vert)
+
     }
 }
