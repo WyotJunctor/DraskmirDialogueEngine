@@ -3,6 +3,11 @@ namespace Graphmir.GraphObjects {
     public enum QueryTargetType { TgtVertex, RefVert, Edge }
     public enum EdgeDirection { Ingoing, Outgoing, Undirected }
 
+    public class LabelDelta {
+        public HashSet<Label> addLabels = new HashSet<Label>();
+        public HashSet<Label> delLabels = new HashSet<Label>();
+    }
+
     public class Vertex {
         public readonly Label vLabel;
         public uint lastUpdated;
@@ -14,9 +19,7 @@ namespace Graphmir.GraphObjects {
             this.localIndex = new LocalIndex(); 
         }
 
-
-        public HashSet<Label> GetLabels() {
-            return new HashSet<Label>();
+        public Vertex(Label vLabel) : this(vLabel, Clock.globalTimestamp) {
         }
 
         // delete edge how do you index? you already have the source and target vertex:
@@ -32,15 +35,43 @@ namespace Graphmir.GraphObjects {
             HashSet<Label>? refVertLabels = null, 
             HashSet<Label>? tgtVertLabels = null) 
         {
+            // TODO
             return new HashSet<T>();
         }
 
+        public void UpdateNeighborhood() {
+            // TODO
+            // if labels updated, tell invRefVerts?
+        }
+
+        public LabelDelta UpdateLabels() {
+            // TODO
+            return new LabelDelta();
+        }
+
+        public void PropagateLabels() {
+            // TODO
+        }
+
         public HashSet<Edge> GetEdges(EdgeDirection dir) {
+            // TODO
             return new HashSet<Edge>();
         }
 
         public HashSet<Vertex> GetInvRefVerts() {
+            // TODO
             return new HashSet<Vertex>();
+        }
+
+        public HashSet<Vertex> GetDependents() {
+            // TODO
+            // get childrne via edges and invRefVerts
+            return new HashSet<Vertex>();
+        }
+
+        public bool IsPrimaryRefVert() {
+            // TODO
+            return false;
         }
     }
 }

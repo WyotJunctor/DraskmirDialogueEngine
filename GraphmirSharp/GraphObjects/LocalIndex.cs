@@ -1,5 +1,6 @@
 namespace Graphmir.GraphObjects {
     public class LocalIndex {
+        // TODO
         // add object to graph
         // remove object from graph
         // given some objects, return set of return objects

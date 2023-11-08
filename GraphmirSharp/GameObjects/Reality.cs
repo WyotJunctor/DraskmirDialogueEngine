@@ -1,6 +1,10 @@
 namespace Graphmir {
     using GraphObjects;
 
+    public class Clock {
+        public static uint globalTimestamp;
+    }
+
     public class Reality {
 
         Graph graph;
