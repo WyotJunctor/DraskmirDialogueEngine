@@ -1,11 +1,18 @@
 namespace Graphmir.GraphObjects {
 
-    public enum QueryTargetType { TgtVertex, RefVert, Edge }
+    public enum QueryTargetType { TgtVertex, RefVert, Edge, TgtLabel }
     public enum EdgeDirection { Ingoing, Outgoing, Undirected }
 
     public class LabelDelta {
         public HashSet<Label> addLabels = new HashSet<Label>();
         public HashSet<Label> delLabels = new HashSet<Label>();
+
+        public LabelDelta(HashSet<Label> oldLabels, HashSet<Label> newLabels) {
+            // which labels are new? labels that exist in newLabels but not in oldLabels
+            // which labels are deleted? labels that exist in oldLabels but not in newLabels
+            this.addLabels = new HashSet<Label>(newLabels.Except(oldLabels));
+            this.delLabels = new HashSet<Label>(oldLabels.Except(newLabels));
+        }
     }
 
     public class Vertex {
@@ -13,24 +20,20 @@ namespace Graphmir.GraphObjects {
         public uint lastUpdated;
         LocalIndex localIndex;
 
+        HashSet<Label> labels = new HashSet<Label>();
+
         public Vertex(Label vLabel, uint lastUpdated) {
             this.vLabel = vLabel;
             this.lastUpdated = lastUpdated;
             this.localIndex = new LocalIndex(); 
+            labels.Add(vLabel);
         }
 
         public Vertex(Label vLabel) : this(vLabel, Clock.globalTimestamp) {
         }
 
-        // delete edge how do you index? you already have the source and target vertex:
-        // remove ref vert from local map and update in source and target vertex.
-        // propagate labels if necessary
-        // 
-        // unknownRelationship.QueryNeighborhood(QueryTargetType.Vertex, asLabel:true, outgoing:false, refVertLabels:{"Is"})
-        // get ref vert label, traverse to ref verts, traverse to edges, 
         public HashSet<T> QueryNeighborhood<T>(
             QueryTargetType queryTargetType,
-            bool asLabel = false, 
             EdgeDirection dir = EdgeDirection.Outgoing,
             HashSet<Label>? refVertLabels = null, 
             HashSet<Label>? tgtVertLabels = null) 
@@ -45,33 +48,50 @@ namespace Graphmir.GraphObjects {
         }
 
         public LabelDelta UpdateLabels() {
-            // TODO
-            return new LabelDelta();
+            // query neighborhood for 'is>' and update labels
+            HashSet<Label> newLabels = QueryNeighborhood<Label>(
+                QueryTargetType.TgtLabel, 
+                dir:EdgeDirection.Outgoing,
+                refVertLabels:new HashSet<Label>() {new Label("Is")});
+            newLabels.Add(vLabel);
+            LabelDelta labelDelta = new LabelDelta(labels, newLabels);
+            labels = newLabels;
+            PropagateLabels(labelDelta);
+            return labelDelta;
         }
 
-        public void PropagateLabels() {
-            // TODO
+        public void PropagateLabels(LabelDelta labelDelta) {
+            // pass labels to all neighbors and invRefVerts
+            HashSet<Vertex> neighbors = new HashSet<Vertex>(localIndex.invRefVerts.Union(
+                QueryNeighborhood<Vertex>(
+                    QueryTargetType.TgtVertex,
+                    dir:EdgeDirection.Undirected))
+            );
+            foreach (var neighbor in neighbors) {
+                // todo neighbor.UpdateNeighborhood()
+            }
         }
 
         public HashSet<Edge> GetEdges(EdgeDirection dir) {
-            // TODO
-            return new HashSet<Edge>();
+            // get edges in direction
+            return QueryNeighborhood<Edge>(QueryTargetType.Edge, dir:dir);
         }
 
         public HashSet<Vertex> GetInvRefVerts() {
-            // TODO
-            return new HashSet<Vertex>();
+            return localIndex.invRefVerts;
         }
 
         public HashSet<Vertex> GetDependents() {
-            // TODO
-            // get childrne via edges and invRefVerts
-            return new HashSet<Vertex>();
+            // get children via ingoing 'is' edges and invRefVerts
+            return new HashSet<Vertex>(localIndex.invRefVerts.Union(
+                QueryNeighborhood<Vertex>(
+                    QueryTargetType.TgtVertex, 
+                    dir:EdgeDirection.Ingoing,
+                    refVertLabels:new HashSet<Label>() {new Label("Is")})));
         }
 
         public bool IsPrimaryRefVert() {
-            // TODO
-            return false;
+            return labels.Overlaps(EngineConfig.primaryTypes);
         }
     }
 }

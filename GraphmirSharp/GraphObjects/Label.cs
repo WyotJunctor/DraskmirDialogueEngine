@@ -1,8 +1,8 @@
 namespace Graphmir.GraphObjects {
     public struct Label : IEquatable<Label> {
-        public int value;
+        public string value;
 
-        public Label (int value) {
+        public Label (string value) {
             this.value = value;
         }
 
@@ -34,7 +34,7 @@ namespace Graphmir.GraphObjects {
 
         public override int GetHashCode()
         {
-            return value;
+            return value.GetHashCode();
         }
     }
 }

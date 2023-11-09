@@ -1,5 +1,8 @@
 namespace Graphmir.GraphObjects {
     public class LocalIndex {
+
+        public HashSet<Vertex> invRefVerts = new HashSet<Vertex>();
+
         // TODO
         // add object to graph
         // remove object from graph

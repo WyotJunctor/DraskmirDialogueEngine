@@ -162,7 +162,6 @@ namespace Graphmir.GraphObjects {
                 // propagate labels to neighbors if neighbors not deleted?
                 // calculate label delta and add to labelMap
                 response.AddLabelDelta(vert, vert.UpdateLabels());
-                vert.PropagateLabels();
             }
         }
 
@@ -184,7 +183,7 @@ namespace Graphmir.GraphObjects {
                 realizedMessage.delSecondaryEdges.UnionWith(sEdges);
                 foreach (var invRefVert in vert.GetInvRefVerts()) {
                     if (realizedMessage.delVerts.Contains(invRefVert) == false) {
-                        // TODO* invRefVert.UpdateNeighborhood(delete vert from refVerts);
+                        // todo invRefVert.UpdateNeighborhood(delete vert from refVerts);
                         if (vert.IsPrimaryRefVert()) {
                             sourceVerts.Add(invRefVert);
                             queue.Enqueue(invRefVert);
@@ -198,7 +197,7 @@ namespace Graphmir.GraphObjects {
                 bool srcExists=false, tgtExists=false;
                 if (!realizedMessage.delVerts.Contains(edge.src)) {
                     srcExists = true;
-                    // TODO* edge.src.UpdateNeighborhood(delete (edge.refVert, edge.tgt) from local index);
+                    // todo edge.src.UpdateNeighborhood(delete (edge.refVert, edge.tgt) from local index);
                     // update response.labelDelMap
                     // add to source verts
                     sourceVerts.Add(edge.src);
@@ -206,7 +205,7 @@ namespace Graphmir.GraphObjects {
                 }
                 if (!realizedMessage.delVerts.Contains(edge.tgt)) {
                     tgtExists = true;
-                    // TODO* edge.tgt.UpdateNeighborhood(delete (edgeRefVert, edge.src) from local index);
+                    // todo edge.tgt.UpdateNeighborhood(delete (edgeRefVert, edge.src) from local index);
                 }
                 if (srcExists || tgtExists) {
                     response.updateRecord.AddEdge(edge, false);
@@ -219,8 +218,8 @@ namespace Graphmir.GraphObjects {
             // it would be dumb to add labels and then immediately remove them
             foreach (var edge in realizedMessage.delSecondaryEdges) {
                 // just remove the refVert, tgtVert edge in local index 
-                // TODO* edge.src.UpdateNeighborhood(delete (refVert, edge.tgt) from local index)
-                // TODO* edge.tgt.UpdateNeighborhood(delete (refVert, edge.src) from local index)
+                // todo edge.src.UpdateNeighborhood(delete (refVert, edge.tgt) from local index)
+                // todo edge.tgt.UpdateNeighborhood(delete (refVert, edge.src) from local index)
             }
 
             // handle added verts
@@ -235,10 +234,10 @@ namespace Graphmir.GraphObjects {
             // handle added primary edges
             foreach (var edge in realizedMessage.addPrimaryEdges) {
                 // update local index of src and tgt vert
-                // TODO* edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index);
+                // todo edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index);
                 sourceVerts.Add(edge.src);
                 queue.Enqueue(edge.src);
-                // TODO* edge.tgt.UpdateNeighborhood(add (refVert, edge.src) to local index);
+                // todo edge.tgt.UpdateNeighborhood(add (refVert, edge.src) to local index);
             }
             // propagate,
             PropagateLabels(sourceVerts, queue, response);
@@ -246,8 +245,8 @@ namespace Graphmir.GraphObjects {
             // handle added secondary edges
             foreach (var edge in realizedMessage.addSecondaryEdges) {
                 // just add refVert, tgtVert edge in local index long with labels
-                // TODO* edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index)
-                // TODO* edge.tgt.UpdateNeighborhood(add (refVert, edge.src) to local index)
+                // todo edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index)
+                // todo edge.tgt.UpdateNeighborhood(add (refVert, edge.src) to local index)
             }
 
             return response;

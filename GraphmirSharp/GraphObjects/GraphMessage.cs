@@ -35,11 +35,12 @@ namespace Graphmir.GraphObjects {
         public HashSet<EdgeContainer> delEdges = new HashSet<EdgeContainer>();
 
         public void MergeWith(GraphMessage other) {
-            // TODO
-            // put other add verts in add verts
-            // put other del verts in del verts
-            // what has priority over what?
-            throw new NotImplementedException();
+            // currently, we are allowing vertices to exist in both del verts and add verts
+            // this is because the deletion might be important independent of the vertex's re-creation
+            addVerts.UnionWith(other.addVerts);
+            delVerts.UnionWith(other.delVerts);
+            addEdges.UnionWith(other.addEdges);
+            delEdges.UnionWith(other.delEdges);
         }
     }
 
