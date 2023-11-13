@@ -16,5 +16,16 @@ namespace Graphmir
             }
             set { base[key] = value; }
         }
+
+        public TValue TryGet(TKey key) 
+        {
+            TValue val;
+            if (!TryGetValue(key, out val)) 
+            {
+                val = new TValue();
+            }
+            return val;
+        }
+        // subtract from another
     }
 }

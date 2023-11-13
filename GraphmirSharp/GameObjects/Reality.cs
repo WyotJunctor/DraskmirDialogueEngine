@@ -15,14 +15,22 @@ namespace Graphmir {
 
         public GraphMessage ReceiveMessage(GraphMessage message) {
 
-            // iteratively
-            //    apply effect rules
-            //    end if no more changes produced by effect
-            //    apply deconflict rules
+            // instantiate full message
 
-            // build a new graph message of the final,
-            // deconflicted effect deltas
-            // return that
+            // iteratively
+            // instantiate UpdateRecords
+            // merge GraphMessage into full message
+            // process GraphMessage and produce MessageResponse
+            // use MessageResponse.labelAddMap and labelDelMap to handle rule propagation
+            // use MessageResponse to update UpdateRecords
+            // use DeconflictRules on updated verts to generate GraphMessage
+            // merge GraphMessage into full message
+            // process GraphMessage and produce MessageResponse
+            // use MessageResponse.labelAddMap and labelDelMap to handle rule propagation
+            // use MessageResponse to update UpdateRecords
+            // use EffectRules on updated verts to generate GraphMessage... loop back
+
+            // return full message
 
             throw new NotImplementedException();
         }

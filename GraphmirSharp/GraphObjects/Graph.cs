@@ -1,13 +1,11 @@
 using System.Collections;
 
-
-
 namespace Graphmir.GraphObjects {
 
     public class MessageResponse {
         public UpdateRecord updateRecord = new UpdateRecord();
-        public DefaultDictionary<Vertex, HashSet<Label>> labelAddMap = new DefaultDictionary<Vertex, HashSet<Label>>();
-        public DefaultDictionary<Vertex, HashSet<Label>> labelDelMap = new DefaultDictionary<Vertex, HashSet<Label>>();
+        public Dictionary<Vertex, LabelSet> labelAddMap = new Dictionary<Vertex, LabelSet>();
+        public Dictionary<Vertex, LabelSet> labelDelMap = new Dictionary<Vertex, LabelSet>();
 
         public MessageResponse() {}
 
@@ -227,6 +225,7 @@ namespace Graphmir.GraphObjects {
                 // just add it to the dictionary
                 vertices[vert.vLabel] = vert;
                 // add label
+                response.labelAddMap[vert] = new LabelSet();
                 response.labelAddMap[vert].Add(vert.vLabel);
             }
 

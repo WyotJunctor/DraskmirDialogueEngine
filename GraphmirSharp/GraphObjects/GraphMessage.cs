@@ -4,6 +4,41 @@ namespace Graphmir.GraphObjects {
 
     public enum EventTarget { Vertex, Edge, }
 
+
+    public class LabelSet {
+
+        DefaultDictionary<Label, HashSet<Label>> labels = new DefaultDictionary<Label, HashSet<Label>>();
+
+        public LabelSet() {
+
+        }
+
+        public void Add(Label labelKey, Label labelValue) {
+            labels[labelKey].Add(labelValue);
+        }
+
+        public void Add(Label labelValue) {
+            labels[EngineConfig.primaryLabel].Add(labelValue);
+        } 
+
+        public void UnionWith(LabelSet labelSet) {
+
+        }
+
+        public bool Overlaps(Label labelKey, HashSet<Label> tgtLabels) {
+            return labels.TryGet(labelKey).Overlaps(tgtLabels);
+        }
+
+        public LabelSet Except(LabelSet labelSet) {
+            LabelSet newLabelSet = new LabelSet();
+            return newLabelSet;
+        }
+
+        public void ExceptWith(LabelSet labelSet) {
+
+        }
+    }
+
     public class EdgeContainer {
         public Label src, tgt, refVert;
 
