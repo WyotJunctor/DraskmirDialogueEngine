@@ -16,24 +16,6 @@ namespace Graphmir.GraphObjects {
             this.addLabels = newLabels.Except(oldLabels); // SetDifference(newLabels, oldLabels);
             this.delLabels = oldLabels.Except(newLabels); // SetDifference(oldLabels, newLabels); 
         }
-
-
-        // TODO: put this code in the labelSet definition
-        public Dictionary<Label, HashSet<Label>> SetDifference(
-            DefaultDictionary<Label, HashSet<Label>> srcLabels,
-            DefaultDictionary<Label, HashSet<Label>> tgtLabels) 
-        {
-            Dictionary<Label, HashSet<Label>> labelDiff = new Dictionary<Label, HashSet<Label>>();
-            
-            foreach (var keyPair in srcLabels) {
-                HashSet<Label> labels = new HashSet<Label>(tgtLabels.TryGet(keyPair.Key).Except(keyPair.Value));
-                if (labels.Count > 0) {
-                    labelDiff[keyPair.Key] = labels;
-                }
-            }
-
-            return labelDiff;
-        }
     }
 
     public class Vertex {
@@ -65,6 +47,7 @@ namespace Graphmir.GraphObjects {
 
         public void UpdateNeighborhood() {
             // TODO
+            // remember to take into account label priority
             // if labels updated, tell invRefVerts?
         }
 

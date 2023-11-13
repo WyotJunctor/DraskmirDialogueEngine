@@ -22,7 +22,10 @@ namespace Graphmir.GraphObjects {
         } 
 
         public void UnionWith(LabelSet labelSet) {
-
+            // iterate over keys and union hashsets of labels
+            foreach (var keyPair in labelSet.labels) {
+                this.labels[keyPair.Key].UnionWith(keyPair.Value);
+            }
         }
 
         public bool Overlaps(Label labelKey, HashSet<Label> tgtLabels) {
@@ -30,12 +33,27 @@ namespace Graphmir.GraphObjects {
         }
 
         public LabelSet Except(LabelSet labelSet) {
-            LabelSet newLabelSet = new LabelSet();
-            return newLabelSet;
+            LabelSet labelDiff = new LabelSet();
+            foreach (var keyPair in this.labels) {
+                HashSet<Label> labels = new HashSet<Label>(keyPair.Value.Except(labelSet.labels.TryGet(keyPair.Key)));
+                if (labels.Count > 0) {
+                    labelDiff.labels[keyPair.Key] = labels;
+                }
+            }
+            return labelDiff;
         }
 
         public void ExceptWith(LabelSet labelSet) {
-
+            List<Label> labelsToRemove = new List<Label>();
+            foreach (var keyPair in labels) {
+                keyPair.Value.ExceptWith(labelSet.labels.TryGet(keyPair.Key));
+                if (keyPair.Value.Count == 0) {
+                    labelsToRemove.Add(keyPair.Key);
+                }
+            }
+            foreach (var key in labelsToRemove) {
+                labels.Remove(key);
+            }
         }
     }
 
