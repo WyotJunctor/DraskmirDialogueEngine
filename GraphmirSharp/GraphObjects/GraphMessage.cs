@@ -17,6 +17,13 @@ namespace Graphmir.GraphObjects {
             labels[labelKey].Add(labelValue);
         }
 
+        public void RemoveValue(T labelKey, K labelValue) {
+            labels[labelKey].Remove(labelValue);
+            if (labels[labelKey].Count == 0) {
+                labels.Remove(labelKey);
+            }
+        }
+
         /*
         public void Add(T labelValue) {
             labels[EngineConfig.primaryLabel].Add(labelValue);

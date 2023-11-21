@@ -81,9 +81,22 @@ namespace Graphmir.GraphObjects {
         // add/remove refVert
         // add/remove edge between tgtVert/refVert and refVert/label
         // when you add a vert, remember to link its labels
-        public void UpdateNeighborhood<T>(GraphOp graphOp, QueryTargetType targetType, T target) {
-            // TODO
-            // if labels updated, tell invRefVerts?
+        // invRefVert.UpdateNeighborhood(delete vert from refVerts);
+        // edge.src.UpdateNeighborhood(delete (edge.refVert, edge.tgt) from local index);
+        // edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index);
+        // neighbor.UpdateNeighborhood(add your edge map/labels)
+
+
+        public void DeleteRefVert(Vertex refVert) {
+            ingoingLocalIndex.DeleteRefVert(refVert);
+            outgoingLocalIndex.DeleteRefVert(refVert);
+        }
+
+        public void DeleteEdge(Edge edge, EdgeDirection dir) {
+            var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex: outgoingLocalIndex;
+            Vertex otherVert = (dir == EdgeDirection.Ingoing) ? edge.src : edge.tgt;
+            // remove otherVert - refVert relationship from graph
+
         }
 
         public LabelDelta UpdateLabels() {

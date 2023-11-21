@@ -179,9 +179,10 @@ namespace Graphmir.GraphObjects {
                 (HashSet<Edge> pEdges, HashSet<Edge> sEdges) = SplitEdges(vert.GetEdges(EdgeDirection.Undirected));
                 realizedMessage.delPrimaryEdges.UnionWith(pEdges);
                 realizedMessage.delSecondaryEdges.UnionWith(sEdges);
+                // get the vertices in which 'vert' appears as a refVert and delete the refVert
                 foreach (var invRefVert in vert.GetInvRefVerts()) {
                     if (realizedMessage.delVerts.Contains(invRefVert) == false) {
-                        // todo invRefVert.UpdateNeighborhood(delete vert from refVerts);
+                        invRefVert.DeleteRefVert(vert);
                         if (vert.IsPrimaryRefVert()) {
                             sourceVerts.Add(invRefVert);
                             queue.Enqueue(invRefVert);
@@ -195,15 +196,14 @@ namespace Graphmir.GraphObjects {
                 bool srcExists=false, tgtExists=false;
                 if (!realizedMessage.delVerts.Contains(edge.src)) {
                     srcExists = true;
-                    // todo edge.src.UpdateNeighborhood(delete (edge.refVert, edge.tgt) from local index);
-                    // update response.labelDelMap
+                    edge.src.DeleteEdge(edge, EdgeDirection.Outgoing);
                     // add to source verts
                     sourceVerts.Add(edge.src);
                     queue.Enqueue(edge.src);
                 }
                 if (!realizedMessage.delVerts.Contains(edge.tgt)) {
                     tgtExists = true;
-                    // todo edge.tgt.UpdateNeighborhood(delete (edgeRefVert, edge.src) from local index);
+                    edge.tgt.DeleteEdge(edge, EdgeDirection.Ingoing);
                 }
                 if (srcExists || tgtExists) {
                     response.updateRecord.AddEdge(edge, false);
@@ -216,8 +216,8 @@ namespace Graphmir.GraphObjects {
             // it would be dumb to add labels and then immediately remove them
             foreach (var edge in realizedMessage.delSecondaryEdges) {
                 // just remove the refVert, tgtVert edge in local index 
-                // todo edge.src.UpdateNeighborhood(delete (refVert, edge.tgt) from local index)
-                // todo edge.tgt.UpdateNeighborhood(delete (refVert, edge.src) from local index)
+                edge.src.DeleteEdge(edge, EdgeDirection.Outgoing);
+                edge.tgt.DeleteEdge(edge, EdgeDirection.Ingoing);
             }
 
             // handle added verts
