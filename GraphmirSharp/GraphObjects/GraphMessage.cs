@@ -5,37 +5,39 @@ namespace Graphmir.GraphObjects {
     public enum EventTarget { Vertex, Edge, }
 
 
-    public class LabelSet {
+    public class EdgeMap<T, K> {
 
-        DefaultDictionary<Label, HashSet<Label>> labels = new DefaultDictionary<Label, HashSet<Label>>();
+        public DefaultDictionary<T, HashSet<K>> labels = new DefaultDictionary<T, HashSet<K>>();
 
-        public LabelSet() {
+        public EdgeMap() {
 
         }
 
-        public void Add(Label labelKey, Label labelValue) {
+        public void Add(T labelKey, K labelValue) {
             labels[labelKey].Add(labelValue);
         }
 
-        public void Add(Label labelValue) {
+        /*
+        public void Add(T labelValue) {
             labels[EngineConfig.primaryLabel].Add(labelValue);
         } 
+        */
 
-        public void UnionWith(LabelSet labelSet) {
+        public void UnionWith(EdgeMap<T, K> labelSet) {
             // iterate over keys and union hashsets of labels
             foreach (var keyPair in labelSet.labels) {
                 this.labels[keyPair.Key].UnionWith(keyPair.Value);
             }
         }
 
-        public bool Overlaps(Label labelKey, HashSet<Label> tgtLabels) {
+        public bool Overlaps(T labelKey, HashSet<K> tgtLabels) {
             return labels.TryGet(labelKey).Overlaps(tgtLabels);
         }
 
-        public LabelSet Except(LabelSet labelSet) {
-            LabelSet labelDiff = new LabelSet();
+        public EdgeMap<T, K> Except(EdgeMap<T, K> labelSet) {
+            EdgeMap<T, K> labelDiff = new EdgeMap<T, K>();
             foreach (var keyPair in this.labels) {
-                HashSet<Label> labels = new HashSet<Label>(keyPair.Value.Except(labelSet.labels.TryGet(keyPair.Key)));
+                HashSet<K> labels = new HashSet<K>(keyPair.Value.Except(labelSet.labels.TryGet(keyPair.Key)));
                 if (labels.Count > 0) {
                     labelDiff.labels[keyPair.Key] = labels;
                 }
@@ -43,8 +45,8 @@ namespace Graphmir.GraphObjects {
             return labelDiff;
         }
 
-        public void ExceptWith(LabelSet labelSet) {
-            List<Label> labelsToRemove = new List<Label>();
+        public void ExceptWith(EdgeMap<T, K> labelSet) {
+            List<T> labelsToRemove = new List<T>();
             foreach (var keyPair in labels) {
                 keyPair.Value.ExceptWith(labelSet.labels.TryGet(keyPair.Key));
                 if (keyPair.Value.Count == 0) {

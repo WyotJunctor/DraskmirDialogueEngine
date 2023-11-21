@@ -4,8 +4,8 @@ namespace Graphmir.GraphObjects {
 
     public class MessageResponse {
         public UpdateRecord updateRecord = new UpdateRecord();
-        public Dictionary<Vertex, LabelSet> labelAddMap = new Dictionary<Vertex, LabelSet>();
-        public Dictionary<Vertex, LabelSet> labelDelMap = new Dictionary<Vertex, LabelSet>();
+        public Dictionary<Vertex, EdgeMap<Label, Label>> labelAddMap = new Dictionary<Vertex, EdgeMap<Label, Label>>();
+        public Dictionary<Vertex, EdgeMap<Label, Label>> labelDelMap = new Dictionary<Vertex, EdgeMap<Label, Label>>();
 
         public MessageResponse() {}
 
@@ -225,8 +225,8 @@ namespace Graphmir.GraphObjects {
                 // just add it to the dictionary
                 vertices[vert.vLabel] = vert;
                 // add label
-                response.labelAddMap[vert] = new LabelSet();
-                response.labelAddMap[vert].Add(vert.vLabel);
+                response.labelAddMap[vert] = new EdgeMap<Label, Label>();
+                response.labelAddMap[vert].Add(vert.vLabel, EngineConfig.primaryLabel);
             }
 
             queue = new Queue<Vertex>();
