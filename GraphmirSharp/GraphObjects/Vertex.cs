@@ -96,7 +96,7 @@ namespace Graphmir.GraphObjects {
             var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex: outgoingLocalIndex;
             Vertex otherVert = (dir == EdgeDirection.Ingoing) ? edge.src : edge.tgt;
             // remove otherVert - refVert relationship from graph
-
+            targetIndex.DeleteTgtVertToRefVert(otherVert, edge.refVert);
         }
 
         public LabelDelta UpdateLabels() {
