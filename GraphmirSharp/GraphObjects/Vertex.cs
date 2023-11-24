@@ -99,6 +99,15 @@ namespace Graphmir.GraphObjects {
             targetIndex.DeleteTgtVertToRefVert(otherVert, edge.refVert);
         }
 
+        public void AddEdge(Edge edge, EdgeDirection dir) {
+            // get index and otherVert
+            var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex: outgoingLocalIndex;
+            Vertex otherVert = (dir == EdgeDirection.Ingoing) ? edge.src : edge.tgt;
+            // add each other to appropriate vertMap
+            edge.refVert.invRefVerts.Add(this);
+            targetIndex.AddTgtVertToRefVert(otherVert, edge.refVert);
+        }
+
         public LabelDelta UpdateLabels() {
             EdgeMap<Label, Label> newLabels = new EdgeMap<Label, Label>();
             // iterate over primary edges and get labels
@@ -107,11 +116,11 @@ namespace Graphmir.GraphObjects {
                     // foreach ref vert in labelToRefVert ("Is"), so the refVert 'is' an Is or Was
                     foreach (var refVert in outgoingLocalIndex.labelToRefVert[edgeLabel].labels.TryGet(EngineConfig.primaryLabel)) {
                         // foreach tgt vert in refVertToTgtVert
-                        foreach (var tgtVert in outgoingLocalIndex.refVertToTgtVert[refVert]) {
+                        foreach (var tgtVert in outgoingLocalIndex.refVertToTgtVert.TryGet(refVert)) {
                             // foreach primary edge label
                             foreach (var tgtEdgeLabel in EngineConfig.primaryTypes) {
                                 // foreach label, HashSet<Label> in tgtVertToLabel (primaryTypes), overwrite label 
-                                foreach (var tgtLabel in outgoingLocalIndex.tgtVertToLabel[tgtVert].labels.TryGet(tgtEdgeLabel)) {
+                                foreach (var tgtLabel in outgoingLocalIndex.tgtVertToLabel.TryGet(tgtVert).labels.TryGet(tgtEdgeLabel)) {
                                     if (EngineConfig.labelPriority[edgeLabel] > EngineConfig.labelPriority[tgtEdgeLabel]) {
                                         newLabels.Add(edgeLabel, tgtLabel);
                                     }
@@ -131,15 +140,27 @@ namespace Graphmir.GraphObjects {
             return labelDelta;
         }
 
+        public void UpdateNeighborLabels(Vertex neighbor, LabelDelta labelDelta, QueryTargetType queryTargetType, EdgeDirection dir) {
+            if (queryTargetType == QueryTargetType.RefVert && dir == EdgeDirection.Undirected) {
+                UpdateNeighborLabels(neighbor, labelDelta, queryTargetType, EdgeDirection.Ingoing);
+                dir = EdgeDirection.Outgoing;
+            }
+            var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex : outgoingLocalIndex;
+            targetIndex.UpdateVertLabels(queryTargetType, neighbor, labelDelta);
+        }
+
         public void PropagateLabels(LabelDelta labelDelta) {
             // pass labels to all neighbors and invRefVerts
-            HashSet<Vertex> neighbors = new HashSet<Vertex>(invRefVerts.Union(
-                QueryNeighborhoodVertex(
-                    QueryTargetType.TgtVert,
-                    dir:EdgeDirection.Undirected))
-            );
-            foreach (var neighbor in neighbors) {
-                // todo neighbor.UpdateNeighborhood(add all your labels)
+            HashSet<Vertex> ingoingNeighbors =  QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Ingoing); 
+            HashSet<Vertex> outgoingNeighbors = QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Outgoing);
+            foreach (var neighbor in ingoingNeighbors) {
+                neighbor.UpdateNeighborLabels(this, labelDelta, QueryTargetType.TgtVert, EdgeDirection.Ingoing);
+            }
+            foreach (var neighbor in outgoingNeighbors) {
+                neighbor.UpdateNeighborLabels(this, labelDelta, QueryTargetType.TgtVert, EdgeDirection.Outgoing);
+            }
+            foreach (var neighbor in invRefVerts) {
+                neighbor.UpdateNeighborLabels(this, labelDelta, QueryTargetType.RefVert, EdgeDirection.Undirected);
             }
         }
 
@@ -149,7 +170,7 @@ namespace Graphmir.GraphObjects {
             this.tgt = tgt;
             this.refVert = refVert;
         }
-        refVertToTgtVert = new Dictionary<Vertex, HashSet<Vertex>>(),
+        refVertToTgtVert = new DefaultDictionary<Vertex, HashSet<Vertex>>(),
         */
         public HashSet<Edge> GetEdges(EdgeDirection dir) {
             // get edges in direction 

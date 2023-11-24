@@ -233,10 +233,10 @@ namespace Graphmir.GraphObjects {
             // handle added primary edges
             foreach (var edge in realizedMessage.addPrimaryEdges) {
                 // update local index of src and tgt vert
-                // todo edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index);
+                edge.src.AddEdge(edge, EdgeDirection.Outgoing);
                 sourceVerts.Add(edge.src);
                 queue.Enqueue(edge.src);
-                // todo edge.tgt.UpdateNeighborhood(add (refVert, edge.src) to local index);
+                edge.tgt.AddEdge(edge, EdgeDirection.Ingoing);
             }
             // propagate,
             PropagateLabels(sourceVerts, queue, response);
@@ -244,8 +244,8 @@ namespace Graphmir.GraphObjects {
             // handle added secondary edges
             foreach (var edge in realizedMessage.addSecondaryEdges) {
                 // just add refVert, tgtVert edge in local index long with labels
-                // todo edge.src.UpdateNeighborhood(add (refVert, edge.tgt) to local index)
-                // todo edge.tgt.UpdateNeighborhood(add (refVert, edge.src) to local index)
+                edge.src.AddEdge(edge, EdgeDirection.Outgoing);
+                edge.tgt.AddEdge(edge, EdgeDirection.Ingoing);
             }
 
             return response;
