@@ -1,6 +1,6 @@
 namespace Graphmir.GraphObjects {
         public class UpdateRecord {
-        HashSet<EdgeUpdate> edges = new HashSet<EdgeUpdate>();
+        public HashSet<EdgeUpdate> edges = new HashSet<EdgeUpdate>();
 
         public void AddEdge(EdgeUpdate edge) {
             edges.Add(edge);

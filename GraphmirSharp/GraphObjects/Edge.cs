@@ -47,7 +47,7 @@ namespace Graphmir.GraphObjects {
     public class EdgeUpdate : Edge {
         public QueryTargetType queryTargetType;
         bool add;
-        Vertex invRefVert;
+        public Vertex invRefVert;
 
         public EdgeUpdate(Vertex src, Vertex tgt, Vertex refVert, Vertex invRefVert, QueryTargetType queryTargetType, bool add) : base(src, tgt, refVert) {
             this.invRefVert = invRefVert;

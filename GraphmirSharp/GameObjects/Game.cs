@@ -3,7 +3,7 @@ using Graphmir.GraphObjects;
 
 namespace Graphmir.GameObjects {
     public class Game {
-        Reality objReality;
+        ObjectiveReality objReality;
         HashSet<Entity> entities;
 
         public void Step() {
@@ -13,15 +13,24 @@ namespace Graphmir.GameObjects {
             //              maybe uses LINQ? stinky...
             GraphMessage actionsMessage = new GraphMessage();
             foreach (Entity entity in entities) {
-                actionsMessage.UpdateFrom(entity.ChooseAction());
+                actionsMessage.MergeWith(entity.ChooseAction());
             }
 
-            GraphMessage resultsMessage = objReality.ReceiveMessage(actionsMessage);
+        }
+
+        public void ProcessMessage(GraphMessage message) {
+            GraphMessage resultsMessage = objReality.ReceiveMessage(message);
 
             foreach (Entity entity in entities) {
                 entity.Observe(resultsMessage);
             }
+        }
 
+        // TODO implement and include rule map templates when spawning entities
+        public void SpawnEntity(GraphMessage baseConceptMap, GraphMessage spawnMessage) {
+            Entity entity = new Entity(baseConceptMap);
+            ProcessMessage(spawnMessage);
+            entity.ObserveSpawn(objReality.GetVisibleGraph(entity.egoLabel));
         }
     }
 }
