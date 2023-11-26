@@ -84,6 +84,17 @@ namespace Graphmir.GraphObjects {
             // iterate over add vertices, if exists, add to the thing
             RealizedMessage realizedMessage = new RealizedMessage();
             Dictionary<Label, Vertex> realizedVerts = new Dictionary<Label, Vertex>();
+
+            // iterate over del vertices, if exists, add to the thing
+            foreach (var vLabel in message.delVerts) {
+                if (vertices.ContainsKey(vLabel)) {
+                    realizedMessage.delVerts.Add(new Vertex(vLabel));
+                }
+                else if (message.addVerts.Contains(vLabel)) {
+                    message.addVerts.Remove(vLabel);
+                }
+            }
+
             foreach (var vLabel in message.addVerts) {
                 if (!vertices.ContainsKey(vLabel)) {
                     var realizedVert = new Vertex(vLabel);
@@ -91,15 +102,10 @@ namespace Graphmir.GraphObjects {
                     realizedVerts[vLabel] = realizedVert;
                 }
             }
-            // iterate over del vertices, if exists, add to the thing
-            foreach (var vLabel in message.delVerts) {
-                if (vertices.ContainsKey(vLabel)) {
-                    realizedMessage.delVerts.Add(new Vertex(vLabel));
-                }
-            }
-            foreach (var edge in message.addEdges) {
+
+            foreach (var edge in message.delEdges) {
                 // check src, tgt, and ref exists in graph or add verts
-                var realizedEdge = RealizeEdge(edge, message, realizedVerts);
+                var realizedEdge = RealizeEdge(edge);
                 if (realizedEdge != null) {
                     if (realizedEdge.refVert.IsPrimaryRefVert()) {
                         realizedMessage.addPrimaryEdges.Add(realizedEdge);
@@ -107,11 +113,15 @@ namespace Graphmir.GraphObjects {
                     else {
                         realizedMessage.delPrimaryEdges.Add(realizedEdge);
                     }
-                } 
+                }
+                else if (message.addEdges.Contains(edge)) {
+                    message.addEdges.Remove(edge);
+                }
             }
-            foreach (var edge in message.delEdges) {
+
+            foreach (var edge in message.addEdges) {
                 // check src, tgt, and ref exists in graph or add verts
-                var realizedEdge = RealizeEdge(edge);
+                var realizedEdge = RealizeEdge(edge, message, realizedVerts);
                 if (realizedEdge != null) {
                     if (realizedEdge.refVert.IsPrimaryRefVert()) {
                         realizedMessage.addPrimaryEdges.Add(realizedEdge);
@@ -183,6 +193,8 @@ namespace Graphmir.GraphObjects {
                 foreach (var invRefVert in vert.GetInvRefVerts()) {
                     if (realizedMessage.delVerts.Contains(invRefVert) == false) {
                         invRefVert.DeleteRefVert(vert);
+                        // add to UpdateRecord
+                        response.updateRecord.AddEdge(new EdgeUpdate(vert, invRefVert, QueryTargetType.RefVert, false));
                         if (vert.IsPrimaryRefVert()) {
                             sourceVerts.Add(invRefVert);
                             queue.Enqueue(invRefVert);
@@ -193,21 +205,17 @@ namespace Graphmir.GraphObjects {
 
             // handle deleted primary edges
             foreach (var edge in realizedMessage.delPrimaryEdges) {
-                bool srcExists=false, tgtExists=false;
                 if (!realizedMessage.delVerts.Contains(edge.src)) {
-                    srcExists = true;
                     edge.src.DeleteEdge(edge, EdgeDirection.Outgoing);
                     // add to source verts
                     sourceVerts.Add(edge.src);
                     queue.Enqueue(edge.src);
                 }
                 if (!realizedMessage.delVerts.Contains(edge.tgt)) {
-                    tgtExists = true;
                     edge.tgt.DeleteEdge(edge, EdgeDirection.Ingoing);
                 }
-                if (srcExists || tgtExists) {
-                    response.updateRecord.AddEdge(edge, false);
-                }
+                // add to update record
+                response.updateRecord.AddEdge(new EdgeUpdate(edge, QueryTargetType.Edge, false));
             }
             PropagateLabels(sourceVerts, queue, response);
 
@@ -218,6 +226,8 @@ namespace Graphmir.GraphObjects {
                 // just remove the refVert, tgtVert edge in local index 
                 edge.src.DeleteEdge(edge, EdgeDirection.Outgoing);
                 edge.tgt.DeleteEdge(edge, EdgeDirection.Ingoing);
+                // add to update record
+                response.updateRecord.AddEdge(new EdgeUpdate(edge, QueryTargetType.Edge, false));
             }
 
             // handle added verts
@@ -237,6 +247,8 @@ namespace Graphmir.GraphObjects {
                 sourceVerts.Add(edge.src);
                 queue.Enqueue(edge.src);
                 edge.tgt.AddEdge(edge, EdgeDirection.Ingoing);
+                // add to update record
+                response.updateRecord.AddEdge(new EdgeUpdate(edge, QueryTargetType.Edge, true));
             }
             // propagate,
             PropagateLabels(sourceVerts, queue, response);
@@ -246,6 +258,8 @@ namespace Graphmir.GraphObjects {
                 // just add refVert, tgtVert edge in local index long with labels
                 edge.src.AddEdge(edge, EdgeDirection.Outgoing);
                 edge.tgt.AddEdge(edge, EdgeDirection.Ingoing);
+                // add to update record
+                response.updateRecord.AddEdge(new EdgeUpdate(edge, QueryTargetType.Edge, true));
             }
 
             return response;
