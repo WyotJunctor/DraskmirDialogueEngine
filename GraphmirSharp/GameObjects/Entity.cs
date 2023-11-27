@@ -5,12 +5,10 @@ namespace Graphmir.GameObjects {
         ChooseMaker chooseMaker;
         
         public Entity(
-            GraphMessage baseConceptMap,             
-            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
-            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap,
-            Dictionary<Label, List<RuleFactory>> spawnRuleFactoryMap) 
+            SubjectiveReality reality, ChooseMaker chooseMaker) 
         {
-            subjReality = new SubjectiveReality(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap, spawnRuleFactoryMap);
+            subjReality = reality;
+            this.chooseMaker = chooseMaker;
         }
 
         public GraphMessage ObserveSpawn(GraphMessage message) {

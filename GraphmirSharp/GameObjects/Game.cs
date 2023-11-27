@@ -4,7 +4,11 @@ using Graphmir.GraphObjects;
 namespace Graphmir.GameObjects {
     public class Game {
         ObjectiveReality objReality;
-        HashSet<Entity> entities;
+        HashSet<Entity> entities = new HashSet<Entity>();
+
+        public Game(ObjectiveReality reality) {
+            objReality = reality;
+        }
 
         public void Step() {
 
@@ -26,14 +30,8 @@ namespace Graphmir.GameObjects {
             }
         }
 
-        public void SpawnEntity(
-            GraphMessage baseConceptMap, 
-            GraphMessage spawnMessage, 
-            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
-            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap,
-            Dictionary<Label, List<RuleFactory>> spawnRuleFactoryMap) 
+        public void SpawnEntity(Entity entity, GraphMessage spawnMessage) 
         {
-            Entity entity = new Entity(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap, spawnRuleFactoryMap);
             ProcessMessage(spawnMessage);
             entity.ObserveSpawn(objReality.GetVisibleGraph(entity.subjReality.egoLabel));
             if (entity.subjReality.egoLabel != null)
