@@ -1,7 +1,7 @@
 namespace Graphmir.GameObjects {
     using Graphmir.GraphObjects;
     public class ChooseMaker {
-        public GraphMessage MakeChoose(Label egoLabel, Reality reality) {
+        public GraphMessage MakeChoose(SubjectiveReality reality) {
             throw new NotImplementedException();
         }
     }

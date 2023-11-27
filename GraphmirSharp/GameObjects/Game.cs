@@ -26,11 +26,20 @@ namespace Graphmir.GameObjects {
             }
         }
 
-        // TODO implement and include rule map templates when spawning entities
-        public void SpawnEntity(GraphMessage baseConceptMap, GraphMessage spawnMessage) {
-            Entity entity = new Entity(baseConceptMap);
+        public void SpawnEntity(
+            GraphMessage baseConceptMap, 
+            GraphMessage spawnMessage, 
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap,
+            Dictionary<Label, List<RuleFactory>> spawnRuleFactoryMap) 
+        {
+            Entity entity = new Entity(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap, spawnRuleFactoryMap);
             ProcessMessage(spawnMessage);
-            entity.ObserveSpawn(objReality.GetVisibleGraph(entity.egoLabel));
+            entity.ObserveSpawn(objReality.GetVisibleGraph(entity.subjReality.egoLabel));
+            if (entity.subjReality.egoLabel != null)
+            {
+                entities.Add(entity);
+            }
         }
     }
 }

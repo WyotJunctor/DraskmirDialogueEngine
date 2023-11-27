@@ -6,6 +6,15 @@ namespace Graphmir {
     }
 
     public class Rule {
+
+        protected Graph graph;
+        protected Vertex vert;
+
+        public Rule(Graph graph, Vertex vert) {
+            this.graph = graph;
+            this.vert = vert;
+        }
+
         public virtual GraphMessage CheckRule(Vertex vert, EdgeUpdate edgeUpdate) {
             return new GraphMessage();
         } 
@@ -13,24 +22,25 @@ namespace Graphmir {
         public virtual Rule AddRule(Vertex vert) {
             return this;
         }
-
-        public override int GetHashCode()
-        {
-            // todo get hash code correctly for checking when to remove rule
-            return base.GetHashCode();
-        }
-    }
-
-    public class CopyRule : Rule {
-        // todo, when added, return a copy of this rule
-        public override Rule AddRule(Vertex vert)
-        {
-            return new CopyRule();
-        }
     }
 
     public class ReferenceRule : Rule {
-        // todo, when added, return reference to original rule
+        public ReferenceRule(Graph graph, Vertex vert) : base(graph, vert) {}
+    }
+
+    public class CopyRule : Rule {
+
+        public CopyRule(Graph graph, Vertex vert) : base(graph, vert) {}
+
+        public override Rule AddRule(Vertex vert)
+        {
+            return new CopyRule(graph, vert);
+        }
+
+        public override int GetHashCode()
+        {
+            return GetType().GetHashCode();
+        }
     }
 
     public class RuleMap {
@@ -58,21 +68,35 @@ namespace Graphmir {
         }
     }
 
+    public delegate Rule RuleFactory(Graph graph, Vertex vert);
+
     public class Reality {
 
-        Graph graph;
+        protected Graph graph;
         // structure which maps vertices to rules
         RuleMap deconflictRules = new RuleMap();
         RuleMap effectRules = new RuleMap();
-        RuleMap spawnRules = new RuleMap();
 
-        public Reality(GraphMessage baseConceptMap) {
+        public Reality(
+            GraphMessage baseConceptMap,             
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap) 
+        {
             graph = new Graph();
             graph.UpdateFrom(baseConceptMap);
-            // TODO, receive rule map templates and instantiate them
+            InstantiateRules(deconflictRuleFactoryMap, deconflictRules);
+            InstantiateRules(effectRuleFactoryMap, effectRules);
         }
 
-        GraphMessage ProcessRules(UpdateRecord updateRecord, RuleMap ruleMap) {
+        public void InstantiateRules(Dictionary<Label, List<RuleFactory>> ruleFactoryMap, RuleMap ruleMap) {
+            foreach (var keyPair in ruleFactoryMap) {
+                foreach (var ruleFactory in keyPair.Value) {
+                    ruleMap.inherentRules[keyPair.Key].Add(ruleFactory(graph, graph.vertices[keyPair.Key]));
+                }
+            }
+        }
+
+        protected GraphMessage ProcessRules(UpdateRecord updateRecord, RuleMap ruleMap) {
             GraphMessage message = new GraphMessage();
             // iterate over rules of src, tgt, refVert, and invRefVert?
             // check rules and merge into graph message
@@ -86,7 +110,7 @@ namespace Graphmir {
             return message;
         }
 
-        void PropagateRules(MessageResponse response) {
+        protected void PropagateRules(MessageResponse response) {
             foreach (var keyPair in response.labelDelMap) {
                 Vertex vert = keyPair.Key;
                 foreach (Label label in response.labelDelMap[vert].labels.TryGet(EngineConfig.primaryLabel)) {
@@ -100,19 +124,12 @@ namespace Graphmir {
             }
         }
 
-        UpdateRecord UpdateGraph(GraphMessage message) {
+        protected UpdateRecord UpdateGraph(GraphMessage message) {
             // process GraphMessage and produce MessageResponse
             MessageResponse response = graph.UpdateFrom(message);
             // use MessageResponse.labelAddMap and labelDelMap to handle rule propagation
             PropagateRules(response);
             return response.updateRecord;
-        }
-
-        public GraphMessage ReceiveSpawnMessage(GraphMessage message) {
-            GraphMessage fullMessage = message;
-            UpdateRecord updateRecord = UpdateGraph(message);
-            fullMessage.MergeWith(ProcessRules(updateRecord, spawnRules));
-            return ReceiveMessage(fullMessage);
         }
 
         public GraphMessage ReceiveMessage(GraphMessage message) {
@@ -146,9 +163,43 @@ namespace Graphmir {
 
     public class ObjectiveReality : Reality {
 
-        public ObjectiveReality(GraphMessage baseConceptMap) : base(baseConceptMap) {}
+        public ObjectiveReality(
+            GraphMessage baseConceptMap,             
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap) : base(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap) {}
         public GraphMessage GetVisibleGraph(Label label) {
             return new GraphMessage();
+        }
+    }
+
+    public class SubjectiveReality : Reality {
+        RuleMap spawnRules = new RuleMap();
+
+        public Label egoLabel;
+
+        public SubjectiveReality(
+            GraphMessage baseConceptMap,             
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap,
+            Dictionary<Label, List<RuleFactory>> spawnRuleFactoryMap) : base(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap) {
+                InstantiateRules(spawnRuleFactoryMap, spawnRules);
+            }
+
+        public GraphMessage ReceiveSpawnMessage(GraphMessage message) {
+            GraphMessage fullMessage = message;
+            UpdateRecord updateRecord = UpdateGraph(message);
+            fullMessage.MergeWith(ProcessRules(updateRecord, spawnRules));
+
+            egoLabel = GetEgoLabel().Value;
+            return ReceiveMessage(fullMessage);
+        }
+
+        public Label? GetEgoLabel() {
+            Vertex? egoInstance = graph.vertices[new Label("Ego")].QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Ingoing, refVertLabels:new HashSet<Label>() {new Label("Is")}, tgtVertLabels:new HashSet<Label>() {new Label("Instance")}).FirstOrDefault();
+            if (egoInstance == null) {
+                return null;
+            }
+            return egoInstance.vLabel;
         }
     }
 }

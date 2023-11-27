@@ -1,18 +1,20 @@
 namespace Graphmir.GameObjects {
     using Graphmir.GraphObjects;
     public class Entity {
-        public Label egoLabel;
-        Reality subjReality;
+        public SubjectiveReality subjReality;
         ChooseMaker chooseMaker;
-
-        // todo include rule map templates when spawning
-        // todo fetch egoLabel
-        public Entity(GraphMessage baseConceptMap) {
-            subjReality = new Reality(baseConceptMap);
+        
+        public Entity(
+            GraphMessage baseConceptMap,             
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap,
+            Dictionary<Label, List<RuleFactory>> spawnRuleFactoryMap) 
+        {
+            subjReality = new SubjectiveReality(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap, spawnRuleFactoryMap);
         }
 
-        public void ObserveSpawn(GraphMessage message) {
-            subjReality.ReceiveSpawnMessage(message);
+        public GraphMessage ObserveSpawn(GraphMessage message) {
+            return subjReality.ReceiveSpawnMessage(message);
         }
 
         public void Observe(GraphMessage eventsMessage) {
@@ -20,7 +22,7 @@ namespace Graphmir.GameObjects {
         }
 
         public GraphMessage ChooseAction() {
-            return chooseMaker.MakeChoose(egoLabel, subjReality);
+            return chooseMaker.MakeChoose(subjReality);
         }
     }
 }
