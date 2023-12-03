@@ -1,5 +1,5 @@
 namespace Graphmir.GraphObjects {
-    
+
     public class EdgeMap<T, K> {
 
         public DefaultDictionary<T, HashSet<K>> labels = new DefaultDictionary<T, HashSet<K>>();
@@ -22,7 +22,7 @@ namespace Graphmir.GraphObjects {
         /*
         public void Add(T labelValue) {
             labels[EngineConfig.primaryLabel].Add(labelValue);
-        } 
+        }
         */
 
         public void UnionWith(EdgeMap<T, K> labelSet) {

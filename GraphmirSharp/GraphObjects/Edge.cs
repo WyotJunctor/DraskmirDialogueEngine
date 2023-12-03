@@ -4,7 +4,7 @@ namespace Graphmir.GraphObjects {
         public Vertex src = null;
         public Vertex tgt = null;
         public Vertex refVert = null;
-    
+
         public Edge(Vertex src, Vertex tgt, Vertex refVert) {
             this.src = src;
             this.tgt = tgt;
@@ -23,7 +23,7 @@ namespace Graphmir.GraphObjects {
     public class EdgeContainer {
         public Label src, tgt, refVert;
 
-        public EdgeContainer(Label src, Label tgt, Label refVert) 
+        public EdgeContainer(Label src, Label tgt, Label refVert)
         {
             this.src = src;
             this.tgt = tgt;
@@ -32,9 +32,9 @@ namespace Graphmir.GraphObjects {
 
         public override bool Equals(object? obj)
         {
-            return obj is EdgeContainer edge && 
-                this.src == edge.src && 
-                this.tgt == edge.tgt && 
+            return obj is EdgeContainer edge &&
+                this.src == edge.src &&
+                this.tgt == edge.tgt &&
                 this.refVert == edge.refVert;
         }
 

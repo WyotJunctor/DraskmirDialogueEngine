@@ -8,9 +8,9 @@ namespace Graphmir.GraphObjects {
 
         public static bool operator ==(Label obj1, Label obj2)
         {
-            if (ReferenceEquals(obj1, obj2)) 
+            if (ReferenceEquals(obj1, obj2))
                 return true;
-            if (ReferenceEquals(obj1, null)) 
+            if (ReferenceEquals(obj1, null))
                 return false;
             if (ReferenceEquals(obj2, null))
                 return false;

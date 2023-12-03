@@ -3,9 +3,9 @@ namespace Graphmir.GameObjects {
     public class Entity {
         public SubjectiveReality subjReality;
         ChooseMaker chooseMaker;
-        
+
         public Entity(
-            SubjectiveReality reality, ChooseMaker chooseMaker) 
+            SubjectiveReality reality, ChooseMaker chooseMaker)
         {
             subjReality = reality;
             this.chooseMaker = chooseMaker;

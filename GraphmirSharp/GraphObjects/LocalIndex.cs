@@ -1,20 +1,20 @@
 namespace Graphmir.GraphObjects {
     public class LocalIndex {
 
-        public DefaultDictionary<Vertex, EdgeMap<Label, Label>> 
-            refVertToLabel = new DefaultDictionary<Vertex, EdgeMap<Label, Label>>(), 
+        public DefaultDictionary<Vertex, EdgeMap<Label, Label>>
+            refVertToLabel = new DefaultDictionary<Vertex, EdgeMap<Label, Label>>(),
             tgtVertToLabel = new DefaultDictionary<Vertex, EdgeMap<Label, Label>>();
-        public DefaultDictionary<Label, EdgeMap<Label, Vertex>> 
+        public DefaultDictionary<Label, EdgeMap<Label, Vertex>>
             labelToRefVert = new DefaultDictionary<Label, EdgeMap<Label, Vertex>>(),
             labelToTgtVert = new DefaultDictionary<Label, EdgeMap<Label, Vertex>>();
-        public DefaultDictionary<Vertex, HashSet<Vertex>> 
-            refVertToTgtVert = new DefaultDictionary<Vertex, HashSet<Vertex>>(), 
+        public DefaultDictionary<Vertex, HashSet<Vertex>>
+            refVertToTgtVert = new DefaultDictionary<Vertex, HashSet<Vertex>>(),
             tgtVertToRefVert = new DefaultDictionary<Vertex, HashSet<Vertex>>();
 
         void DeleteVertFromLabelMap(
-            Vertex vert, 
-            Dictionary<Vertex, EdgeMap<Label, Label>> vertTolabelMap, 
-            Dictionary<Label, EdgeMap<Label, Vertex>> labelToVertMap) 
+            Vertex vert,
+            Dictionary<Vertex, EdgeMap<Label, Label>> vertTolabelMap,
+            Dictionary<Label, EdgeMap<Label, Vertex>> labelToVertMap)
         {
             foreach (var keyPair in vertTolabelMap[vert].labels) {
                 // label, hashSet
@@ -46,7 +46,7 @@ namespace Graphmir.GraphObjects {
             }
             refVertToTgtVert.Remove(refVert);
             DeleteVertFromLabelMap(refVert, refVertToLabel, labelToRefVert);
-        } 
+        }
 
         public bool DeleteVertConnection(Vertex srcVert, Vertex dstVert, Dictionary<Vertex, HashSet<Vertex>> vertMap) {
             vertMap[srcVert].Remove(dstVert);
@@ -79,10 +79,10 @@ namespace Graphmir.GraphObjects {
         }
 
         /*
-        public Dictionary<Vertex, EdgeMap<Label, Label>> 
-            refVertToLabel = new Dictionary<Vertex, EdgeMap<Label, Label>>(), 
+        public Dictionary<Vertex, EdgeMap<Label, Label>>
+            refVertToLabel = new Dictionary<Vertex, EdgeMap<Label, Label>>(),
             tgtVertToLabel = new Dictionary<Vertex, EdgeMap<Label, Label>>();
-        public Dictionary<Label, EdgeMap<Label, Vertex>> 
+        public Dictionary<Label, EdgeMap<Label, Vertex>>
             labelToRefVert = new Dictionary<Label, EdgeMap<Label, Vertex>>(),
             labelToTgtVert = new Dictionary<Label, EdgeMap<Label, Vertex>>();
         */
@@ -114,7 +114,7 @@ namespace Graphmir.GraphObjects {
                         if (labelToVertMap[label].labels.Count == 0) {
                             labelToVertMap.Remove(label);
                         }
-                        // if vert has no more labels, remove? 
+                        // if vert has no more labels, remove?
                         // I think we can ignore this for now since a vertex will never end up with zero labels as a result of this method
                     }
                 }

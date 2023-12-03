@@ -30,7 +30,7 @@ namespace Graphmir.GameObjects {
             }
         }
 
-        public void SpawnEntity(Entity entity, GraphMessage spawnMessage) 
+        public void SpawnEntity(Entity entity, GraphMessage spawnMessage)
         {
             ProcessMessage(spawnMessage);
             entity.ObserveSpawn(objReality.GetVisibleGraph(entity.subjReality.egoLabel));

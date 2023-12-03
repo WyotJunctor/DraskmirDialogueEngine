@@ -17,17 +17,17 @@ namespace Graphmir.GraphObjects {
     }
 
     public class Graph {
-  
+
         public Dictionary<Label, Vertex> vertices = new Dictionary<Label, Vertex>();
 
         class RealizedMessage {
-            public HashSet<Vertex> 
-                addVerts = new HashSet<Vertex>(), 
+            public HashSet<Vertex>
+                addVerts = new HashSet<Vertex>(),
                 delVerts = new HashSet<Vertex>();
-            public HashSet<Edge> 
-                addPrimaryEdges = new HashSet<Edge>(), 
+            public HashSet<Edge>
+                addPrimaryEdges = new HashSet<Edge>(),
                 addSecondaryEdges = new HashSet<Edge>(),
-                delPrimaryEdges = new HashSet<Edge>(), 
+                delPrimaryEdges = new HashSet<Edge>(),
                 delSecondaryEdges = new HashSet<Edge>();
         }
 
@@ -49,9 +49,9 @@ namespace Graphmir.GraphObjects {
         }
 
         public bool CheckEdgeRef(
-            Label vLabel, 
-            ref Vertex vertRef, 
-            GraphMessage message, 
+            Label vLabel,
+            ref Vertex vertRef,
+            GraphMessage message,
             Dictionary<Label, Vertex> realizedVerts) {
 
             if (vertices.ContainsKey(vLabel)) {
@@ -68,7 +68,7 @@ namespace Graphmir.GraphObjects {
 
         public Edge RealizeEdge(
             EdgeContainer edge,
-            GraphMessage message=null, 
+            GraphMessage message=null,
             Dictionary<Label, Vertex> realizedVerts=null) {
 
             Edge realizedEdge = new Edge();
@@ -109,7 +109,7 @@ namespace Graphmir.GraphObjects {
                 if (realizedEdge != null) {
                     if (realizedEdge.refVert.IsPrimaryRefVert()) {
                         realizedMessage.addPrimaryEdges.Add(realizedEdge);
-                    }   
+                    }
                     else {
                         realizedMessage.delPrimaryEdges.Add(realizedEdge);
                     }
@@ -125,11 +125,11 @@ namespace Graphmir.GraphObjects {
                 if (realizedEdge != null) {
                     if (realizedEdge.refVert.IsPrimaryRefVert()) {
                         realizedMessage.addPrimaryEdges.Add(realizedEdge);
-                    }   
+                    }
                     else {
                         realizedMessage.delPrimaryEdges.Add(realizedEdge);
                     }
-                } 
+                }
             }
             return realizedMessage;
         }
@@ -220,10 +220,10 @@ namespace Graphmir.GraphObjects {
             PropagateLabels(sourceVerts, queue, response);
 
             // handle deleted secondary edges
-            // we do this before added primary edges because 
+            // we do this before added primary edges because
             // it would be dumb to add labels and then immediately remove them
             foreach (var edge in realizedMessage.delSecondaryEdges) {
-                // just remove the refVert, tgtVert edge in local index 
+                // just remove the refVert, tgtVert edge in local index
                 edge.src.DeleteEdge(edge, EdgeDirection.Outgoing);
                 edge.tgt.DeleteEdge(edge, EdgeDirection.Ingoing);
                 // add to update record

@@ -17,7 +17,7 @@ namespace Graphmir {
 
         public virtual GraphMessage CheckRule(Vertex vert, EdgeUpdate edgeUpdate) {
             return new GraphMessage();
-        } 
+        }
 
         public virtual Rule AddRule(Vertex vert) {
             return this;
@@ -78,9 +78,9 @@ namespace Graphmir {
         RuleMap effectRules = new RuleMap();
 
         public Reality(
-            GraphMessage baseConceptMap,             
-            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
-            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap) 
+            GraphMessage baseConceptMap,
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap,
+            Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap)
         {
             graph = new Graph();
             graph.UpdateFrom(baseConceptMap);
@@ -141,7 +141,7 @@ namespace Graphmir {
             // iteratively
             while (fullMessageUpdated == true) {
                 // instantiate UpdateRecords
-                UpdateRecord updateRecord = new UpdateRecord(); 
+                UpdateRecord updateRecord = new UpdateRecord();
                 // merge GraphMessage into full message
                 fullMessageUpdated = fullMessage.MergeWith(message);
                 // use MessageResponse to update UpdateRecords
@@ -164,8 +164,8 @@ namespace Graphmir {
     public class ObjectiveReality : Reality {
 
         public ObjectiveReality(
-            GraphMessage baseConceptMap,             
-            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            GraphMessage baseConceptMap,
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap,
             Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap) : base(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap) {}
         public GraphMessage GetVisibleGraph(Label label) {
             return new GraphMessage();
@@ -178,8 +178,8 @@ namespace Graphmir {
         public Label egoLabel;
 
         public SubjectiveReality(
-            GraphMessage baseConceptMap,             
-            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap, 
+            GraphMessage baseConceptMap,
+            Dictionary<Label, List<RuleFactory>> deconflictRuleFactoryMap,
             Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap,
             Dictionary<Label, List<RuleFactory>> spawnRuleFactoryMap) : base(baseConceptMap, deconflictRuleFactoryMap, effectRuleFactoryMap) {
                 InstantiateRules(spawnRuleFactoryMap, spawnRules);

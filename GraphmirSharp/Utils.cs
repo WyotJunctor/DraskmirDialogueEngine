@@ -17,10 +17,10 @@ namespace Graphmir
             set { base[key] = value; }
         }
 
-        public TValue TryGet(TKey key) 
+        public TValue TryGet(TKey key)
         {
             TValue val;
-            if (!TryGetValue(key, out val)) 
+            if (!TryGetValue(key, out val))
             {
                 val = new TValue();
             }
@@ -30,6 +30,6 @@ namespace Graphmir
 
     public static class DictionaryExtensionMethods {
 
-        
+
     }
 }

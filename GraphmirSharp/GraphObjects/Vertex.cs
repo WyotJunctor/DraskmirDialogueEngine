@@ -13,9 +13,9 @@ namespace Graphmir.GraphObjects {
             EdgeMap<Label, Label> newLabels) {
             // which labels are new? labels that exist in newLabels but not in oldLabels
             // which labels are deleted? labels that exist in oldLabels but not in newLabels
-            
+
             this.addLabels = newLabels.Except(oldLabels); // SetDifference(newLabels, oldLabels);
-            this.delLabels = oldLabels.Except(newLabels); // SetDifference(oldLabels, newLabels); 
+            this.delLabels = oldLabels.Except(newLabels); // SetDifference(oldLabels, newLabels);
         }
     }
 
@@ -30,7 +30,7 @@ namespace Graphmir.GraphObjects {
         public Vertex(Label vLabel, uint lastUpdated) {
             this.vLabel = vLabel;
             this.lastUpdated = lastUpdated;
-            this.outgoingLocalIndex = new LocalIndex(); 
+            this.outgoingLocalIndex = new LocalIndex();
             this.ingoingLocalIndex = new LocalIndex();
             labels.Add(vLabel, EngineConfig.primaryLabel);
         }
@@ -46,7 +46,7 @@ namespace Graphmir.GraphObjects {
         public HashSet<Vertex> QueryNeighborhoodVertex (
             QueryTargetType queryTargetType,
             EdgeDirection dir,
-            HashSet<Label>? refVertLabels = null, 
+            HashSet<Label>? refVertLabels = null,
             HashSet<Label>? tgtVertLabels = null)
         {
             if (dir == EdgeDirection.Undirected) {
@@ -59,9 +59,9 @@ namespace Graphmir.GraphObjects {
             }
             LocalIndex targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex : outgoingLocalIndex;
             QueryTargetType srcType = queryTargetType;
-            QueryTargetType dstType = (queryTargetType == QueryTargetType.RefVert) ? QueryTargetType.TgtVert : QueryTargetType.RefVert;  
+            QueryTargetType dstType = (queryTargetType == QueryTargetType.RefVert) ? QueryTargetType.TgtVert : QueryTargetType.RefVert;
             HashSet<Label>? srcLabels = (queryTargetType == QueryTargetType.RefVert) ? refVertLabels: tgtVertLabels;
-            HashSet<Label>? dstLabels = (queryTargetType == QueryTargetType.RefVert) ? tgtVertLabels: refVertLabels; 
+            HashSet<Label>? dstLabels = (queryTargetType == QueryTargetType.RefVert) ? tgtVertLabels: refVertLabels;
 
             HashSet<Vertex> srcVerts = new HashSet<Vertex>();
             if (srcLabels != null) {
@@ -119,7 +119,7 @@ namespace Graphmir.GraphObjects {
                         foreach (var tgtVert in outgoingLocalIndex.refVertToTgtVert.TryGet(refVert)) {
                             // foreach primary edge label
                             foreach (var tgtEdgeLabel in EngineConfig.primaryTypes) {
-                                // foreach label, HashSet<Label> in tgtVertToLabel (primaryTypes), overwrite label 
+                                // foreach label, HashSet<Label> in tgtVertToLabel (primaryTypes), overwrite label
                                 foreach (var tgtLabel in outgoingLocalIndex.tgtVertToLabel.TryGet(tgtVert).labels.TryGet(tgtEdgeLabel)) {
                                     if (EngineConfig.labelPriority[edgeLabel] > EngineConfig.labelPriority[tgtEdgeLabel]) {
                                         newLabels.Add(edgeLabel, tgtLabel);
@@ -130,7 +130,7 @@ namespace Graphmir.GraphObjects {
                                 }
                             }
                         }
-                    }     
+                    }
                 }
             }
             newLabels.Add(EngineConfig.primaryLabel, vLabel);
@@ -151,7 +151,7 @@ namespace Graphmir.GraphObjects {
 
         public void PropagateLabels(LabelDelta labelDelta) {
             // pass labels to all neighbors and invRefVerts
-            HashSet<Vertex> ingoingNeighbors =  QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Ingoing); 
+            HashSet<Vertex> ingoingNeighbors =  QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Ingoing);
             HashSet<Vertex> outgoingNeighbors = QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Outgoing);
             foreach (var neighbor in ingoingNeighbors) {
                 neighbor.UpdateNeighborLabels(this, labelDelta, QueryTargetType.TgtVert, EdgeDirection.Ingoing);
@@ -173,7 +173,7 @@ namespace Graphmir.GraphObjects {
         refVertToTgtVert = new DefaultDictionary<Vertex, HashSet<Vertex>>(),
         */
         public HashSet<Edge> GetEdges(EdgeDirection dir) {
-            // get edges in direction 
+            // get edges in direction
             HashSet<Edge> edges = new HashSet<Edge>();
             if (dir == EdgeDirection.Undirected) {
                 edges = new HashSet<Edge>(GetEdges(EdgeDirection.Ingoing).Union(GetEdges(EdgeDirection.Outgoing)));
@@ -195,7 +195,7 @@ namespace Graphmir.GraphObjects {
             // get children via ingoing 'is' edges and invRefVerts
             return new HashSet<Vertex>(invRefVerts.Union(
                 QueryNeighborhoodVertex(
-                    QueryTargetType.TgtVert, 
+                    QueryTargetType.TgtVert,
                     dir:EdgeDirection.Ingoing,
                     refVertLabels:EngineConfig.primaryTypes)));
         }
