@@ -1,11 +1,24 @@
 namespace GraphmirSharpTest;
+using Graphmir.GraphObjects;
 
 [TestClass]
 public class GraphTest
 {
     [TestMethod]
-    public void RealizeTest()
+    public void UpdateTest()
     {
-        Console.WriteLine("RealizeTest!");
+        Graph graph = new();
+
+        Label label = new("test_label");
+        Vertex vertex = new(label);
+
+        GraphMessage message1 = new() {
+            addVerts = {
+                label
+            }
+        };
+
+        MessageResponse response = graph.UpdateFrom(message1);
+        Assert.IsTrue(response.labelAddMap.ContainsKey(vertex));
     }
 }
