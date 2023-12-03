@@ -10,7 +10,6 @@ public class GraphTest
         Graph graph = new();
 
         Label label = new("test_label");
-        Vertex vertex = new(label);
 
         GraphMessage message1 = new() {
             addVerts = {
@@ -19,6 +18,9 @@ public class GraphTest
         };
 
         MessageResponse response = graph.UpdateFrom(message1);
-        Assert.IsTrue(response.labelAddMap.ContainsKey(vertex));
+        Assert.IsTrue(response.labelAddMap.Count == 1);
+        foreach (var vert_pair in response.labelAddMap) {
+            Assert.IsTrue(vert_pair.Key.vLabel == label);
+        }
     }
 }
