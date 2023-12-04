@@ -190,12 +190,16 @@ namespace Graphmir {
             UpdateRecord updateRecord = UpdateGraph(message);
             fullMessage.MergeWith(spawnRules.CheckRules(updateRecord));
 
-            egoLabel = GetEgoLabel().Value;
+            egoLabel = GetEgoLabel();
             return ReceiveMessage(fullMessage);
         }
 
         public Label? GetEgoLabel() {
-            Vertex? egoInstance = graph.vertices[new Label("Ego")].QueryNeighborhoodVertex(QueryTargetType.TgtVert, EdgeDirection.Ingoing, refVertLabels:new HashSet<Label>() {new Label("Is")}, tgtVertLabels:new HashSet<Label>() {new Label("Instance")}).FirstOrDefault();
+            Vertex? egoInstance = graph.vertices[new Label("Ego")].QueryNeighborhoodVertex(
+                QueryTargetType.TgtVert, 
+                EdgeDirection.Ingoing, 
+                refVertLabels:new HashSet<Label>() {EngineConfig.primaryLabel}, 
+                tgtVertLabels:new HashSet<Label>() {new Label("Instance")}).FirstOrDefault();
             if (egoInstance == null) {
                 return null;
             }

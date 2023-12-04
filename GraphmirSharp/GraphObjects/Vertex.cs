@@ -92,14 +92,14 @@ namespace Graphmir.GraphObjects {
             outgoingLocalIndex.DeleteRefVert(refVert);
         }
 
-        public void DeleteEdge(Edge edge, EdgeDirection dir) {
+        public void DeleteEdge(Edge<Vertex>edge, EdgeDirection dir) {
             var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex: outgoingLocalIndex;
             Vertex otherVert = (dir == EdgeDirection.Ingoing) ? edge.src : edge.tgt;
             // remove otherVert - refVert relationship from graph
             targetIndex.DeleteTgtVertToRefVert(otherVert, edge.refVert);
         }
 
-        public void AddEdge(Edge edge, EdgeDirection dir) {
+        public void AddEdge(Edge<Vertex>edge, EdgeDirection dir) {
             // get index and otherVert
             var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex: outgoingLocalIndex;
             Vertex otherVert = (dir == EdgeDirection.Ingoing) ? edge.src : edge.tgt;
@@ -172,16 +172,16 @@ namespace Graphmir.GraphObjects {
         }
         refVertToTgtVert = new DefaultDictionary<Vertex, HashSet<Vertex>>(),
         */
-        public HashSet<Edge> GetEdges(EdgeDirection dir) {
+        public HashSet<Edge<Vertex>> GetEdges(EdgeDirection dir) {
             // get edges in direction
-            HashSet<Edge> edges = new HashSet<Edge>();
+            HashSet<Edge<Vertex>> edges = new HashSet<Edge<Vertex>>();
             if (dir == EdgeDirection.Undirected) {
-                edges = new HashSet<Edge>(GetEdges(EdgeDirection.Ingoing).Union(GetEdges(EdgeDirection.Outgoing)));
+                edges = new HashSet<Edge<Vertex>>(GetEdges(EdgeDirection.Ingoing).Union(GetEdges(EdgeDirection.Outgoing)));
             }
             var targetIndex = (dir == EdgeDirection.Ingoing) ? ingoingLocalIndex: outgoingLocalIndex;
             foreach (var keyPair in targetIndex.refVertToTgtVert) {
                 foreach (var tgtVert in keyPair.Value) {
-                    edges.Add(new Edge(this, tgtVert, keyPair.Key));
+                    edges.Add(new Edge<Vertex>(this, tgtVert, keyPair.Key));
                 }
             }
             return edges;

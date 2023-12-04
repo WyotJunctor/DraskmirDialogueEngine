@@ -1,4 +1,6 @@
 using System.Dynamic;
+using System.Text.Json;
+using System.IO;
 using Graphmir.GraphObjects;
 
 namespace Graphmir.GameObjects {
@@ -38,6 +40,17 @@ namespace Graphmir.GameObjects {
             {
                 entities.Add(entity);
             }
+        }
+
+        public GraphMessage JSONToGraphMessage(string filepath) {
+            GraphMessage message = new GraphMessage();
+            if (!File.Exists(filepath)) {
+                string readText = File.ReadAllText(filepath);
+                var deserializedMessage = JsonSerializer.Deserialize<JSONGraphMessage>(readText);
+                if (deserializedMessage != null)
+                    message = deserializedMessage.ToGraphMessage();
+            }
+            return message;
         }
     }
 }

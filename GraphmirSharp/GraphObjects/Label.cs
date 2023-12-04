@@ -1,5 +1,5 @@
 namespace Graphmir.GraphObjects {
-    public struct Label : IEquatable<Label> {
+    public class Label : IEquatable<Label> {
         public string value;
 
         public Label (string value) {

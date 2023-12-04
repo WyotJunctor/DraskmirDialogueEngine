@@ -27,9 +27,4 @@ namespace Graphmir
             return val;
         }
     }
-
-    public static class DictionaryExtensionMethods {
-
-
-    }
 }

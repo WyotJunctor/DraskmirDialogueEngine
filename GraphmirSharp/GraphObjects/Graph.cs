@@ -24,11 +24,11 @@ namespace Graphmir.GraphObjects {
             public HashSet<Vertex>
                 addVerts = new HashSet<Vertex>(),
                 delVerts = new HashSet<Vertex>();
-            public HashSet<Edge>
-                addPrimaryEdges = new HashSet<Edge>(),
-                addSecondaryEdges = new HashSet<Edge>(),
-                delPrimaryEdges = new HashSet<Edge>(),
-                delSecondaryEdges = new HashSet<Edge>();
+            public HashSet<Edge<Vertex>>
+                addPrimaryEdges = new HashSet<Edge<Vertex>>(),
+                addSecondaryEdges = new HashSet<Edge<Vertex>>(),
+                delPrimaryEdges = new HashSet<Edge<Vertex>>(),
+                delSecondaryEdges = new HashSet<Edge<Vertex>>();
         }
 
         public class DependencyCount {
@@ -36,9 +36,9 @@ namespace Graphmir.GraphObjects {
             public int calculatedDependencies;
         }
 
-        (HashSet<Edge> primaryEdges, HashSet<Edge> secondaryEdges) SplitEdges(HashSet<Edge> edges) {
-            HashSet<Edge> primaryEdges = new HashSet<Edge>();
-            HashSet<Edge> secondaryEdges = new HashSet<Edge>();
+        (HashSet<Edge<Vertex>> primaryEdges, HashSet<Edge<Vertex>> secondaryEdges) SplitEdges(HashSet<Edge<Vertex>> edges) {
+            HashSet<Edge<Vertex>> primaryEdges = new HashSet<Edge<Vertex>>();
+            HashSet<Edge<Vertex>> secondaryEdges = new HashSet<Edge<Vertex>>();
             foreach (var edge in edges) {
                 if (edge.refVert.IsPrimaryRefVert())
                     primaryEdges.Add(edge);
@@ -66,12 +66,12 @@ namespace Graphmir.GraphObjects {
             return true;
         }
 
-        public Edge RealizeEdge(
-            EdgeContainer edge,
+        public Edge<Vertex> RealizeEdge(
+            Edge<Label> edge,
             GraphMessage message=null,
             Dictionary<Label, Vertex> realizedVerts=null) {
 
-            Edge realizedEdge = new Edge();
+            Edge<Vertex> realizedEdge = new Edge<Vertex>();
             CheckEdgeRef(edge.src, ref realizedEdge.src, message, realizedVerts);
             CheckEdgeRef(edge.tgt, ref realizedEdge.tgt, message, realizedVerts);
             CheckEdgeRef(edge.refVert, ref realizedEdge.refVert, message, realizedVerts);
@@ -186,7 +186,7 @@ namespace Graphmir.GraphObjects {
                 // get all outgoing and ingoing edges
                 // split em up
                 // add to delPrimaryEdges and delSecondaryEdges
-                (HashSet<Edge> pEdges, HashSet<Edge> sEdges) = SplitEdges(vert.GetEdges(EdgeDirection.Undirected));
+                (HashSet<Edge<Vertex>> pEdges, HashSet<Edge<Vertex>> sEdges) = SplitEdges(vert.GetEdges(EdgeDirection.Undirected));
                 realizedMessage.delPrimaryEdges.UnionWith(pEdges);
                 realizedMessage.delSecondaryEdges.UnionWith(sEdges);
                 // get the vertices in which 'vert' appears as a refVert and delete the refVert

@@ -1,11 +1,10 @@
 namespace Graphmir.GraphObjects {
-    public class Edge {
+    public class Edge<T> where T : class? {
 
-        public Vertex src = null;
-        public Vertex tgt = null;
-        public Vertex refVert = null;
+        public T src = null, tgt = null, refVert = null;
 
-        public Edge(Vertex src, Vertex tgt, Vertex refVert) {
+        public Edge(T src, T tgt, T refVert) 
+        {
             this.src = src;
             this.tgt = tgt;
             this.refVert = refVert;
@@ -15,36 +14,19 @@ namespace Graphmir.GraphObjects {
 
         public override int GetHashCode()
         {
-            return new {src, tgt, refVert}.GetHashCode();
-        }
-
-    }
-
-    public class EdgeContainer {
-        public Label src, tgt, refVert;
-
-        public EdgeContainer(Label src, Label tgt, Label refVert)
-        {
-            this.src = src;
-            this.tgt = tgt;
-            this.refVert = refVert;
+            return (src, tgt, refVert).GetHashCode();
         }
 
         public override bool Equals(object? obj)
         {
-            return obj is EdgeContainer edge &&
+            return obj is Edge<T> edge &&
                 this.src == edge.src &&
                 this.tgt == edge.tgt &&
                 this.refVert == edge.refVert;
         }
-
-        public override int GetHashCode()
-        {
-            return (this.src, this.tgt, this.refVert).GetHashCode();
-        }
     }
 
-    public class EdgeUpdate : Edge {
+    public class EdgeUpdate : Edge<Vertex> {
         public QueryTargetType queryTargetType;
         bool add;
         public Vertex invRefVert;
@@ -55,9 +37,9 @@ namespace Graphmir.GraphObjects {
             this.add = add;
         }
 
-        public EdgeUpdate(Edge edge, QueryTargetType queryTargetType, bool add) : this(edge, null, queryTargetType, add) {}
+        public EdgeUpdate(Edge<Vertex> edge, QueryTargetType queryTargetType, bool add) : this(edge, null, queryTargetType, add) {}
 
-        public EdgeUpdate(Edge edge, Vertex invRefVert, QueryTargetType queryTargetType, bool add) : this(edge.src, edge.tgt, edge.refVert, invRefVert, queryTargetType, add) {}
+        public EdgeUpdate(Edge<Vertex> edge, Vertex invRefVert, QueryTargetType queryTargetType, bool add) : this(edge.src, edge.tgt, edge.refVert, invRefVert, queryTargetType, add) {}
 
         public EdgeUpdate(Vertex refVert, Vertex invRefVert, QueryTargetType queryTargetType, bool add) : this(null, null, refVert, invRefVert, queryTargetType, add) {}
 
