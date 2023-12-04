@@ -57,6 +57,20 @@ namespace Graphmir {
             return message;
         }
 
+        public GraphMessage CheckRules(UpdateRecord updateRecord) {
+            GraphMessage message = new GraphMessage();
+            // iterate over rules of src, tgt, refVert, and invRefVert?
+            // check rules and merge into graph message
+            foreach (var edgeUpdate in updateRecord.edges) {
+                message.MergeWith(CheckRule(edgeUpdate.src, edgeUpdate));
+                message.MergeWith(CheckRule(edgeUpdate.tgt, edgeUpdate));
+                message.MergeWith(CheckRule(edgeUpdate.refVert, edgeUpdate));
+                message.MergeWith(CheckRule(edgeUpdate.invRefVert, edgeUpdate));
+            }
+            // return graph message
+            return message;
+        }
+
         public void DeleteRule(Vertex vert, Label label) {
             inheritedRules[vert.vLabel].ExceptWith(inherentRules[label]);
         }
@@ -96,20 +110,6 @@ namespace Graphmir {
             }
         }
 
-        protected GraphMessage ProcessRules(UpdateRecord updateRecord, RuleMap ruleMap) {
-            GraphMessage message = new GraphMessage();
-            // iterate over rules of src, tgt, refVert, and invRefVert?
-            // check rules and merge into graph message
-            foreach (var edgeUpdate in updateRecord.edges) {
-                message.MergeWith(ruleMap.CheckRule(edgeUpdate.src, edgeUpdate));
-                message.MergeWith(ruleMap.CheckRule(edgeUpdate.tgt, edgeUpdate));
-                message.MergeWith(ruleMap.CheckRule(edgeUpdate.refVert, edgeUpdate));
-                message.MergeWith(ruleMap.CheckRule(edgeUpdate.invRefVert, edgeUpdate));
-            }
-            // return graph message
-            return message;
-        }
-
         protected void PropagateRules(MessageResponse response) {
             foreach (var keyPair in response.labelDelMap) {
                 Vertex vert = keyPair.Key;
@@ -147,13 +147,13 @@ namespace Graphmir {
                 // use MessageResponse to update UpdateRecords
                 updateRecord.MergeWith(UpdateGraph(message));
                 // use DeconflictRules on update record to generate GraphMessage
-                message = ProcessRules(updateRecord, deconflictRules);
+                message = deconflictRules.CheckRules(updateRecord);
                 // merge GraphMessage into full message
                 fullMessageUpdated = fullMessageUpdated || fullMessage.MergeWith(message);
                 // use MessageResponse to update UpdateRecords
                 updateRecord.MergeWith(UpdateGraph(message));
                 // use EffectRules on update record to generate GraphMessage... loop back
-                message = ProcessRules(updateRecord, effectRules);
+                message = effectRules.CheckRules(updateRecord);
             }
 
             // return full message
@@ -188,7 +188,7 @@ namespace Graphmir {
         public GraphMessage ReceiveSpawnMessage(GraphMessage message) {
             GraphMessage fullMessage = message;
             UpdateRecord updateRecord = UpdateGraph(message);
-            fullMessage.MergeWith(ProcessRules(updateRecord, spawnRules));
+            fullMessage.MergeWith(spawnRules.CheckRules(updateRecord));
 
             egoLabel = GetEgoLabel().Value;
             return ReceiveMessage(fullMessage);
