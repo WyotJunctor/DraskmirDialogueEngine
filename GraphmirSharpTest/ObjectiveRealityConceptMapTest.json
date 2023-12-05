@@ -1,0 +1,10 @@
+{
+  "verts": ["a", "b", "Is"],
+  "edges": [
+    {
+      "src": "b",
+      "tgt": "a",
+      "refVert": "Is"
+    }
+  ]
+}

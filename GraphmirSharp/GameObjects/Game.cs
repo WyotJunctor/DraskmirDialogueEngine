@@ -42,9 +42,9 @@ namespace Graphmir.GameObjects {
             }
         }
 
-        public GraphMessage JSONToGraphMessage(string filepath) {
+        public static GraphMessage JSONToGraphMessage(string filepath) {
             GraphMessage message = new GraphMessage();
-            if (!File.Exists(filepath)) {
+            if (File.Exists(filepath)) {
                 string readText = File.ReadAllText(filepath);
                 var deserializedMessage = JsonSerializer.Deserialize<JSONGraphMessage>(readText);
                 if (deserializedMessage != null)

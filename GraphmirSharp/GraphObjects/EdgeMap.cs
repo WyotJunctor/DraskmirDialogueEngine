@@ -8,6 +8,14 @@ namespace Graphmir.GraphObjects {
 
         }
 
+        public EdgeMap<T, K> Copy() {
+            EdgeMap<T, K> edgeMap = new EdgeMap<T, K>();
+            foreach (var keyPair in labels) {
+                edgeMap.labels[keyPair.Key] = keyPair.Value;
+            }
+            return edgeMap;
+        }
+
         public void Add(T labelKey, K labelValue) {
             labels[labelKey].Add(labelValue);
         }

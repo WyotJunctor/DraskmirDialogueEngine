@@ -70,11 +70,21 @@ namespace Graphmir.GraphObjects {
         public void AddTgtVertToRefVert(Vertex tgtVert, Vertex refVert) {
             tgtVertToRefVert[tgtVert].Add(refVert);
             if (tgtVertToLabel.ContainsKey(tgtVert) == false) {
-                tgtVertToLabel[tgtVert] = new EdgeMap<Label, Label>();
+                tgtVertToLabel[tgtVert] = tgtVert.labels.Copy(); // new EdgeMap<Label, Label>();
+                foreach (var keyPair in tgtVert.labels.labels) {
+                    foreach (var label in keyPair.Value) {
+                        labelToTgtVert[label].Add(keyPair.Key, tgtVert);
+                    }
+                }
             }
             refVertToTgtVert[refVert].Add(tgtVert);
             if (refVertToLabel.ContainsKey(refVert) == false) {
-                refVertToLabel[refVert] = new EdgeMap<Label, Label>();
+                refVertToLabel[refVert] = refVert.labels.Copy(); // new EdgeMap<Label, Label>();
+                foreach (var keyPair in refVert.labels.labels) {
+                    foreach (var label in keyPair.Value) {
+                        labelToRefVert[label].Add(keyPair.Key, refVert);
+                    }
+                }
             }
         }
 

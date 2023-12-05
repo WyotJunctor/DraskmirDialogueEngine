@@ -10,4 +10,8 @@ namespace Graphmir {
             {new Label("Was"), 1},
         };
     }
+
+    public class Clock {
+        public static uint globalTimestamp;
+    }
 }

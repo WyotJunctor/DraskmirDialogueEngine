@@ -25,14 +25,14 @@ namespace Graphmir.GraphObjects {
         LocalIndex outgoingLocalIndex, ingoingLocalIndex;
         public HashSet<Vertex> invRefVerts = new HashSet<Vertex>();
 
-        EdgeMap<Label, Label> labels = new EdgeMap<Label, Label>();
+        public EdgeMap<Label, Label> labels = new EdgeMap<Label, Label>();
 
         public Vertex(Label vLabel, uint lastUpdated) {
             this.vLabel = vLabel;
             this.lastUpdated = lastUpdated;
             this.outgoingLocalIndex = new LocalIndex();
             this.ingoingLocalIndex = new LocalIndex();
-            labels.Add(vLabel, EngineConfig.primaryLabel);
+            labels.Add(EngineConfig.primaryLabel, vLabel);
         }
 
         public Vertex(Label vLabel) : this(vLabel, Clock.globalTimestamp) {
@@ -112,21 +112,19 @@ namespace Graphmir.GraphObjects {
             EdgeMap<Label, Label> newLabels = new EdgeMap<Label, Label>();
             // iterate over primary edges and get labels
             foreach (var edgeLabel in EngineConfig.primaryTypes) {
-                if (outgoingLocalIndex.labelToRefVert.ContainsKey(edgeLabel)) {
-                    // foreach ref vert in labelToRefVert ("Is"), so the refVert 'is' an Is or Was
-                    foreach (var refVert in outgoingLocalIndex.labelToRefVert[edgeLabel].labels.TryGet(EngineConfig.primaryLabel)) {
-                        // foreach tgt vert in refVertToTgtVert
-                        foreach (var tgtVert in outgoingLocalIndex.refVertToTgtVert.TryGet(refVert)) {
-                            // foreach primary edge label
-                            foreach (var tgtEdgeLabel in EngineConfig.primaryTypes) {
-                                // foreach label, HashSet<Label> in tgtVertToLabel (primaryTypes), overwrite label
-                                foreach (var tgtLabel in outgoingLocalIndex.tgtVertToLabel.TryGet(tgtVert).labels.TryGet(tgtEdgeLabel)) {
-                                    if (EngineConfig.labelPriority[edgeLabel] > EngineConfig.labelPriority[tgtEdgeLabel]) {
-                                        newLabels.Add(edgeLabel, tgtLabel);
-                                    }
-                                    else {
-                                        newLabels.Add(tgtEdgeLabel, tgtLabel);
-                                    }
+                // foreach ref vert in labelToRefVert ("Is"), so the refVert 'is' an Is or Was
+                foreach (var refVert in outgoingLocalIndex.labelToRefVert.TryGet(edgeLabel).labels.TryGet(EngineConfig.primaryLabel)) {
+                    // foreach tgt vert in refVertToTgtVert
+                    foreach (var tgtVert in outgoingLocalIndex.refVertToTgtVert.TryGet(refVert)) {
+                        // foreach primary edge label
+                        foreach (var tgtEdgeLabel in EngineConfig.primaryTypes) {
+                            // foreach label, HashSet<Label> in tgtVertToLabel (primaryTypes), overwrite label
+                            foreach (var tgtLabel in outgoingLocalIndex.tgtVertToLabel.TryGet(tgtVert).labels.TryGet(tgtEdgeLabel)) {
+                                if (EngineConfig.labelPriority[edgeLabel] > EngineConfig.labelPriority[tgtEdgeLabel]) {
+                                    newLabels.Add(edgeLabel, tgtLabel);
+                                }
+                                else {
+                                    newLabels.Add(tgtEdgeLabel, tgtLabel);
                                 }
                             }
                         }
@@ -202,6 +200,10 @@ namespace Graphmir.GraphObjects {
 
         public bool IsPrimaryRefVert() {
             return labels.Overlaps(EngineConfig.primaryLabel, EngineConfig.primaryTypes);
+        }
+
+        public bool HasLabel(Label edgeLabel, Label label) {
+            return labels.labels.TryGet(edgeLabel).Contains(label);
         }
     }
 }

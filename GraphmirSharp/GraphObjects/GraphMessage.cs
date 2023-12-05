@@ -31,11 +31,17 @@ namespace Graphmir.GraphObjects {
         }
     }
 
+    public class JSONEdge {
+        public string src {get; set;}
+        public string tgt {get; set;}
+        public string refVert {get; set;}
+    }
+
     // this class exists for deserialization purposes
     public class JSONGraphMessage {
         
-        public List<string> verts;
-        public List<Edge<string>> edges;
+        public List<string> verts {get; set;}
+        public List<JSONEdge> edges {get; set;}
 
         public GraphMessage ToGraphMessage() 
         {

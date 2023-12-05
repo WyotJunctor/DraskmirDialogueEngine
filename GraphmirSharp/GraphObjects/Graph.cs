@@ -4,8 +4,8 @@ namespace Graphmir.GraphObjects {
 
     public class MessageResponse {
         public UpdateRecord updateRecord = new UpdateRecord();
-        public Dictionary<Vertex, EdgeMap<Label, Label>> labelAddMap = new Dictionary<Vertex, EdgeMap<Label, Label>>();
-        public Dictionary<Vertex, EdgeMap<Label, Label>> labelDelMap = new Dictionary<Vertex, EdgeMap<Label, Label>>();
+        public DefaultDictionary<Vertex, EdgeMap<Label, Label>> labelAddMap = new DefaultDictionary<Vertex, EdgeMap<Label, Label>>();
+        public DefaultDictionary<Vertex, EdgeMap<Label, Label>> labelDelMap = new DefaultDictionary<Vertex, EdgeMap<Label, Label>>();
 
         public MessageResponse() {}
 
@@ -161,6 +161,7 @@ namespace Graphmir.GraphObjects {
             // while queue not empty
             while (queue.Count > 0) {
                 // pop queue
+                
                 Vertex vert = queue.Dequeue();
                 foreach (var child in vert.GetDependents()) {
                     if (++dependencyMap[child].calculatedDependencies == dependencyMap[child].totalDependencies) {
@@ -240,6 +241,7 @@ namespace Graphmir.GraphObjects {
             }
 
             queue = new Queue<Vertex>();
+            sourceVerts = new HashSet<Vertex>();
             // handle added primary edges
             foreach (var edge in realizedMessage.addPrimaryEdges) {
                 // update local index of src and tgt vert
