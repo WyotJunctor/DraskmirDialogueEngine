@@ -9,16 +9,16 @@ namespace Graphmir.GraphObjects {
         public bool MergeWith(GraphMessage other) {
             // currently, we are allowing vertices to exist in both del verts and add verts
             // this is because the deletion might be important independent of the vertex's re-creation
-            bool isSubset = false;
-            isSubset = isSubset || other.addVerts.IsSubsetOf(addVerts);
+            bool updated = false;
+            updated = updated || !other.addVerts.IsSubsetOf(addVerts);
             addVerts.UnionWith(other.addVerts);
-            isSubset = isSubset || other.delVerts.IsSubsetOf(delVerts);
+            updated = updated || !other.delVerts.IsSubsetOf(delVerts);
             delVerts.UnionWith(other.delVerts);
-            isSubset = isSubset || other.addEdges.IsSubsetOf(addEdges);
+            updated = updated || !other.addEdges.IsSubsetOf(addEdges);
             addEdges.UnionWith(other.addEdges);
-            isSubset = isSubset || other.delEdges.IsSubsetOf(delEdges);
+            updated = updated || !other.delEdges.IsSubsetOf(delEdges);
             delEdges.UnionWith(other.delEdges);
-            return isSubset;
+            return updated;
         }
 
         public GraphMessage Copy() {

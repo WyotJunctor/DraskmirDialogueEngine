@@ -1,5 +1,5 @@
 {
-  "verts": ["a", "b", "Is"],
+  "verts": ["a", "b", "Is", "Instance"],
   "edges": [
     {
       "src": "b",

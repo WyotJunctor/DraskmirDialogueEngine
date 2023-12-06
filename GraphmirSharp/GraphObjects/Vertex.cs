@@ -202,8 +202,13 @@ namespace Graphmir.GraphObjects {
             return labels.Overlaps(EngineConfig.primaryLabel, EngineConfig.primaryTypes);
         }
 
-        public bool HasLabel(Label edgeLabel, Label label) {
-            return labels.labels.TryGet(edgeLabel).Contains(label);
+        public bool HasLabels(Label edgeLabel, params Label[] labels) {
+            foreach (var label in labels) {
+                if (!this.labels.labels.TryGet(edgeLabel).Contains(label)) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

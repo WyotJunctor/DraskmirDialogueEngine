@@ -4,7 +4,7 @@ namespace Graphmir.GameObjects {
     public class Rule {
 
         protected Graph graph;
-        protected Vertex vert;
+        public Vertex vert;
 
         public Rule(Graph graph, Vertex vert) {
             this.graph = graph;
@@ -47,6 +47,9 @@ namespace Graphmir.GameObjects {
             GraphMessage message = new GraphMessage();
             if (vert != null) {
                 foreach (var rule in inheritedRules.TryGet(vert.vLabel)) {
+                    message.MergeWith(rule.CheckRule(vert, edgeUpdate));
+                }
+                foreach (var rule in inherentRules.TryGet(vert.vLabel)) {
                     message.MergeWith(rule.CheckRule(vert, edgeUpdate));
                 }
             }

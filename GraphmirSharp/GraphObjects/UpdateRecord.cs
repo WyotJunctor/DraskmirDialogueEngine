@@ -11,7 +11,7 @@ namespace Graphmir.GraphObjects {
         }
 
         public void MergeWith(UpdateRecord record) {
-            edges.Union(record.edges);
+            edges.UnionWith(record.edges);
         }
     }
 }

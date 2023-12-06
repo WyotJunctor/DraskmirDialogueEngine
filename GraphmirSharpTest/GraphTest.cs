@@ -28,12 +28,27 @@ public class GraphTest
     [TestMethod]
     public void HelloRealityTest() {
         GraphMessage objectiveConceptMap = Game.JSONToGraphMessage("C:\\Users\\Wyatt Joyner\\Projects\\Graphmir\\DraskmirDialogueEngine\\GraphmirSharpTest\\ObjectiveRealityConceptMapTest.json");
-        ObjectiveReality reality = new(objectiveConceptMap, new(), new());
+        Dictionary<Label, List<RuleFactory>> effectRules = new Dictionary<Label, List<RuleFactory>>() {
+            {
+                new("a"), 
+                new() {
+                    delegate (Graph graph, Vertex vert) {return new ObjectiveRealityTestRule(graph, vert);}
+                }
+            }
+        };
+        ObjectiveReality reality = new ObjectiveReality(objectiveConceptMap, new(), effectRules);
+
         // check if correct number of vertices and edges exist
-        Assert.AreEqual(3, reality.graph.vertices.Count);
+        Assert.AreEqual(4, reality.graph.vertices.Count);
         // check labels of particular vertices
-        // print b's labels
-        // Console.WriteLine(reality.graph.vertices[new("b")].labels.labels.TryGet(new ("Is")).Count);
-        Assert.IsTrue(reality.graph.vertices[new("b")].HasLabel(new("Is"), new("a")));
+        Assert.IsTrue(reality.graph.vertices[new("b")].HasLabels(new Label("Is"), new Label("a")));
+
+        GraphMessage message = new GraphMessage();
+        message.addVerts.Add(new("d"));
+        message.addEdges.Add(new Edge<Label>(new("d"), new("b"), new("Is")));
+        message.addEdges.Add(new Edge<Label>(new("d"), new("Instance"), new("Is")));
+        reality.ReceiveMessage(message);
+
+        Assert.IsTrue(reality.graph.vertices.ContainsKey(new("c")));
     }
 }

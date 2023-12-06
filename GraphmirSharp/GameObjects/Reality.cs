@@ -5,8 +5,8 @@ namespace Graphmir.GameObjects {
 
         public Graph graph;
         // structure which maps vertices to rules
-        RuleMap deconflictRules = new RuleMap();
-        RuleMap effectRules = new RuleMap();
+        public RuleMap deconflictRules = new RuleMap();
+        public RuleMap effectRules = new RuleMap();
 
         public Reality(
             GraphMessage baseConceptMap,
@@ -14,9 +14,14 @@ namespace Graphmir.GameObjects {
             Dictionary<Label, List<RuleFactory>> effectRuleFactoryMap)
         {
             graph = new Graph();
-            graph.UpdateFrom(baseConceptMap);
+            GraphMessage baseVerts = new GraphMessage();
+            baseVerts.addVerts = baseConceptMap.addVerts;
+            ReceiveMessage(baseVerts);
             InstantiateRules(deconflictRuleFactoryMap, deconflictRules);
             InstantiateRules(effectRuleFactoryMap, effectRules);
+            GraphMessage baseEdges = new GraphMessage();
+            baseEdges.addEdges = baseConceptMap.addEdges;
+            ReceiveMessage(baseEdges);
         }
 
         public void InstantiateRules(Dictionary<Label, List<RuleFactory>> ruleFactoryMap, RuleMap ruleMap) {
@@ -34,6 +39,9 @@ namespace Graphmir.GameObjects {
                     deconflictRules.DeleteRule(vert, label);
                     effectRules.DeleteRule(vert, label);
                 }
+            }
+            foreach (var keyPair in response.labelAddMap) {
+                Vertex vert = keyPair.Key;
                 foreach (Label label in response.labelAddMap[vert].labels.TryGet(EngineConfig.primaryLabel)) {
                     deconflictRules.AddRule(vert, label);
                     effectRules.AddRule(vert, label);
@@ -50,7 +58,6 @@ namespace Graphmir.GameObjects {
         }
 
         public GraphMessage ReceiveMessage(GraphMessage message) {
-
             // instantiate full message
             GraphMessage fullMessage = new GraphMessage();
 
@@ -61,6 +68,8 @@ namespace Graphmir.GameObjects {
                 UpdateRecord updateRecord = new UpdateRecord();
                 // merge GraphMessage into full message
                 fullMessageUpdated = fullMessage.MergeWith(message);
+                if (fullMessageUpdated == false)
+                    break;
                 // use MessageResponse to update UpdateRecords
                 updateRecord.MergeWith(UpdateGraph(message));
                 // use DeconflictRules on update record to generate GraphMessage
@@ -73,7 +82,6 @@ namespace Graphmir.GameObjects {
                 message = effectRules.CheckRules(updateRecord);
             }
 
-            // return full message
             return fullMessage;
         }
     }
