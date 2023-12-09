@@ -49,6 +49,8 @@ namespace Graphmir.GameObjects {
                 var deserializedMessage = JsonSerializer.Deserialize<JSONGraphMessage>(readText);
                 if (deserializedMessage != null)
                     message = deserializedMessage.ToGraphMessage();
+            } else {
+                throw new FileLoadException("GraphMessage JSON file expected at '" + filepath + "' does not exist!");
             }
             return message;
         }
