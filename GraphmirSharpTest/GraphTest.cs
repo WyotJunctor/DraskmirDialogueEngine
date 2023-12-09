@@ -27,7 +27,7 @@ public class GraphTest
 
     [TestMethod]
     public void HelloRealityTest() {
-        GraphMessage objectiveConceptMap = Game.JSONToGraphMessage("C:\\Users\\Wyatt Joyner\\Projects\\Graphmir\\DraskmirDialogueEngine\\GraphmirSharpTest\\ObjectiveRealityConceptMapTest.json");
+        GraphMessage objectiveConceptMap = Game.JSONToGraphMessage("data\\ObjectiveRealityConceptMapTest.json");
         Dictionary<Label, List<RuleFactory>> effectRules = new Dictionary<Label, List<RuleFactory>>() {
             {
                 new("a"), 
